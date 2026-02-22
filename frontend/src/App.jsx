@@ -590,11 +590,12 @@ const LanguageScreen = ({ onDone }) => {
 };
 
 // ─── Character Creator ────────────────────────────────────────────────────────
-const CharacterCreator = ({ onBack, myCharacter, setMyCharacter, language, onStart }) => {
+const CharacterCreator = ({ onBack, onSave, language }) => {
   const [step,setStep]=useState(1);
-  const [tempChar,setTempChar]=useState(myCharacter);
+  const [tempChar,setTempChar]=useState({ base_role:'Close Cousin', traits:[], energy:50, quirks:[], memory_hook:'', label:'' });
   const [quirkInput,setQuirkInput]=useState('');
   const [isRefining,setIsRefining]=useState(false);
+  const [saving,setSaving]=useState(false);
   const avatarColor=ROLE_COLORS[tempChar.base_role]||'#a78bfa';
 
   const toggleTrait=(id)=>{
@@ -608,7 +609,16 @@ const CharacterCreator = ({ onBack, myCharacter, setMyCharacter, language, onSta
     try{ const res=await api.post('/api/refine-backstory',{draft_text:tempChar.memory_hook,language}); setTempChar({...tempChar,memory_hook:res.data.refined_text}); }catch{}
     finally{setIsRefining(false);}
   };
-  const saveAndExit=()=>{setMyCharacter(tempChar);onStart();};
+  const saveAndExit=async()=>{
+    setSaving(true);
+    const label = tempChar.label.trim() || tempChar.base_role;
+    try{
+      const res=await api.post('/api/characters',{...tempChar, label});
+      onSave(res.data);
+    }catch(err){
+      alert(err.response?.data?.detail||'Failed to save character');
+    }finally{setSaving(false);}
+  };
 
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', overflow:'hidden' }}>
