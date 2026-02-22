@@ -1,42 +1,81 @@
 import os
-from fastapi import FastAPI, HTTPException, Request
-from pydantic import BaseModel
-from graph import app_graph
+import httpx
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, List, Any
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.messages import SystemMessage, HumanMessage
+from pydantic import BaseModel
+from typing import Optional, Dict, Any
 from dotenv import load_dotenv
-import redis
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
-from slowapi.errors import RateLimitExceeded
+from emergentintegrations.llm.chat import LlmChat, UserMessage
+
+from database import (
+    create_indexes, create_user, get_user_by_email, get_user_by_id,
+    get_user_by_google_id, verify_password, update_user,
+    create_session, get_session, delete_session,
+    save_message, get_history,
+    increment_exchange, reset_exchange_counter,
+    get_coins, deduct_coins, _clean_user,
+)
+from graph import app_graph
 
 load_dotenv()
 
-# --- Redis client for distributed session state ---
-# Replaces the in-memory dict so state persists across multiple server instances
-redis_client = redis.from_url(
-    os.getenv("REDIS_URL", "redis://localhost:6379"),
-    decode_responses=True
-)
+GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
+APP_URL = os.environ.get("APP_URL", "")
 
-# --- Rate limiter (slowapi) ---
-limiter = Limiter(key_func=get_remote_address)
 
-app = FastAPI()
-app.state.limiter = limiter
-app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await create_indexes()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[APP_URL, "http://localhost:3000", "http://127.0.0.1:3000", "http://0.0.0.0:3000"],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Helper LLM for the "Write with AI" feature
-helper_llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0.7)
+
+# --- Auth helper ---
+async def get_current_user(request: Request) -> Optional[dict]:
+    token = request.cookies.get("session_token")
+    if not token:
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header[7:]
+    if not token:
+        return None
+    session = await get_session(token)
+    if not session:
+        return None
+    user = await get_user_by_id(session["user_id"])
+    return _clean_user(user) if user else None
+
+
+def set_session_cookie(response: Response, token: str):
+    response.set_cookie(
+        "session_token", token,
+        httponly=True, secure=True, samesite="none",
+        path="/", max_age=7 * 24 * 3600,
+    )
+
+
+# --- Models ---
+class RegisterRequest(BaseModel):
+    email: str
+    password: str
+    name: str = "User"
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
 
 class ChatRequest(BaseModel):
     message: str
@@ -46,63 +85,193 @@ class ChatRequest(BaseModel):
     persona_config: Dict[str, Any] = {}
     force_vault: bool = False
 
+
 class RefineRequest(BaseModel):
     draft_text: str
     language: str
 
-@app.post("/chat")
-@limiter.limit("30/minute")
-async def chat(request: Request, chat_request: ChatRequest):
-    try:
-        baseline_key = f"baseline:{chat_request.session_id}"
-        raw = redis_client.get(baseline_key)
-        current_baseline = int(raw) if raw else 5
 
+class UpdateProfileRequest(BaseModel):
+    name: Optional[str] = None
+    language: Optional[str] = None
+    onboarding_complete: Optional[bool] = None
+
+
+# ===================== AUTH ROUTES =====================
+
+@app.post("/api/auth/register")
+async def register(req: RegisterRequest, response: Response):
+    if await get_user_by_email(req.email):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user = await create_user(req.email, req.password, req.name)
+    token = await create_session(user["user_id"])
+    set_session_cookie(response, token)
+    return user
+
+
+@app.post("/api/auth/login")
+async def login(req: LoginRequest, response: Response):
+    user_doc = await get_user_by_email(req.email)
+    if not user_doc or not await verify_password(user_doc, req.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    user = _clean_user(user_doc)
+    token = await create_session(user["user_id"])
+    set_session_cookie(response, token)
+    return user
+
+
+@app.get("/api/auth/google-session")
+async def google_session(session_id: str, response: Response):
+    async with httpx.AsyncClient() as client:
+        r = await client.get(
+            "https://demobackend.emergentagent.com/auth/v1/env/oauth/session-data",
+            headers={"X-Session-ID": session_id},
+            timeout=10,
+        )
+    if r.status_code != 200:
+        raise HTTPException(status_code=401, detail="Invalid Google session")
+    data = r.json()
+    email = data.get("email", "")
+    google_id = data.get("id", "")
+    name = data.get("name", "User")
+
+    user_doc = await get_user_by_email(email)
+    if not user_doc:
+        user = await create_user(email, None, name, google_id)
+    else:
+        updates = {}
+        if not user_doc.get("google_id"):
+            updates["google_id"] = google_id
+        if updates:
+            user_doc = await update_user(user_doc["user_id"], updates) or user_doc
+        user = _clean_user(user_doc)
+
+    token = await create_session(user["user_id"])
+    set_session_cookie(response, token)
+    return {"user": user}
+
+
+@app.get("/api/auth/me")
+async def get_me(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
+@app.post("/api/auth/mark-first-login")
+async def mark_first_login(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    await update_user(user["user_id"], {"is_first_login": False})
+    return {"ok": True}
+
+
+@app.post("/api/auth/logout")
+async def logout(request: Request, response: Response):
+    token = request.cookies.get("session_token")
+    if token:
+        await delete_session(token)
+    response.delete_cookie("session_token", path="/", samesite="none", secure=True)
+    return {"ok": True}
+
+
+# ===================== USER ROUTES =====================
+
+@app.post("/api/user/update-profile")
+async def update_profile(req: UpdateProfileRequest, request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    updates = {}
+    if req.name is not None:
+        updates["name"] = req.name
+    if req.language is not None:
+        updates["language"] = req.language
+    if req.onboarding_complete is not None:
+        updates["onboarding_complete"] = req.onboarding_complete
+    updated = await update_user(user["user_id"], updates)
+    return updated or user
+
+
+# ===================== CHAT ROUTE =====================
+
+@app.post("/api/chat")
+async def chat(chat_req: ChatRequest, request: Request):
+    user = await get_current_user(request)
+    user_id = user["user_id"] if user else "anonymous"
+
+    try:
         inputs = {
-            "session_id": chat_request.session_id,
-            "input_text": chat_request.message,
-            "language": chat_request.language,
-            "manual_mode": chat_request.manual_mode,
-            "persona_config": chat_request.persona_config,
-            "emotional_baseline": current_baseline,
-            "force_vault": chat_request.force_vault,
-            "history": []
+            "session_id": chat_req.session_id,
+            "user_id": user_id,
+            "input_text": chat_req.message,
+            "language": chat_req.language,
+            "manual_mode": chat_req.manual_mode,
+            "persona_config": chat_req.persona_config,
+            "emotional_baseline": 5,
+            "force_vault": chat_req.force_vault,
+            "history": [],
         }
-        result = app_graph.invoke(inputs)
-        new_baseline = result.get("emotional_baseline", 5)
-
-        # Store baseline in Redis with 24-hour TTL (auto-expires stale sessions)
-        redis_client.setex(baseline_key, 86400, new_baseline)
-
-        return {
-            "response": result["final_response"],
-            "mode": result["active_mode"],
-            "is_vault": result["is_vault"],
-            "intensity_score": result.get("intensity_score", 0),
-            "emotional_baseline": new_baseline
-        }
+        result = await app_graph.ainvoke(inputs)
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Chat error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- NEW ENDPOINT FOR FIX 6 ---
-@app.post("/refine-backstory")
-@limiter.limit("10/minute")
-async def refine_backstory(request: Request, backstory_request: RefineRequest):
+    coins_remaining = user.get("coins", 0) if user else 0
+    coins_deducted = 0
+    active_mode = result.get("active_mode", "AUTO")
+
+    if user and active_mode != "CRISIS":
+        exchange_count = await increment_exchange(chat_req.session_id, user_id)
+        if exchange_count >= 10:
+            deduct_amount = 8 if active_mode == "BE_REAL" else 5
+            coins_remaining = await deduct_coins(user_id, deduct_amount)
+            coins_deducted = deduct_amount
+            await reset_exchange_counter(chat_req.session_id)
+
+    return {
+        "response": result["final_response"],
+        "mode": active_mode,
+        "is_vault": result.get("is_vault", False),
+        "intensity_score": result.get("intensity_score", 0),
+        "emotional_baseline": result.get("emotional_baseline", 5),
+        "coins_remaining": coins_remaining,
+        "coins_deducted": coins_deducted,
+    }
+
+
+# ===================== UTILITY ROUTES =====================
+
+@app.post("/api/refine-backstory")
+async def refine_backstory(req: RefineRequest, request: Request):
     try:
-        prompt = f"""
-        Rewrite the following user story to be short, funny, and engaging.
-        Keep the original meaning but make it sound like a cool character description.
-        Language: English mixed with {backstory_request.language} (Roman Script).
-        Max 2 sentences.
-
-        User Draft: "{backstory_request.draft_text}"
-        """
-        response = helper_llm.invoke([HumanMessage(content=prompt)])
-        return {"refined_text": response.content}
+        chat = LlmChat(
+            api_key=GOOGLE_API_KEY,
+            session_id=f"refine_{id(req)}",
+            system_message=(
+                "Rewrite user stories to be short, funny, and engaging. "
+                "Keep the original meaning. Max 2 sentences. "
+                "Sound like a cool character description, not a formal bio."
+            ),
+        ).with_model("gemini", "gemini-2.0-flash")
+        response = await chat.send_message(UserMessage(
+            text=f"Language: English mixed with {req.language} (Roman Script).\nDraft: \"{req.draft_text}\"\nRewrite:"
+        ))
+        return {"refined_text": response}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+@app.get("/api/coins/balance")
+async def coins_balance(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return {"coins": user.get("coins", 0)}
+
+
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "service": "ReVent API"}
