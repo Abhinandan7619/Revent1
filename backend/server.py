@@ -16,6 +16,8 @@ from database import (
     increment_exchange, reset_exchange_counter,
     get_coins, deduct_coins, _clean_user,
     create_character, get_characters, delete_character,
+    get_user_sessions, create_chat_session, update_session_title,
+    delete_sessions_for_character,
 )
 from graph import app_graph
 from onboarding_chat import handle_onboarding_chat, get_onboarding_welcome_messages
