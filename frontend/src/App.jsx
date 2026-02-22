@@ -1346,9 +1346,21 @@ function App() {
       const res=await api.post('/api/user/update-profile',{name:userName,language:lang,onboarding_complete:true});
       setAuthUser(res.data);
     }catch{}
-    // Load personalized welcome messages
+    // Generate a new session and auto-trigger onboarding message
+    const newSid = genSessionId();
+    setSessionId(newSid);
+    // Load personalized welcome
     try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
     setView('chat');
+    // Auto-trigger onboarding chat: send a "hey" to get the consent question
+    setTimeout(async()=>{
+      try{
+        const res=await api.post('/api/chat',{message:'hey',session_id:newSid,language:lang,manual_mode:'AUTO',persona_config:{}});
+        if(res.data.response){
+          setMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:res.data.mode||'AUTO'}]);
+        }
+      }catch{}
+    },800);
   };
 
   const openGossip=()=>{ setGossipMessages([]);setGossipSessionId(genSessionId());setView('gossip_chat'); };
