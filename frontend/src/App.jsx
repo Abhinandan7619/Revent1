@@ -1264,7 +1264,7 @@ function App() {
 
   const handleLogout=async()=>{
     try{await api.post('/api/auth/logout');}catch{}
-    setAuthUser(null);setCharacters([]);setPendingRoute('auth');setView('splash');
+    setAuthUser(null);setCharacters([]);setView('splash');
   };
 
   const handleLangDone=async(lang)=>{
