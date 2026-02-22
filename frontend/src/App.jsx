@@ -438,13 +438,11 @@ const OnboardingScreen = ({ onDone }) => {
       ],
     },
     {
-      accent: '#f87171',
-      icon: '💢',
-      iconBg: 'rgba(248,113,113,0.12)',
-      title: 'Be mad.\nWe can handle it.',
-      body: 'Shred it. Trash it. Say it out loud.',
-      highlight: null,
-      sub: 'Specially designed release rooms inside.',
+      accent: '#f472b6',
+      icon: '✨',
+      iconBg: 'rgba(244,114,182,0.12)',
+      title: <>Create your {GT('own')} companions.</>,
+      characters: true,
     },
   ];
   const s=slides[slide-1];
