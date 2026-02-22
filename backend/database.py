@@ -45,6 +45,10 @@ async def create_user(email: str, password: Optional[str], name: str = "User", g
         "coins": 2000,
         "is_first_login": True,
         "onboarding_complete": False,
+        "onboarding_chat_status": "not_started",
+        "onboarding_chat_phase": 0,
+        "onboarding_chat_question": 0,
+        "personality_profile": {},
         "google_id": google_id,
         "created_at": datetime.now(timezone.utc),
     }
