@@ -1161,6 +1161,8 @@ function App() {
       setLanguage(user.language||'Hindi');
       // Load characters
       try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
+      // Load welcome messages
+      try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
       // Authenticated: skip splash, go directly to chat or onboarding
       if(user.onboarding_complete){
         setView('chat');
