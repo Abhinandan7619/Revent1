@@ -563,7 +563,7 @@ const OnboardingScreen = ({ onDone }) => {
           </div>
 
           {/* Content */}
-          <div style={{ flex: 1, padding: '20px 28px 0', display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto' }}>
+          <div style={{ flex: 1, padding: '20px 28px 0', display: 'flex', flexDirection: 'column', gap: 14, overflowY: 'auto', maxWidth: 620, width: '100%', alignSelf: 'center', boxSizing: 'border-box' }}>
             <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 26, color: '#fff', letterSpacing: -0.5, lineHeight: 1.2, whiteSpace: 'pre-line' }}>{s.title}</div>
             {s.modes ? (
               <>
