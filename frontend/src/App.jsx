@@ -1326,12 +1326,16 @@ function App() {
     setUserName(user.name || 'User');
     setLanguage(user.language || 'Hindi');
     if (user.is_first_login) {
+      // Show beta modal FIRST — splash will open after modal is dismissed
+      const nextView = user.onboarding_complete ? 'chat' : 'splash';
+      setPostModalView(nextView);
       setShowBetaModal(true);
       try { await api.post('/api/auth/mark-first-login'); } catch {}
       setAuthUser(prev => prev ? { ...prev, is_first_login: false } : prev);
+      // Do NOT setView here — BetaWelcomeModal.onDismiss will handle it
+    } else {
+      setView(user.onboarding_complete ? 'chat' : 'splash');
     }
-    // Go directly to chat (not home screen)
-    setView(user.onboarding_complete ? 'chat' : 'splash');
   };
 
   const handleAuth = (user) => handleUserLoaded(user);
