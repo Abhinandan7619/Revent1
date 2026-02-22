@@ -1129,7 +1129,7 @@ function App() {
   const [baseline,setBaseline]=useState(5);
   const [userName,setUserName]=useState('User');
   const [activeVibe,setActiveVibe]=useState('default');
-  const [myCharacter,setMyCharacter]=useState({ base_role:'Close Cousin', traits:[], energy:50, quirks:[], memory_hook:'' });
+  const [characters,setCharacters]=useState([]);
   const [loading,setLoading]=useState(false);
   const [gossipLoading,setGossipLoading]=useState(false);
   const [coinToast,setCoinToast]=useState(null);
