@@ -31,12 +31,7 @@ const ROLE_COLORS = {
   'Close Cousin': '#a78bfa', 'Office Bro': '#60a5fa', 'Childhood Buddy': '#34d399',
   'Chill Ex': '#fbbf24', 'Blunt Senior': '#f87171', 'Protective Sister': '#f472b6',
 };
-const PRESET_VIBES = [
-  { id: 'default', label: 'RE',     emoji: null,  color: '#a78bfa', config: {} },
-  { id: 'vibe1',   label: 'Vibe 1', emoji: '😿',  color: '#a78bfa', config: { base_role: 'Close Cousin',  traits: ['Soft'],                       energy: 35, quirks: [], memory_hook: '' } },
-  { id: 'shadow',  label: 'Shadow', emoji: '😈',  color: '#f472b6', config: { base_role: 'Blunt Senior',  traits: ['Sarcastic', 'Savage'],          energy: 80, quirks: [], memory_hook: '' } },
-  { id: 'logic',   label: 'Logic',  emoji: '🧐',  color: '#60a5fa', config: { base_role: 'Office Bro',    traits: ['Wise', 'Brutally Honest'],       energy: 55, quirks: [], memory_hook: '' } },
-];
+const RE_DEFAULT = { id: 'default', label: 'RE', emoji: null, color: '#a78bfa', config: {} };
 const EMOTION_ITEMS = [
   { emoji: '😔', label: 'Sad',     mode: 'HEAR_ME' },
   { emoji: '💀', label: 'Dead',    mode: 'HEAR_ME' },
