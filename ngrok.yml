@@ -1,0 +1,11 @@
+version: "2"
+authtoken: 39mku3u1YizYibB49fcJD8knBn0_55aRoM7es8ZCBX6wrvQpv  # <--- PASTE YOUR TOKEN HERE
+tunnels:
+  gupt-backend:
+    proto: http
+    addr: 8000
+    domain: ungenerically-suprasegmental-kendrick.ngrok-free.dev
+
+  gupt-frontend:
+    proto: http
+    addr: 5173
