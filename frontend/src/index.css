@@ -1,15 +1,21 @@
 @import "tailwindcss";
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
 
-*, *::before, *::after { -webkit-tap-highlight-color: transparent; box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after {
+  -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
 
 html, body, #root {
   height: 100%;
-  overflow: hidden;
-  background: #000;
+  width: 100%;
+  background: #0a0515;
   color: #f8fafc;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
+  overflow: hidden;
 }
 
 /* scrollbar */
@@ -18,19 +24,49 @@ html, body, #root {
 ::-webkit-scrollbar-thumb { background: rgba(167,139,250,0.2); border-radius: 10px; }
 
 /* range input */
-input[type=range] { -webkit-appearance: none; height: 4px; border-radius: 99px; background: rgba(255,255,255,0.1); cursor: pointer; width: 100%; }
-input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #a78bfa, #34d399); cursor: pointer; box-shadow: 0 0 10px rgba(167,139,250,0.5); }
-input[type=range]::-webkit-slider-runnable-track { height: 4px; border-radius: 99px; background: rgba(255,255,255,0.1); }
+input[type=range] {
+  -webkit-appearance: none;
+  height: 4px;
+  border-radius: 99px;
+  background: rgba(255,255,255,0.1);
+  cursor: pointer;
+  width: 100%;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a78bfa, #34d399);
+  cursor: pointer;
+  box-shadow: 0 0 10px rgba(167,139,250,0.5);
+}
 
-/* button reset */
 button { font-family: inherit; }
-
-/* textarea */
 textarea { overflow: hidden; }
-
-/* selection */
 ::selection { background: rgba(167,139,250,0.3); }
-
-/* placeholder */
 input::placeholder, textarea::placeholder { color: rgba(248,250,252,0.25); }
 select option { background: #1a0533; color: #f8fafc; }
+
+/* glass utility */
+.glass {
+  background: rgba(255,255,255,0.07);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255,255,255,0.10);
+}
+
+/* responsive helpers */
+@media (min-width: 768px) {
+  .home-grid {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .home-grid {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}
