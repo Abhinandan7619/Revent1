@@ -18,6 +18,7 @@ from database import (
     create_character, get_characters, delete_character,
 )
 from graph import app_graph
+from onboarding_chat import handle_onboarding_chat, get_onboarding_welcome_messages
 
 load_dotenv()
 
