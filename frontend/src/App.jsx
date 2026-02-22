@@ -469,7 +469,7 @@ const OnboardingScreen = ({ onDone }) => {
             {s.title}
           </div>
 
-          {/* Modes or body text */}
+          {/* Modes, characters, or body text */}
           {s.modes ? (
             <div style={{ display:'flex', flexDirection:'column', gap:12, width:'100%' }}>
               {s.modes.map(m=>(
@@ -482,6 +482,26 @@ const OnboardingScreen = ({ onDone }) => {
                 </div>
               ))}
               <p style={{ fontSize:12, color:'rgba(248,250,252,0.25)', textAlign:'center', marginTop:8 }}>No sugarcoating unless you ask for it.</p>
+            </div>
+          ) : s.characters ? (
+            <div style={{ display:'flex', flexDirection:'column', gap:14, width:'100%' }}>
+              <p style={{ fontSize:15, lineHeight:1.7, color:'rgba(248,250,252,0.55)', textAlign:'center', marginBottom:4 }}>
+                Beyond RE, design up to <span style={{ color:'#f472b6', fontWeight:700 }}>3 custom personas</span> — each with their own vibe, traits, and energy.
+              </p>
+              {[
+                { icon:'🤝', title:'Pick a base vibe', sub:'Close Cousin, Blunt Senior, Office Bro…' },
+                { icon:'🎨', title:'Add personality traits', sub:'Funny, Savage, Wise, Soft — up to 4 traits' },
+                { icon:'⚡', title:'Set the energy level', sub:'Chill to intense — you control the dial' },
+              ].map(item=>(
+                <div key={item.title} style={{ display:'flex', alignItems:'center', gap:14, padding:'14px 18px', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:14, backdropFilter:'blur(16px)' }}>
+                  <span style={{ fontSize:22, flexShrink:0 }}>{item.icon}</span>
+                  <div>
+                    <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:13, color:'#fff' }}>{item.title}</div>
+                    <div style={{ fontSize:12, color:'rgba(248,250,252,0.45)', marginTop:2 }}>{item.sub}</div>
+                  </div>
+                </div>
+              ))}
+              <p style={{ fontSize:12, color:'rgba(248,250,252,0.25)', textAlign:'center', marginTop:4 }}>You can delete and recreate anytime.</p>
             </div>
           ) : (
             <div style={{ textAlign:'center' }}>
