@@ -7,7 +7,11 @@ import * as THREE from 'three';
 // ─── API ──────────────────────────────────────────────────────────────────────
 const BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || '';
 const api = axios.create({ baseURL: BASE_URL, withCredentials: true });
-const genSessionId = () => `sess_${Math.random().toString(36).substr(2, 9)}`;
+const genSessionId = () => `sess_${Math.random().toString(36).substr(2,9)}_${Date.now().toString(36)}`;
+
+// Persist view state across page reloads
+const saveState = (key, val) => { try { sessionStorage.setItem(`rv_${key}`, JSON.stringify(val)); } catch {} };
+const loadState = (key, fallback) => { try { const v = sessionStorage.getItem(`rv_${key}`); return v ? JSON.parse(v) : fallback; } catch { return fallback; } };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 const BASE_ROLES = [
