@@ -1449,7 +1449,7 @@ function App() {
   return (
     <AppBg>
       <AnimatePresence>
-        {showBetaModal && <BetaWelcomeModal onDismiss={() => setShowBetaModal(false)} />}
+        {showBetaModal && <BetaWelcomeModal onDismiss={() => { setShowBetaModal(false); setView(postModalView); }} />}
       </AnimatePresence>
 
       <AnimatePresence>
