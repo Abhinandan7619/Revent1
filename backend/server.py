@@ -98,6 +98,15 @@ class UpdateProfileRequest(BaseModel):
     onboarding_complete: Optional[bool] = None
 
 
+class CreateCharacterRequest(BaseModel):
+    base_role: str = "Close Cousin"
+    traits: list = []
+    energy: int = 50
+    quirks: list = []
+    memory_hook: str = ""
+    label: str = "Custom"
+
+
 # ===================== AUTH ROUTES =====================
 
 @app.post("/api/auth/register")
