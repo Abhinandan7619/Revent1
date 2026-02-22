@@ -1142,7 +1142,27 @@ function App() {
   const windowWidth=useWindowWidth();
   const isDesktop=windowWidth>=768;
 
-  // Run auth check in background while splash is shown
+  // Load chat history for current session from DB
+  const loadChatHistory=async(sid)=>{
+    if(!sid)return;
+    try{
+      const res=await api.get(`/api/chat/history/${sid}`);
+      const msgs=(res.data||[]).map(m=>({role:m.role==='ai'?'ai':'user',content:m.content,mode:m.mode}));
+      if(msgs.length>0){ setMessages(msgs); return true; }
+    }catch{}
+    return false;
+  };
+
+  // Load sessions list for current vibe
+  const loadSessions=async(vibeId='default')=>{
+    try{
+      const res=await api.get('/api/chat/sessions',{params:{vibe_id:vibeId}});
+      setChatSessions(res.data||[]);
+      return res.data||[];
+    }catch{ return []; }
+  };
+
+  // Run auth check — restore state from session if available
   useEffect(()=>{
     const hash=window.location.hash;
     if(hash?.includes('session_id=')){
@@ -1162,6 +1182,7 @@ function App() {
   },[]);
 
   const checkAuth=async()=>{
+    const savedView = loadState('view', null);
     try{
       const res=await api.get('/api/auth/me');
       const user=res.data;
@@ -1170,11 +1191,38 @@ function App() {
       setLanguage(user.language||'Hindi');
       // Load characters
       try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
-      // Load welcome messages
-      try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
-      // Authenticated: skip splash, go directly to chat or onboarding
+
       if(user.onboarding_complete){
-        setView('chat');
+        // Restore chat history from DB
+        const currentSessionId = loadState('sessionId', null);
+        const currentVibe = loadState('activeVibe', 'default');
+        const sessions = await loadSessions(currentVibe);
+
+        if(currentSessionId && sessions.some(s=>s.session_id===currentSessionId)){
+          // Restore existing session
+          const loaded = await loadChatHistory(currentSessionId);
+          if(!loaded){
+            // Session exists but no messages — load welcome
+            try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+          }
+        } else if(sessions.length>0){
+          // Use most recent session
+          const latest = sessions[0];
+          setSessionId(latest.session_id);
+          await loadChatHistory(latest.session_id);
+        } else {
+          // No sessions — fresh start with welcome
+          const newSid = genSessionId();
+          setSessionId(newSid);
+          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+        }
+
+        // If the user was on chat/settings/creator, restore that view
+        if(savedView && ['chat','settings','creator','gossip_chat'].includes(savedView)){
+          setView(savedView);
+        } else {
+          setView('chat');
+        }
       }else{
         setView('onboarding');
       }
