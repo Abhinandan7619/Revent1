@@ -925,7 +925,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
         </div>
         {!isDesktop&&(
           <div style={{ flex:1, overflow:'hidden', padding:'0 8px' }}>
-            <CharacterTabStrip activeVibe={activeVibe} setActiveVibe={setActiveVibe} onOpenCreator={onOpenCreator} myCharacter={myCharacter}/>
+            <CharacterTabStrip activeVibe={activeVibe} setActiveVibe={setActiveVibe} onOpenCreator={onOpenCreator} characters={characters}/>
           </div>
         )}
         <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
