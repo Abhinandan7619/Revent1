@@ -34,12 +34,12 @@ class ReVentState(TypedDict):
 
 # --- Models (Gemini 2.0 Flash) ---
 classifier_llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     temperature=0.2,
     google_api_key=GOOGLE_API_KEY,
 )
 generator_llm = ChatGoogleGenerativeAI(
-    model="gemini-2.0-flash",
+    model="gemini-2.5-flash",
     temperature=0.7,
     google_api_key=GOOGLE_API_KEY,
 )
