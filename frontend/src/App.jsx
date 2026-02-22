@@ -907,9 +907,9 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
 };
 
 // ─── Chat Interface ───────────────────────────────────────────────────────────
-const ChatInterface = ({ activeVibe, setActiveVibe, setView, myCharacter, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop }) => {
-  const currentVibe=[...PRESET_VIBES,{id:'custom',label:'Mine',color:ROLE_COLORS[myCharacter?.base_role]||'#a78bfa',emoji:BASE_ROLES.find(r=>r.id===myCharacter?.base_role)?.icon}].find(v=>v.id===activeVibe)||PRESET_VIBES[0];
-  const accentColor=currentVibe?.color||'#a78bfa';
+const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop }) => {
+  const activeChar = characters.find(c=>c.character_id===activeVibe);
+  const accentColor = activeChar ? (ROLE_COLORS[activeChar.base_role]||'#a78bfa') : '#a78bfa';
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', position:'relative' }}>
       {/* Topbar */}
