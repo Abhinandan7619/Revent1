@@ -591,7 +591,7 @@ const OnboardingScreen = ({ onDone }) => {
       </AnimatePresence>
 
       {/* Navigation */}
-      <div style={{ padding: '16px 28px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0 }}>
+      <div style={{ padding: '16px 28px 28px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, maxWidth: 620, width: '100%', alignSelf: 'center', boxSizing: 'border-box' }}>
         <div style={{ display: 'flex', gap: 6 }}>
           {[1, 2, 3].map(i => (
             <div key={i} style={{ width: slide === i ? 20 : 6, height: 6, borderRadius: 99, background: slide === i ? '#a78bfa' : 'rgba(255,255,255,0.15)', transition: 'all 0.3s', boxShadow: slide === i ? '0 0 8px rgba(167,139,250,0.5)' : 'none' }} />
