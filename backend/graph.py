@@ -227,6 +227,7 @@ async def node_generator(state: ReVentState):
         f"ENERGY LEVEL: {persona['energy']}/100\n"
         f"QUIRKS: {', '.join(persona['quirks']) if persona['quirks'] else 'None'}\n"
         f"{memory_line}\n"
+        f"{personality_context}\n"
         f"{lang_instruction}\n"
         f"{style_rules}\n\n"
         "TASK: Reply to the user. React like a real person. Start with a natural reaction only if it fits."
