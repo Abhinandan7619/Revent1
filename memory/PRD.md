@@ -7,7 +7,7 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - **Primary**: Young adults (18-30) who need to vent emotionally in a private, non-judgmental space
 - **Secondary**: Beta testers exploring AI companionship
 
-## Core Requirements (from user)
+## Core Requirements
 
 ### Task 1 — Responsive UI
 - Full-screen layout on desktop (no mobile container)
@@ -30,27 +30,31 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 ### Task 4 — Coin Economics & Onboarding
 - 2,000 coins on signup (beta tester)
 - Beta Welcome Modal with animated coin counter
-- Coin badge real-time update on messages
+- Coin deduction after 10 exchanges
 
 ### Task 5 — UX Flow
-- Flow: Splash → Auth → Onboarding (3 slides) → Name → Language → Chat
-- Pre-generated welcome message
-- Emotion bar with 7 emojis (auto-switches modes)
-- Floating GOSSIP MODE button
-- Onboarding text-only (no images until user provides custom assets)
+- Flow: Splash (unauthenticated) → Auth → Onboarding (3 slides) → Name → Language → Chat
+- Authenticated users skip splash, go directly to chat
+- Loading screen while auth check in progress
 
-### Task 6 — Character System (NEW)
+### Task 6 — Character System
 - RE is the default companion (always present)
-- Users can create up to 3 custom personas via Character Creator
-- Each persona has: base role, traits (up to 4), energy level, quirks, backstory, label
-- Characters persist in database (MongoDB `characters` collection)
-- Characters appear in sidebar (desktop) and tab strip (mobile)
-- Delete button on each character in sidebar
-- Create Persona button hidden when 3 characters exist
-- Onboarding slide 3 explains the character creation system
+- Max 3 user-created custom personas via Character Creator
+- Each persona: base role, traits (up to 4), energy level, quirks, backstory
+- Characters persist in MongoDB, appear in sidebar/tab strip
+- Delete button on each character, Create button hidden at max 3
+
+### Task 7 — Onboarding Chatbot Flow (NEW)
+- 5-phase conversational personality discovery for new users in RE mode only
+- NOT for gossip mode or custom characters
+- Phases: Welcome/Consent → Movies/Music → Emotional Style → Mindset/Energy → Trust/Safe Space → Dreams/Reality
+- One question at a time, react before asking next
+- Skip/exit handling, session persistence (resume from where user left off)
+- Personality tags extracted from answers (e.g. analytical_mind, overthinker, etc.)
+- Profile saved in user document, used subtly in future AI responses (not every message)
 
 ## User Flow
-`Splash → Auth → Onboarding (3 slides) → Name → Language → Chat (main) ↔ Gossip / Creator / Settings`
+`Splash → Auth → Onboarding slides → Name → Language → Chat (onboarding chatbot for new RE users) → Regular Chat`
 
 ## Architecture
 
@@ -58,15 +62,15 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - React 18 + Vite + Tailwind CSS
 - Framer Motion animations
 - Three.js / @react-three/fiber (3D avatar in Character Creator)
-- All components in single App.jsx
 
 ### Backend
 - FastAPI + Motor (async MongoDB)
 - LangGraph state machine (graph.py)
-- Google Gemini 2.5 Flash (via emergentintegrations)
+- Google Gemini 2.5 Flash
+- Onboarding chat flow (onboarding_chat.py)
 
 ### Database (MongoDB: `revent`)
-- **users**: user_id, email, password_hash, name, language, coins, is_first_login, onboarding_complete, google_id, created_at
+- **users**: user_id, email, password_hash, name, language, coins, is_first_login, onboarding_complete, onboarding_chat_status, onboarding_chat_phase, onboarding_chat_question, personality_profile, google_id, created_at
 - **characters**: character_id, user_id, base_role, traits, energy, quirks, memory_hook, label, created_at
 - **user_sessions**: session_token, user_id, expires_at, created_at
 - **chat_history**: session_id, user_id, role, content, mode, timestamp
@@ -75,12 +79,13 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 ## Key API Endpoints
 - `POST /api/auth/register` — signup (awards 2000 coins)
 - `POST /api/auth/login` — login
-- `GET /api/auth/me` — get current user
+- `GET /api/auth/me` — get current user (includes personality_profile)
 - `POST /api/auth/logout`
 - `GET /api/auth/google-session` — OAuth callback
 - `POST /api/auth/mark-first-login` — clears first-login flag
 - `POST /api/user/update-profile` — update name/language/onboarding
-- `POST /api/chat` — send message to RE (main chat + gossip)
+- `POST /api/chat` — send message (auto-detects onboarding mode for new RE users)
+- `GET /api/chat/welcome` — personalized welcome messages based on onboarding status
 - `POST /api/refine-backstory` — AI backstory refinement
 - `POST /api/characters` — create character (max 3)
 - `GET /api/characters` — list user's characters
@@ -98,17 +103,16 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - Production readiness audit: rate limiting, security headers, CORS tightening
 
 ### P1 (High)
-- Chat history persistence (currently in-memory only — page refresh clears chat)
-- Test all AI emotional modes (Back Me, Be Real, Hear Me, Gossip)
+- Chat history persistence (page refresh clears chat)
+- Test all AI emotional modes end-to-end
 - Safety-net logic for distressed users
-- Production deployment preparation
 
 ### P2 (Medium)
 - Payment integration for coin packs
 - Push notifications / PWA
-- Component file splitting (App.jsx is 1500+ lines)
+- Component file splitting (App.jsx is 1400+ lines)
 
 ### P3 (Low / Backlog)
 - Analytics dashboard
 - Multiple language prompting refinement
-- Voice messages (OpenAI Whisper)
+- Voice messages
