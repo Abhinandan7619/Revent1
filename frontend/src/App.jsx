@@ -1252,6 +1252,7 @@ function App() {
   const [authUser, setAuthUser] = useState(undefined);
   const [view, setView] = useState('loading');
   const [showBetaModal, setShowBetaModal] = useState(false);
+  const [postModalView, setPostModalView] = useState('splash');
 
   const [messages, setMessages] = useState([WELCOME_MESSAGE]);
   const [gossipMessages, setGossipMessages] = useState([]);
