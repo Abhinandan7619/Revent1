@@ -138,6 +138,48 @@ async def get_history(session_id: str, limit: int = 20) -> list:
     return list(reversed(docs))
 
 
+async def get_user_sessions(user_id: str, vibe_id: str = "default") -> list:
+    """Get chat sessions for a user + vibe. Returns most recent first."""
+    cursor = db.chat_sessions.find(
+        {"user_id": user_id, "vibe_id": vibe_id},
+        {"_id": 0}
+    ).sort("updated_at", -1).limit(20)
+    return await cursor.to_list(length=20)
+
+
+async def create_chat_session(user_id: str, session_id: str, vibe_id: str = "default", title: str = "New Chat") -> dict:
+    doc = {
+        "session_id": session_id,
+        "user_id": user_id,
+        "vibe_id": vibe_id,
+        "title": title,
+        "created_at": datetime.now(timezone.utc),
+        "updated_at": datetime.now(timezone.utc),
+    }
+    await db.chat_sessions.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+async def update_session_title(session_id: str, title: str):
+    await db.chat_sessions.update_one(
+        {"session_id": session_id},
+        {"$set": {"title": title, "updated_at": datetime.now(timezone.utc)}}
+    )
+
+
+async def delete_sessions_for_character(user_id: str, vibe_id: str):
+    """Delete all chat sessions and messages for a character."""
+    sessions = await db.chat_sessions.find({"user_id": user_id, "vibe_id": vibe_id}, {"session_id": 1, "_id": 0}).to_list(length=100)
+    session_ids = [s["session_id"] for s in sessions]
+    if session_ids:
+        await db.chat_history.delete_many({"session_id": {"$in": session_ids}})
+        await db.exchange_counters.delete_many({"session_id": {"$in": session_ids}})
+    await db.chat_sessions.delete_many({"user_id": user_id, "vibe_id": vibe_id})
+
+
+
+
 async def increment_exchange(session_id: str, user_id: str) -> int:
     result = await db.exchange_counters.find_one_and_update(
         {"session_id": session_id},
