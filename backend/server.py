@@ -322,6 +322,15 @@ async def chat(chat_req: ChatRequest, request: Request):
     }
 
 
+@app.get("/api/chat/welcome")
+async def chat_welcome(request: Request):
+    """Get personalized welcome messages based on onboarding status."""
+    user = await get_current_user(request)
+    if not user:
+        return {"messages": [{"role": "ai", "content": "Hey! 👋", "mode": "AUTO"}]}
+    return {"messages": get_onboarding_welcome_messages(user)}
+
+
 # ===================== UTILITY ROUTES =====================
 
 @app.post("/api/refine-backstory")
