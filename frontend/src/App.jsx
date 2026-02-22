@@ -1345,7 +1345,9 @@ function App() {
 
   const handleLogout=async()=>{
     try{await api.post('/api/auth/logout');}catch{}
-    setAuthUser(null);setCharacters([]);setView('splash');
+    setAuthUser(null);setCharacters([]);
+    sessionStorage.clear();
+    setView('splash');
   };
 
   const handleLangDone=async(lang)=>{
