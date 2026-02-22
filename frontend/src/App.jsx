@@ -1353,7 +1353,7 @@ function App() {
             {isDesktop?(
               <div style={{ display:'flex', height:'100%' }}>
                 <div style={{ width:240, flexShrink:0 }}>
-                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe} myCharacter={myCharacter} onOpenCreator={openCreator} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage}/>
+                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage}/>
                 </div>
                 <div style={{ flex:1, overflow:'hidden', position:'relative' }}>
                   <ChatInterface {...chatViewProps}/>
@@ -1378,14 +1378,14 @@ function App() {
             {isDesktop?(
               <div style={{ display:'flex', height:'100%' }}>
                 <div style={{ width:240, flexShrink:0 }}>
-                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe} myCharacter={myCharacter} onOpenCreator={openCreator} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage}/>
+                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage}/>
                 </div>
                 <div style={{ flex:1, overflow:'hidden', position:'relative' }}>
-                  <CharacterCreator onBack={()=>setView('chat')} myCharacter={myCharacter} setMyCharacter={setMyCharacter} language={language} onStart={()=>{setActiveVibe('custom');setView('chat');}}/>
+                  <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
                 </div>
               </div>
             ):(
-              <CharacterCreator onBack={()=>setView('chat')} myCharacter={myCharacter} setMyCharacter={setMyCharacter} language={language} onStart={()=>{setActiveVibe('custom');setView('chat');}}/>
+              <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
             )}
           </motion.div>
         )}
