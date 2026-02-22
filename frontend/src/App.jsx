@@ -1166,8 +1166,9 @@ function App() {
       setAuthUser(user);
       setUserName(user.name||'User');
       setLanguage(user.language||'Hindi');
-      // Decide where to go AFTER splash is dismissed
       setPendingRoute(user.onboarding_complete?'chat':'onboarding');
+      // Load characters
+      try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
     }catch{
       setAuthUser(null);
       setPendingRoute('auth');
