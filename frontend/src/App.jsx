@@ -1217,8 +1217,9 @@ function App() {
   };
 
   const getPersonaConfig=()=>{
-    if(activeVibe==='custom')return myCharacter;
-    return PRESET_VIBES.find(v=>v.id===activeVibe)?.config||{};
+    const char = characters.find(c=>c.character_id===activeVibe);
+    if(char) return { base_role:char.base_role, traits:char.traits, energy:char.energy, quirks:char.quirks, memory_hook:char.memory_hook };
+    return {};
   };
 
   const showCoinNotif=(deducted,remaining)=>{
