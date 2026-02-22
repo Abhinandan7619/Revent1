@@ -1113,8 +1113,8 @@ function App() {
   const [pendingRoute,setPendingRoute]=useState('auth'); // where to go after splash
   const [showBetaModal,setShowBetaModal]=useState(false);
 
-  // View — always start with splash
-  const [view,setView]=useState('splash');
+  // View — null = loading, 'splash' = unauthenticated landing
+  const [view,setView]=useState(null);
 
   // Chat state
   const [messages,setMessages]=useState([WELCOME_MESSAGE]);
