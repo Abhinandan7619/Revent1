@@ -1405,12 +1405,13 @@ function App() {
   };
 
   const chatViewProps={
-    activeVibe,setActiveVibe,
+    activeVibe,setActiveVibe:switchVibe,
     setView:(v)=>{ if(v==='gossip_chat'){openGossip();return;} setView(v); },
     characters,onOpenCreator:openCreator,
     intensity,baseline,manualMode,setManualMode,authUser,
     messages,input,setInput,sendMessage,loading,scrollRef,
     language,setLanguage,isDesktop,
+    startNewSession,chatSessions,
   };
 
   // Page transition variants
