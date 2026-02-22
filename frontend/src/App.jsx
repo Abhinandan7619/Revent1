@@ -1207,7 +1207,6 @@ function App() {
     setLanguage(user.language||'Hindi');
     try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
     if(user.is_first_login){
-      setPendingRoute('onboarding');
       setShowBetaModal(true);
       try{ await api.post('/api/auth/mark-first-login'); }catch{}
       setAuthUser(prev=>prev?{...prev,is_first_login:false}:prev);
@@ -1218,7 +1217,7 @@ function App() {
 
   const handleBetaModalDismiss=()=>{
     setShowBetaModal(false);
-    setView(pendingRoute); // goes to 'onboarding'
+    setView('onboarding');
   };
 
   const getPersonaConfig=()=>{
