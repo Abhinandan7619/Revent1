@@ -479,32 +479,41 @@ const CoinToast = ({ toast }) => (
 
 // ─── Splash Screen ────────────────────────────────────────────────────────────
 const SplashScreen = ({ onDone }) => {
-  useEffect(() => { const t = setTimeout(onDone, 2400); return () => clearTimeout(t); }, []);
   return (
-    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 0, padding: '40px 32px' }}>
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
-        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 32px', textAlign: 'center' }}>
+      <motion.div initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} transition={{ type: 'spring', stiffness: 180, damping: 20 }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0 }}>
         <LogoIcon size="lg" />
-        <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 44, color: '#fff', letterSpacing: -1, marginTop: 22 }}>
+        <div style={{ fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 48, color: '#fff', letterSpacing: -2, marginTop: 24, lineHeight: 1 }}>
           Re{GT('Vent')}
         </div>
-        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, letterSpacing: 3, color: 'rgba(248,250,252,0.25)', textTransform: 'uppercase', marginTop: 6 }}>
+        <div style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 10, letterSpacing: 3, color: 'rgba(248,250,252,0.25)', textTransform: 'uppercase', marginTop: 10 }}>
           Re · In · Venting · Space
         </div>
       </motion.div>
-      <div style={{ height: 36 }} />
-      <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.3 }}
-        style={{ fontFamily: "'DM Sans',sans-serif", fontSize: 16, lineHeight: 1.75, color: 'rgba(248,250,252,0.5)', textAlign: 'center' }}>
-        Complain. Cry. Overreact.<br />We take it all.
-      </motion.p>
-      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45 }}
-        style={{ marginTop: 8, fontSize: 11, color: 'rgba(248,250,252,0.25)', textAlign: 'center' }}>
-        A private emotional space powered by AI.
-      </motion.p>
-      <div style={{ height: 52 }} />
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} style={{ width: '100%' }}>
-        <button data-testid="splash-begin-btn" onClick={onDone} style={btnPrimaryStyle}>Let's Begin</button>
+
+      <div style={{ height: 48 }} />
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, duration: 0.6 }}
+        style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <p style={{ fontFamily: "'Outfit',sans-serif", fontSize: 22, fontWeight: 600, color: 'rgba(248,250,252,0.75)', lineHeight: 1.5 }}>
+          Complain. Cry. Overreact.<br /><span style={{ color: '#a78bfa' }}>We take it all.</span>
+        </p>
+        <p style={{ fontSize: 13, color: 'rgba(248,250,252,0.3)', lineHeight: 1.6 }}>
+          A private emotional space powered by AI.
+        </p>
       </motion.div>
+
+      <div style={{ height: 56 }} />
+
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} style={{ width: '100%', maxWidth: 360 }}>
+        <button data-testid="splash-begin-btn" onClick={onDone} style={btnPrimaryStyle}>Let's Begin →</button>
+      </motion.div>
+
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}
+        style={{ marginTop: 20, fontSize: 11, color: 'rgba(248,250,252,0.15)', letterSpacing: 1 }}>
+        Your thoughts stay private. Always.
+      </motion.p>
     </div>
   );
 };
