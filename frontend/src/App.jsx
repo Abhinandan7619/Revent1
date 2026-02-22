@@ -1290,7 +1290,7 @@ function App() {
   const chatViewProps={
     activeVibe,setActiveVibe,
     setView:(v)=>{ if(v==='gossip_chat'){openGossip();return;} setView(v); },
-    myCharacter,onOpenCreator:openCreator,
+    characters,onOpenCreator:openCreator,
     intensity,baseline,manualMode,setManualMode,authUser,
     messages,input,setInput,sendMessage,loading,scrollRef,
     language,setLanguage,isDesktop,
