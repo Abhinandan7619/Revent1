@@ -719,7 +719,7 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
       <div style={{ padding:'12px 16px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.7)', backdropFilter:'blur(16px)', flexShrink:0 }}>
         {step<5
           ? <button onClick={()=>setStep(step+1)} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)` }}>Next Step →</button>
-          : <button data-testid="launch-character-btn" onClick={saveAndExit} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)` }}>Launch Character ✨</button>
+          : <button data-testid="launch-character-btn" onClick={saveAndExit} disabled={saving} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)`, opacity:saving?0.7:1 }}>{saving?'Saving…':'Launch Character ✨'}</button>
         }
       </div>
     </div>
