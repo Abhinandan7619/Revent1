@@ -169,4 +169,41 @@ async def deduct_coins(user_id: str, amount: int) -> int:
         return 0
     new_coins = max(0, doc.get("coins", 0) - amount)
     await db.users.update_one({"user_id": user_id}, {"$set": {"coins": new_coins}})
+
+
+# ─── Character CRUD ─────────────────────────────────────────────────────────
+
+MAX_CHARACTERS = 3
+
+
+async def create_character(user_id: str, config: dict) -> dict:
+    count = await db.characters.count_documents({"user_id": user_id})
+    if count >= MAX_CHARACTERS:
+        return None
+    character_id = f"char_{uuid.uuid4().hex[:12]}"
+    doc = {
+        "character_id": character_id,
+        "user_id": user_id,
+        "base_role": config.get("base_role", "Close Cousin"),
+        "traits": config.get("traits", []),
+        "energy": config.get("energy", 50),
+        "quirks": config.get("quirks", []),
+        "memory_hook": config.get("memory_hook", ""),
+        "label": config.get("label", "Custom"),
+        "created_at": datetime.now(timezone.utc),
+    }
+    await db.characters.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+async def get_characters(user_id: str) -> list:
+    cursor = db.characters.find({"user_id": user_id}, {"_id": 0}).sort("created_at", 1)
+    return await cursor.to_list(length=MAX_CHARACTERS)
+
+
+async def delete_character(user_id: str, character_id: str) -> bool:
+    result = await db.characters.delete_one({"user_id": user_id, "character_id": character_id})
+    return result.deleted_count > 0
+
     return new_coins
