@@ -1184,7 +1184,8 @@ function App() {
       setUserName(user.name||'User');
       setLanguage(user.language||'Hindi');
       setPendingRoute(user.onboarding_complete?'chat':'onboarding');
-      setView('splash'); // start from splash
+      try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
+      setView('splash');
     }catch{
       setAuthUser(null);
       setView('splash');
