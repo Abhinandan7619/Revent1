@@ -333,6 +333,40 @@ async def chat_welcome(request: Request):
     return {"messages": get_onboarding_welcome_messages(user)}
 
 
+@app.get("/api/chat/sessions")
+async def get_chat_sessions(vibe_id: str = "default", request: Request = None):
+    """Get all chat sessions for a user + vibe."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    sessions = await get_user_sessions(user["user_id"], vibe_id)
+    return sessions
+
+
+@app.post("/api/chat/sessions")
+async def create_new_chat_session(request: Request):
+    """Create a new chat session."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    body = await request.json()
+    session_id = body.get("session_id", f"sess_{__import__('uuid').uuid4().hex[:12]}")
+    vibe_id = body.get("vibe_id", "default")
+    title = body.get("title", "New Chat")
+    session = await create_chat_session(user["user_id"], session_id, vibe_id, title)
+    return session
+
+
+@app.get("/api/chat/history/{session_id}")
+async def get_chat_history(session_id: str, request: Request):
+    """Get chat history for a session."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    messages = await get_history(session_id, limit=100)
+    return messages
+
+
 # ===================== UTILITY ROUTES =====================
 
 @app.post("/api/refine-backstory")
