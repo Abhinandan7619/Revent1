@@ -256,6 +256,12 @@ async def chat(chat_req: ChatRequest, request: Request):
 
     if use_onboarding:
         try:
+            # Auto-create session for onboarding
+            existing = await get_user_sessions(user["user_id"], "default")
+            session_exists = any(s["session_id"] == chat_req.session_id for s in existing)
+            if not session_exists:
+                await create_chat_session(user["user_id"], chat_req.session_id, "default", "Getting to know you")
+
             response_text, updates = await handle_onboarding_chat(
                 user, chat_req.message, chat_req.session_id, chat_req.language
             )
