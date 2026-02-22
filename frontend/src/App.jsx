@@ -1306,6 +1306,16 @@ function App() {
 
   return (
     <AppBg>
+      {/* Loading state while checking auth */}
+      {view===null&&(
+        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <motion.div initial={{opacity:0,scale:0.8}} animate={{opacity:1,scale:1}} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
+            <LogoIcon size="lg"/>
+            <TypingDots color="#a78bfa"/>
+          </motion.div>
+        </div>
+      )}
+
       {/* Overlays */}
       <AnimatePresence>
         {showBetaModal&&<BetaWelcomeModal onDismiss={handleBetaModalDismiss}/>}
