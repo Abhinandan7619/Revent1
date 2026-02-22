@@ -237,6 +237,8 @@ async def api_delete_character(character_id: str, request: Request):
     deleted = await delete_character(user["user_id"], character_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Character not found")
+    # Also delete all chat history for this character
+    await delete_sessions_for_character(user["user_id"], character_id)
     return {"ok": True}
 
 
