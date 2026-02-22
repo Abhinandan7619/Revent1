@@ -1200,14 +1200,13 @@ function App() {
     setAuthUser(user);
     setUserName(user.name||'User');
     setLanguage(user.language||'Hindi');
+    try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
     if(user.is_first_login){
-      // New signup: show beta modal, then go to onboarding
       setPendingRoute('onboarding');
       setShowBetaModal(true);
       try{ await api.post('/api/auth/mark-first-login'); }catch{}
       setAuthUser(prev=>prev?{...prev,is_first_login:false}:prev);
     }else{
-      // Returning user: go to chat (or onboarding if incomplete)
       setView(user.onboarding_complete?'chat':'onboarding');
     }
   };
