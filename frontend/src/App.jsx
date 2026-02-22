@@ -1268,6 +1268,8 @@ function App() {
       const res=await api.post('/api/user/update-profile',{name:userName,language:lang,onboarding_complete:true});
       setAuthUser(res.data);
     }catch{}
+    // Load personalized welcome messages
+    try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
     setView('chat');
   };
 
