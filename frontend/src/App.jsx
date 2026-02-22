@@ -1110,7 +1110,6 @@ const SettingsScreen = ({ authUser, onBack, language, setLanguage, onLogout }) =
 function App() {
   // Auth
   const [authUser,setAuthUser]=useState(null);
-  const [pendingRoute,setPendingRoute]=useState('auth'); // where to go after splash
   const [showBetaModal,setShowBetaModal]=useState(false);
 
   // View — null = loading, 'splash' = unauthenticated landing
