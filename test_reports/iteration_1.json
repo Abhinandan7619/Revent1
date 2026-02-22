@@ -1,0 +1,85 @@
+{
+  "summary": "Comprehensive testing of ReVent app (fresh implementation). Fixed critical gemini-2.0-flash model issue (404 NOT_FOUND). All 22 backend tests passing after fix. All frontend flows verified working: auth, chat, gossip, settings, mobile/desktop layout, onboarding.",
+  "backend_issues": {
+    "critical": [
+      {
+        "endpoint": "/api/chat",
+        "issue": "gemini-2.0-flash model returning 404 NOT_FOUND - 'not available to new users'. Was causing 500 on all chat endpoints, resulting in 520 Cloudflare errors.",
+        "priority": "CRITICAL",
+        "status": "FIXED - Updated to gemini-2.5-flash in graph.py and server.py"
+      }
+    ],
+    "minor": [
+      {
+        "endpoint": "backend",
+        "issue": "bcrypt warning in logs: 'AttributeError: module bcrypt has no attribute __about__'. Non-critical passlib version compatibility issue."
+      }
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {
+        "screen": "Settings",
+        "issues": ["settings-logout-btn missing data-testid attribute - had to use text-based selector for testing"]
+      },
+      {
+        "screen": "App.jsx",
+        "issues": ["File is 1578 lines long - consider splitting into separate component files for maintainability"]
+      }
+    ]
+  },
+  "test_report_links": [
+    "/app/backend/tests/test_revent.py",
+    "/app/test_reports/pytest/pytest_results.xml"
+  ],
+  "action_items": [
+    "Add data-testid='settings-logout-btn' to the Log Out button in SettingsScreen component",
+    "Consider splitting App.jsx (1578 lines) into separate component files for maintainability"
+  ],
+  "critical_code_review_comments": [
+    "gemini-2.0-flash in graph.py and server.py returned 404 for new users - FIXED to gemini-2.5-flash",
+    "App.jsx is a single 1578-line file with all components - violates file size best practices (>700 lines). Should split into Chat.jsx, Sidebar.jsx, Auth.jsx, Settings.jsx etc.",
+    "CORS: allow_origins only includes APP_URL + localhost - verify APP_URL env is set correctly in production",
+    "settings-logout-btn missing data-testid for testability"
+  ],
+  "updated_files": [
+    "/app/backend/graph.py - Changed gemini-2.0-flash to gemini-2.5-flash",
+    "/app/backend/server.py - Changed gemini-2.0-flash to gemini-2.5-flash in refine-backstory endpoint"
+  ],
+  "success_rate": {
+    "backend": "100% (22/22 passed)",
+    "frontend": "100% (all tested flows working)"
+  },
+  "test_credentials": {
+    "email": "testuser_vent@test.com",
+    "password": "Test123!",
+    "note": "User has onboarding_complete=true, so lands directly on chat"
+  },
+  "seed_data_creation": "Created testuser_vent@test.com (Test123!) for testing. Also created test_signup_* user via signup flow.",
+  "features_verified": {
+    "auth_signup_new_user": "PASS - New user creates account, sees beta modal, goes through onboarding, lands on chat",
+    "auth_login_existing_user": "PASS - Existing user with onboarding_complete=true lands directly on chat",
+    "chat_welcome_message": "PASS - 'Hey. You showed up — that already took something. 💜\\n\\nThis is your space. Say whatever. I'm not going anywhere.' visible immediately",
+    "chat_emotion_bar": "PASS - 7 emoji buttons visible at bottom",
+    "gossip_floating_button": "PASS - Visible bottom-right both mobile and desktop",
+    "character_tabs_mobile": "PASS - RE, Vibe 1, Shadow, Logic, + Create visible in header on mobile (390px)",
+    "desktop_sidebar": "PASS - 240px sidebar with logo, user info, vibes, gossip room, language selector, settings",
+    "desktop_sidebar_items": "PASS - Shows gossip room button, vibe selectors (RE, Vibe 1, Shadow, Logic), settings",
+    "chat_send_message": "PASS - Message sent and AI responds with appropriate mode (BACK ME for unfair boss)",
+    "gossip_mode_navigation": "PASS - Floating button and sidebar button both open gossip chat",
+    "gossip_exit": "PASS - Exit & Dissolve returns to main chat, gossip messages cleared",
+    "settings_access": "PASS - Settings icon in header navigates to settings",
+    "settings_logout": "PASS - Log Out button returns to auth screen"
+  },
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "App is fully functional after gemini-2.0-flash -> gemini-2.5-flash fix. Test user: testuser_vent@test.com / Test123! (already has onboarding complete). Backend 22/22 tests passing. All frontend flows working. Minor: add data-testid to settings logout button.",
+  "rca_of_issue": {
+    "issue": "All /api/chat requests failing with 500/520 errors",
+    "root_cause": "gemini-2.0-flash model is no longer available for new API keys in Google AI. The model returns 404 NOT_FOUND with message 'This model models/gemini-2.0-flash is no longer available to new users. Please update your code to use a newer model.'",
+    "fix": "Updated model name from 'gemini-2.0-flash' to 'gemini-2.5-flash' in /app/backend/graph.py (ChatGoogleGenerativeAI models) and /app/backend/server.py (LlmChat refine-backstory endpoint)",
+    "files_changed": ["backend/graph.py", "backend/server.py"]
+  }
+}
