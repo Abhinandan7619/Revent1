@@ -697,8 +697,13 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
             )}
             {step===5&&(
               <>
-                <div style={stepTitle}>Backstory</div>
-                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Write a rough idea, then hit the wand ✨</p>
+                <div style={stepTitle}>Name & Backstory</div>
+                <div style={{ marginBottom:16, marginTop:12 }}>
+                  <div style={label}>Character Name</div>
+                  <input style={inputCss} type="text" placeholder="e.g. My Cousin, The Boss…" maxLength={20}
+                    value={tempChar.label} onChange={e=>setTempChar({...tempChar,label:e.target.value})}/>
+                </div>
+                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginBottom:12 }}>Write a rough idea, then hit the wand ✨</p>
                 <div style={{ position:'relative' }}>
                   <textarea style={{ ...inputCss, minHeight:120, resize:'none', lineHeight:1.6 }} value={tempChar.memory_hook} onChange={e=>setTempChar({...tempChar,memory_hook:e.target.value})} placeholder="e.g. We survived high school together…"/>
                   <button onClick={refineBackstory} disabled={isRefining||!tempChar.memory_hook}
