@@ -1111,25 +1111,30 @@ function App() {
   const [showBetaModal,setShowBetaModal]=useState(false);
 
   // View — null = loading, 'splash' = unauthenticated landing
-  const [view,setView]=useState(null);
+  // Restore from sessionStorage to survive page reloads
+  const [view,setViewRaw]=useState(()=>loadState('view',null));
+  const setView=(v)=>{ saveState('view',v); setViewRaw(v); };
 
   // Chat state
   const [messages,setMessages]=useState([]);
   const [gossipMessages,setGossipMessages]=useState([]);
   const [input,setInput]=useState('');
   const [gossipInput,setGossipInput]=useState('');
-  const [sessionId,setSessionId]=useState(genSessionId);
+  const [sessionId,setSessionIdRaw]=useState(()=>loadState('sessionId',genSessionId()));
+  const setSessionId=(v)=>{ saveState('sessionId',v); setSessionIdRaw(v); };
   const [gossipSessionId,setGossipSessionId]=useState(genSessionId);
   const [manualMode,setManualMode]=useState('AUTO');
   const [language,setLanguage]=useState('Hindi');
   const [intensity,setIntensity]=useState(0);
   const [baseline,setBaseline]=useState(5);
   const [userName,setUserName]=useState('User');
-  const [activeVibe,setActiveVibe]=useState('default');
+  const [activeVibe,setActiveVibeRaw]=useState(()=>loadState('activeVibe','default'));
+  const setActiveVibe=(v)=>{ saveState('activeVibe',v); setActiveVibeRaw(v); };
   const [characters,setCharacters]=useState([]);
   const [loading,setLoading]=useState(false);
   const [gossipLoading,setGossipLoading]=useState(false);
   const [coinToast,setCoinToast]=useState(null);
+  const [chatSessions,setChatSessions]=useState([]);
 
   const scrollRef=useRef(null);
   const gossipScrollRef=useRef(null);
