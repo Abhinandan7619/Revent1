@@ -1197,8 +1197,8 @@ function App() {
     }
   };
 
-  // Splash "Get Started" click
-  const handleSplashDone=()=>{ setView(pendingRoute); };
+  // Splash "Get Started" click — only shown to unauthenticated users
+  const handleSplashDone=()=>{ setView('auth'); };
 
   // Called after login or signup
   const handleAuth=async(user)=>{
