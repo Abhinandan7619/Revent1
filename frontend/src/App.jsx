@@ -818,8 +818,8 @@ const GossipFloatingBtn = ({ onClick }) => (
 );
 
 // ─── Desktop Sidebar ──────────────────────────────────────────────────────────
-const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, myCharacter, onOpenCreator, onOpenSettings, onOpenGossip, language, setLanguage }) => {
-  const vibes=[...PRESET_VIBES,...(myCharacter?.memory_hook||myCharacter?.traits?.length?[{id:'custom',label:'Mine',emoji:BASE_ROLES.find(r=>r.id===myCharacter?.base_role)?.icon||'✨',color:ROLE_COLORS[myCharacter?.base_role]||'#a78bfa'}]:[])];
+const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage }) => {
+  const canCreate = characters.length < 3;
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'20px 16px', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.6)', backdropFilter:'blur(20px)' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, paddingBottom:24, borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
@@ -843,19 +843,38 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, myCharacter, onOp
       )}
       <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Companion</div>
       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-        {vibes.map(v=>(
-          <motion.button key={v.id} data-testid={`sidebar-vibe-${v.id}`} onClick={()=>setActiveVibe(v.id)} whileTap={{scale:0.97}}
-            style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:`1px solid ${activeVibe===v.id?v.color+'50':'rgba(255,255,255,0.05)'}`, background:activeVibe===v.id?v.color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
-            <div style={{ width:32, height:32, borderRadius:'50%', background:activeVibe===v.id?v.color+'20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{v.emoji||'🤖'}</div>
-            <span style={{ fontSize:13, fontWeight:600, color:activeVibe===v.id?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif" }}>{v.label}</span>
-            {activeVibe===v.id&&<span style={{ marginLeft:'auto', color:v.color, fontSize:12 }}>●</span>}
-          </motion.button>
-        ))}
-        <motion.button data-testid="sidebar-create-btn" onClick={onOpenCreator} whileTap={{scale:0.97}}
-          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
-          <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>+</div>
-          <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Persona</span>
+        {/* RE default */}
+        <motion.button data-testid="sidebar-vibe-default" onClick={()=>setActiveVibe('default')} whileTap={{scale:0.97}}
+          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:`1px solid ${activeVibe==='default'?'#a78bfa50':'rgba(255,255,255,0.05)'}`, background:activeVibe==='default'?'#a78bfa15':'rgba(255,255,255,0.03)', cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
+          <div style={{ width:32, height:32, borderRadius:'50%', background:activeVibe==='default'?'#a78bfa20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>🤖</div>
+          <span style={{ fontSize:13, fontWeight:600, color:activeVibe==='default'?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif" }}>RE</span>
+          {activeVibe==='default'&&<span style={{ marginLeft:'auto', color:'#a78bfa', fontSize:12 }}>●</span>}
         </motion.button>
+        {/* User characters */}
+        {characters.map(c=>{
+          const color = ROLE_COLORS[c.base_role]||'#a78bfa';
+          const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
+          return (
+            <div key={c.character_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
+              <motion.button data-testid={`sidebar-vibe-${c.character_id}`} onClick={()=>setActiveVibe(c.character_id)} whileTap={{scale:0.97}}
+                style={{ flex:1, display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:'12px 0 0 12px', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
+                <div style={{ width:32, height:32, borderRadius:'50%', background:activeVibe===c.character_id?color+'20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{icon}</div>
+                <span style={{ fontSize:13, fontWeight:600, color:activeVibe===c.character_id?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.label||c.base_role}</span>
+                {activeVibe===c.character_id&&<span style={{ marginLeft:'auto', color, fontSize:12 }}>●</span>}
+              </motion.button>
+              <button data-testid={`delete-char-${c.character_id}`} onClick={()=>onDeleteCharacter(c.character_id)}
+                style={{ padding:'10px 10px', borderRadius:'0 12px 12px 0', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)', transition:'all 0.2s', display:'flex', alignItems:'center', height:'100%' }}
+                title="Delete character">×</button>
+            </div>
+          );
+        })}
+        {canCreate&&(
+          <motion.button data-testid="sidebar-create-btn" onClick={onOpenCreator} whileTap={{scale:0.97}}
+            style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
+            <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>+</div>
+            <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Persona</span>
+          </motion.button>
+        )}
       </div>
       <div style={{ marginTop:16, borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:16 }}>
         <motion.button data-testid="sidebar-gossip-btn" onClick={onOpenGossip} whileTap={{scale:0.97}}
