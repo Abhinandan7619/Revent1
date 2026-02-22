@@ -1272,7 +1272,26 @@ function App() {
     setView('onboarding');
   };
 
-  const getPersonaConfig=()=>{
+  // When switching vibes, load the correct chat history
+  const switchVibe=async(vibeId)=>{
+    setActiveVibe(vibeId);
+    setMessages([]);
+    const sessions = await loadSessions(vibeId);
+    if(sessions.length>0){
+      const latest = sessions[0];
+      setSessionId(latest.session_id);
+      await loadChatHistory(latest.session_id);
+    } else {
+      // New session for this vibe
+      const newSid = genSessionId();
+      setSessionId(newSid);
+      if(vibeId==='default'){
+        try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+      } else {
+        setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
+      }
+    }
+  };
     const char = characters.find(c=>c.character_id===activeVibe);
     if(char) return { base_role:char.base_role, traits:char.traits, energy:char.energy, quirks:char.quirks, memory_hook:char.memory_hook };
     return {};
