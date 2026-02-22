@@ -775,24 +775,35 @@ const EmotionBar = ({ onEmotion, manualMode }) => {
 };
 
 // ─── Character Tab Strip ──────────────────────────────────────────────────────
-const CharacterTabStrip = ({ activeVibe, setActiveVibe, onOpenCreator, myCharacter }) => {
-  const vibes=[...PRESET_VIBES,...(myCharacter?.memory_hook||myCharacter?.traits?.length?[{id:'custom',label:'Mine',emoji:BASE_ROLES.find(r=>r.id===myCharacter?.base_role)?.icon||'✨',color:ROLE_COLORS[myCharacter?.base_role]||'#a78bfa',config:myCharacter}]:[])];
+const CharacterTabStrip = ({ activeVibe, setActiveVibe, onOpenCreator, characters }) => {
+  const canCreate = characters.length < 3;
   return (
     <div style={{ display:'flex', gap:6, overflowX:'auto', padding:'0 4px', scrollbarWidth:'none', flexShrink:0 }}>
-      {vibes.map(v=>(
-        <motion.button key={v.id} data-testid={`vibe-tab-${v.id}`} onClick={()=>setActiveVibe(v.id)} whileTap={{scale:0.9}}
-          style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:`1.5px solid ${activeVibe===v.id?v.color+'60':'rgba(255,255,255,0.07)'}`, background:activeVibe===v.id?v.color+'18':'rgba(255,255,255,0.04)', cursor:'pointer', minWidth:54, transition:'all 0.2s', flexShrink:0 }}>
-          <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe===v.id?v.color+'25':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:v.emoji?15:10, border:`1px solid ${activeVibe===v.id?v.color+'50':'rgba(255,255,255,0.08)'}` }}>
-            {v.emoji||'🤖'}
-          </div>
-          <span style={{ fontSize:9, fontWeight:600, color:activeVibe===v.id?v.color:'rgba(248,250,252,0.4)', letterSpacing:0.5, whiteSpace:'nowrap' }}>{v.label}</span>
-        </motion.button>
-      ))}
-      <motion.button data-testid="create-character-btn" onClick={onOpenCreator} whileTap={{scale:0.9}}
-        style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:'1.5px dashed rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.02)', cursor:'pointer', minWidth:54, flexShrink:0 }}>
-        <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)' }}>+</div>
-        <span style={{ fontSize:9, fontWeight:600, color:'rgba(248,250,252,0.25)', letterSpacing:0.5, whiteSpace:'nowrap' }}>Create</span>
+      {/* RE default */}
+      <motion.button data-testid="vibe-tab-default" onClick={()=>setActiveVibe('default')} whileTap={{scale:0.9}}
+        style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:`1.5px solid ${activeVibe==='default'?'#a78bfa60':'rgba(255,255,255,0.07)'}`, background:activeVibe==='default'?'#a78bfa18':'rgba(255,255,255,0.04)', cursor:'pointer', minWidth:54, transition:'all 0.2s', flexShrink:0 }}>
+        <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe==='default'?'#a78bfa25':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, border:`1px solid ${activeVibe==='default'?'#a78bfa50':'rgba(255,255,255,0.08)'}` }}>🤖</div>
+        <span style={{ fontSize:9, fontWeight:600, color:activeVibe==='default'?'#a78bfa':'rgba(248,250,252,0.4)', letterSpacing:0.5, whiteSpace:'nowrap' }}>RE</span>
       </motion.button>
+      {/* User characters */}
+      {characters.map(c=>{
+        const color = ROLE_COLORS[c.base_role]||'#a78bfa';
+        const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
+        return (
+          <motion.button key={c.character_id} data-testid={`vibe-tab-${c.character_id}`} onClick={()=>setActiveVibe(c.character_id)} whileTap={{scale:0.9}}
+            style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:`1.5px solid ${activeVibe===c.character_id?color+'60':'rgba(255,255,255,0.07)'}`, background:activeVibe===c.character_id?color+'18':'rgba(255,255,255,0.04)', cursor:'pointer', minWidth:54, transition:'all 0.2s', flexShrink:0 }}>
+            <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe===c.character_id?color+'25':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.08)'}` }}>{icon}</div>
+            <span style={{ fontSize:9, fontWeight:600, color:activeVibe===c.character_id?color:'rgba(248,250,252,0.4)', letterSpacing:0.5, whiteSpace:'nowrap', maxWidth:50, overflow:'hidden', textOverflow:'ellipsis' }}>{c.label||c.base_role}</span>
+          </motion.button>
+        );
+      })}
+      {canCreate&&(
+        <motion.button data-testid="create-character-btn" onClick={onOpenCreator} whileTap={{scale:0.9}}
+          style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:'1.5px dashed rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.02)', cursor:'pointer', minWidth:54, flexShrink:0 }}>
+          <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)' }}>+</div>
+          <span style={{ fontSize:9, fontWeight:600, color:'rgba(248,250,252,0.25)', letterSpacing:0.5, whiteSpace:'nowrap' }}>Create</span>
+        </motion.button>
+      )}
     </div>
   );
 };
