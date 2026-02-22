@@ -255,7 +255,7 @@ async def refine_backstory(req: RefineRequest, request: Request):
                 "Keep the original meaning. Max 2 sentences. "
                 "Sound like a cool character description, not a formal bio."
             ),
-        ).with_model("gemini", "gemini-2.0-flash")
+        ).with_model("gemini", "gemini-2.5-flash")
         response = await chat.send_message(UserMessage(
             text=f"Language: English mixed with {req.language} (Roman Script).\nDraft: \"{req.draft_text}\"\nRewrite:"
         ))
