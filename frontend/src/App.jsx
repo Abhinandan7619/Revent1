@@ -611,9 +611,8 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
   };
   const saveAndExit=async()=>{
     setSaving(true);
-    const label = tempChar.label.trim() || tempChar.base_role;
     try{
-      const res=await api.post('/api/characters',{...tempChar, label});
+      const res=await api.post('/api/characters',{...tempChar, label: tempChar.base_role});
       onSave(res.data);
     }catch(err){
       alert(err.response?.data?.detail||'Failed to save character');
