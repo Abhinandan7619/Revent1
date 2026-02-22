@@ -1489,7 +1489,7 @@ function App() {
             {isDesktop?(
               <div style={{ display:'flex', height:'100%' }}>
                 <div style={{ width:240, flexShrink:0 }}>
-                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage}/>
+                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
                 </div>
                 <div style={{ flex:1, overflow:'hidden', position:'relative' }}>
                   <ChatInterface {...chatViewProps}/>
@@ -1514,7 +1514,7 @@ function App() {
             {isDesktop?(
               <div style={{ display:'flex', height:'100%' }}>
                 <div style={{ width:240, flexShrink:0 }}>
-                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage}/>
+                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
                 </div>
                 <div style={{ flex:1, overflow:'hidden', position:'relative' }}>
                   <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
