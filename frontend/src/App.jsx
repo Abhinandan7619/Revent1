@@ -1368,14 +1368,40 @@ function App() {
   const handleCharacterSaved=(newChar)=>{
     setCharacters(prev=>[...prev,newChar]);
     setActiveVibe(newChar.character_id);
+    const newSid=genSessionId();
+    setSessionId(newSid);
+    setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
     setView('chat');
   };
   const handleDeleteCharacter=async(charId)=>{
     try{
       await api.delete(`/api/characters/${charId}`);
       setCharacters(prev=>prev.filter(c=>c.character_id!==charId));
-      if(activeVibe===charId) setActiveVibe('default');
+      if(activeVibe===charId){
+        setActiveVibe('default');
+        // Load RE default sessions
+        const sessions = await loadSessions('default');
+        if(sessions.length>0){
+          setSessionId(sessions[0].session_id);
+          await loadChatHistory(sessions[0].session_id);
+        } else {
+          const newSid=genSessionId();
+          setSessionId(newSid);
+          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+        }
+      }
     }catch{}
+  };
+
+  const startNewSession=()=>{
+    const newSid=genSessionId();
+    setSessionId(newSid);
+    setMessages([]);
+    if(activeVibe==='default'){
+      try{ api.get('/api/chat/welcome').then(wRes=>setMessages(wRes.data.messages||[])); }catch{ setMessages([WELCOME_MESSAGE]); }
+    } else {
+      setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
+    }
   };
 
   const chatViewProps={
