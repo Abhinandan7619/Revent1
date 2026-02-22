@@ -26,6 +26,8 @@ async def create_indexes():
     await db.exchange_counters.create_index("session_id", unique=True)
     await db.characters.create_index("user_id")
     await db.characters.create_index("character_id", unique=True)
+    await db.chat_sessions.create_index([("user_id", 1), ("vibe_id", 1)])
+    await db.chat_sessions.create_index("session_id", unique=True)
 
 
 def _clean_user(doc: dict) -> dict:
