@@ -205,6 +205,38 @@ async def update_profile(req: UpdateProfileRequest, request: Request):
     return updated or user
 
 
+# ===================== CHARACTER ROUTES =====================
+
+@app.post("/api/characters")
+async def api_create_character(req: CreateCharacterRequest, request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    char = await create_character(user["user_id"], req.dict())
+    if char is None:
+        raise HTTPException(status_code=400, detail="Maximum 3 characters allowed")
+    return char
+
+
+@app.get("/api/characters")
+async def api_get_characters(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return await get_characters(user["user_id"])
+
+
+@app.delete("/api/characters/{character_id}")
+async def api_delete_character(character_id: str, request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    deleted = await delete_character(user["user_id"], character_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Character not found")
+    return {"ok": True}
+
+
 # ===================== CHAT ROUTE =====================
 
 @app.post("/api/chat")
