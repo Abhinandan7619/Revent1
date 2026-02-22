@@ -154,6 +154,7 @@ async def node_generator(state: ReVentState):
     text = state["input_text"]
 
     raw_config = state.get("persona_config") or {}
+    user_personality = raw_config.pop("_user_personality", None)
     persona = {
         "base_role": raw_config.get("base_role", "Friend"),
         "traits": raw_config.get("traits", []),
@@ -161,6 +162,21 @@ async def node_generator(state: ReVentState):
         "quirks": raw_config.get("quirks", []),
         "memory_hook": raw_config.get("memory_hook", ""),
     }
+
+    # Build personality context from onboarding (subtle, not forced)
+    personality_context = ""
+    if user_personality and user_personality.get("personality_tags"):
+        tags = user_personality["personality_tags"]
+        personality_context = (
+            f"\nUSER PROFILE (use subtly, NOT in every message — only when naturally relevant):\n"
+            f"  Tags: {', '.join(tags)}\n"
+        )
+        answers = user_personality.get("answers", {})
+        if answers:
+            # Include a few key answers for context
+            relevant_keys = [k for k in answers if any(x in k for x in ["upset", "overthink", "anger", "trust", "logic"])]
+            for k in relevant_keys[:3]:
+                personality_context += f"  {k}: {answers[k]}\n"
 
     lang_instruction = f"Language: English mixed with {lang} (Roman script)."
     if lang == "Kannada":
