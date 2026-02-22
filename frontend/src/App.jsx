@@ -816,7 +816,7 @@ const GossipFloatingBtn = ({ onClick }) => (
 );
 
 // ─── Desktop Sidebar ──────────────────────────────────────────────────────────
-const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage }) => {
+const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession }) => {
   const canCreate = characters.length < 3;
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'20px 16px', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.6)', backdropFilter:'blur(20px)' }}>
@@ -874,6 +874,14 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           </motion.button>
         )}
       </div>
+      {/* New Chat button — RE mode only */}
+      {activeVibe==='default'&&(
+        <motion.button data-testid="sidebar-new-chat-btn" onClick={startNewSession} whileTap={{scale:0.97}}
+          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px solid rgba(52,211,153,0.2)', background:'rgba(52,211,153,0.05)', cursor:'pointer', marginTop:10, textAlign:'left' }}>
+          <span style={{ fontSize:16 }}>💬</span>
+          <span style={{ fontSize:13, fontWeight:600, color:'rgba(52,211,153,0.7)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
+        </motion.button>
+      )}
       <div style={{ marginTop:16, borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:16 }}>
         <motion.button data-testid="sidebar-gossip-btn" onClick={onOpenGossip} whileTap={{scale:0.97}}
           style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:12, border:'1px solid rgba(251,191,36,0.2)', background:'rgba(251,191,36,0.05)', cursor:'pointer' }}>
