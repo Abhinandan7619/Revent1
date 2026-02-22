@@ -245,14 +245,51 @@ async def chat(chat_req: ChatRequest, request: Request):
     user = await get_current_user(request)
     user_id = user["user_id"] if user else "anonymous"
 
+    # Check if this is an onboarding chat (RE default persona, not gossip/custom)
+    is_default_re = not chat_req.persona_config and chat_req.manual_mode != "GOSSIP"
+    onboarding_status = user.get("onboarding_chat_status", "not_started") if user else "completed"
+    use_onboarding = is_default_re and user and onboarding_status != "completed"
+
+    if use_onboarding:
+        try:
+            response_text, updates = await handle_onboarding_chat(
+                user, chat_req.message, chat_req.session_id, chat_req.language
+            )
+            if response_text and updates:
+                await update_user(user_id, updates)
+                # Save to chat history
+                from database import save_message
+                await save_message(chat_req.session_id, user_id, "user", chat_req.message, "AUTO", False)
+                await save_message(chat_req.session_id, user_id, "ai", response_text, "AUTO", False)
+
+                return {
+                    "response": response_text,
+                    "mode": "AUTO",
+                    "is_vault": False,
+                    "intensity_score": 0,
+                    "emotional_baseline": 5,
+                    "coins_remaining": user.get("coins", 0),
+                    "coins_deducted": 0,
+                    "is_onboarding": True,
+                }
+        except Exception as e:
+            print(f"Onboarding chat error: {e}")
+            # Fall through to regular chat if onboarding fails
+
+    # Regular chat flow
     try:
+        # Include personality profile in persona config for personalized responses
+        persona_cfg = dict(chat_req.persona_config) if chat_req.persona_config else {}
+        if user and user.get("personality_profile"):
+            persona_cfg["_user_personality"] = user["personality_profile"]
+
         inputs = {
             "session_id": chat_req.session_id,
             "user_id": user_id,
             "input_text": chat_req.message,
             "language": chat_req.language,
             "manual_mode": chat_req.manual_mode,
-            "persona_config": chat_req.persona_config,
+            "persona_config": persona_cfg,
             "emotional_baseline": 5,
             "force_vault": chat_req.force_vault,
             "history": [],
