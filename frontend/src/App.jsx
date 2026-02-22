@@ -1110,7 +1110,7 @@ function App() {
   const [view,setView]=useState(null);
 
   // Chat state
-  const [messages,setMessages]=useState([WELCOME_MESSAGE]);
+  const [messages,setMessages]=useState([]);
   const [gossipMessages,setGossipMessages]=useState([]);
   const [input,setInput]=useState('');
   const [gossipInput,setGossipInput]=useState('');
