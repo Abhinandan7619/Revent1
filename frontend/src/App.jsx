@@ -776,24 +776,9 @@ const GossipBubble = ({ msg }) => (
   <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
     style={{ display:'flex', flexDirection:'column', maxWidth:'82%', alignSelf:msg.role==='user'?'flex-end':'flex-start' }}>
     {msg.role==='ai'&&(
-      <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6 }}>
-        <span style={{ fontSize:10, letterSpacing:1, textTransform:'uppercase', color:'rgba(251,191,36,0.5)' }}>RE</span>
-        <div style={{ 
-          display:'inline-flex', 
-          alignItems:'center', 
-          gap:4, 
-          padding:'3px 8px', 
-          borderRadius:99, 
-          background:'rgba(251,191,36,0.12)', 
-          border:'1px solid rgba(251,191,36,0.25)',
-          fontSize:9, 
-          fontWeight:600,
-          letterSpacing:1, 
-          textTransform:'uppercase', 
-          color:'#fbbf24' 
-        }}>
-          🤫 GOSSIP
-        </div>
+      <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5 }}>
+        <span style={{ color:'rgba(251,191,36,0.5)' }}>RE · </span>
+        <span style={{ color:'#fbbf24', fontWeight:600 }}>GOSSIP</span>
       </div>
     )}
     {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'right' }}>You</div>}
