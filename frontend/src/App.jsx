@@ -741,10 +741,41 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
 // ─── Chat Bubbles ─────────────────────────────────────────────────────────────
 const ChatBubble = ({ msg }) => {
   const meta = msg.mode ? modeMeta[msg.mode] : null;
+  // Color scheme for different modes
+  const modeColors = {
+    BACK_ME: { bg: 'rgba(239,68,68,0.15)', border: 'rgba(239,68,68,0.3)', text: '#f87171' },
+    HEAR_ME: { bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.3)', text: '#60a5fa' },
+    BE_REAL: { bg: 'rgba(168,85,247,0.15)', border: 'rgba(168,85,247,0.3)', text: '#c084fc' },
+    VAULT:   { bg: 'rgba(107,114,128,0.15)', border: 'rgba(107,114,128,0.3)', text: '#9ca3af' },
+    CRISIS:  { bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.3)', text: '#fbbf24' },
+    AUTO:    { bg: 'rgba(52,211,153,0.12)', border: 'rgba(52,211,153,0.25)', text: '#34d399' },
+  };
+  const modeStyle = msg.mode ? modeColors[msg.mode] : modeColors.AUTO;
+  
   return (
     <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
       style={{ display:'flex', flexDirection:'column', maxWidth:'82%', alignSelf:msg.role==='user'?'flex-end':'flex-start' }}>
-      {msg.role==='ai'&&meta&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.35)', marginBottom:4, paddingLeft:2 }}>RE · {meta.emoji} {meta.label}</div>}
+      {msg.role==='ai'&&meta&&(
+        <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:6, paddingLeft:2 }}>
+          <span style={{ fontSize:10, letterSpacing:1, textTransform:'uppercase', color:'rgba(248,250,252,0.4)' }}>RE</span>
+          <div style={{ 
+            display:'inline-flex', 
+            alignItems:'center', 
+            gap:4, 
+            padding:'3px 8px', 
+            borderRadius:99, 
+            background: modeStyle.bg, 
+            border: `1px solid ${modeStyle.border}`,
+            fontSize:9, 
+            fontWeight:600,
+            letterSpacing:1, 
+            textTransform:'uppercase', 
+            color: modeStyle.text 
+          }}>
+            {meta.emoji} {meta.label}
+          </div>
+        </div>
+      )}
       {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'right', paddingRight:2 }}>You</div>}
       <div style={{ padding:'12px 16px', fontSize:14, lineHeight:1.7, backdropFilter:'blur(16px)', whiteSpace:'pre-wrap',
         ...(msg.role==='user'
