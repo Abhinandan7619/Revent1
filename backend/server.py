@@ -17,7 +17,7 @@ from database import (
     get_coins, deduct_coins, _clean_user,
     create_character, get_characters, delete_character,
     get_user_sessions, create_chat_session, update_session_title,
-    delete_sessions_for_character,
+    delete_chat_session, delete_sessions_for_character,
 )
 from graph import app_graph
 from onboarding_chat import handle_onboarding_chat, get_onboarding_welcome_messages
@@ -300,7 +300,7 @@ async def chat(chat_req: ChatRequest, request: Request):
                         break
             existing = await get_user_sessions(user["user_id"], vibe_id)
             session_exists = any(s["session_id"] == chat_req.session_id for s in existing)
-            if not session_exists:
+            if not session_exists and len(existing) < 2:
                 title = chat_req.message[:40] if chat_req.message else "New Chat"
                 await create_chat_session(user["user_id"], chat_req.session_id, vibe_id, title)
 
@@ -371,7 +371,7 @@ async def get_chat_sessions(vibe_id: str = "default", request: Request = None):
 
 @app.post("/api/chat/sessions")
 async def create_new_chat_session(request: Request):
-    """Create a new chat session."""
+    """Create a new chat session. Max 2 sessions per vibe."""
     user = await get_current_user(request)
     if not user:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -379,8 +379,35 @@ async def create_new_chat_session(request: Request):
     session_id = body.get("session_id", f"sess_{__import__('uuid').uuid4().hex[:12]}")
     vibe_id = body.get("vibe_id", "default")
     title = body.get("title", "New Chat")
+    existing = await get_user_sessions(user["user_id"], vibe_id)
+    if len(existing) >= 2:
+        raise HTTPException(status_code=400, detail="Session limit reached. Delete an existing session to create a new one.")
     session = await create_chat_session(user["user_id"], session_id, vibe_id, title)
     return session
+
+
+@app.delete("/api/chat/sessions/{session_id}")
+async def delete_chat_session_endpoint(session_id: str, request: Request):
+    """Delete a chat session and all its messages."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    await delete_chat_session(session_id, user["user_id"])
+    return {"ok": True}
+
+
+@app.patch("/api/chat/sessions/{session_id}")
+async def rename_chat_session(session_id: str, request: Request):
+    """Rename a chat session."""
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    body = await request.json()
+    title = body.get("title", "").strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Title required")
+    await update_session_title(session_id, title)
+    return {"ok": True}
 
 
 @app.get("/api/chat/history/{session_id}")

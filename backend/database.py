@@ -183,6 +183,13 @@ async def update_session_title(session_id: str, title: str):
     )
 
 
+async def delete_chat_session(session_id: str, user_id: str):
+    """Delete a single chat session and all its messages."""
+    await db.chat_history.delete_many({"session_id": session_id})
+    await db.exchange_counters.delete_many({"session_id": session_id})
+    await db.chat_sessions.delete_one({"session_id": session_id, "user_id": user_id})
+
+
 async def delete_sessions_for_character(user_id: str, vibe_id: str):
     """Delete all chat sessions and messages for a character."""
     sessions = await db.chat_sessions.find({"user_id": user_id, "vibe_id": vibe_id}, {"session_id": 1, "_id": 0}).to_list(length=100)
