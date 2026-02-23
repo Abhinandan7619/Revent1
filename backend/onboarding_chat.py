@@ -92,6 +92,12 @@ def _is_exit(text: str) -> bool:
     return any(kw in lower for kw in EXIT_KEYWORDS)
 
 
+def _is_eager_to_talk(text: str) -> bool:
+    """Detect when the user wants to skip onboarding and jump straight into venting."""
+    lower = text.lower().strip()
+    return any(kw in lower for kw in EAGER_TO_TALK_KEYWORDS)
+
+
 def _is_consent_yes(text: str) -> bool:
     lower = text.lower().strip()
     yes_words = {"haan", "sure", "okay", "chalo", "yes", "puch lo", "puchho", "yeah",
