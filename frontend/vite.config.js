@@ -8,7 +8,17 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 3000,
     allowedHosts: true,
+    // Completely disable HMR and file watching to prevent auto-reloads
+    // This is necessary for K8s ingress environments with short timeouts
     hmr: false,
-    watch: null,
+    watch: {
+      usePolling: false,
+      ignored: ['**/*'],
+    },
+  },
+  // Disable client-side error overlay that might trigger reloads
+  define: {
+    '__VUE_OPTIONS_API__': false,
+    '__VUE_PROD_DEVTOOLS__': false,
   },
 })
