@@ -739,48 +739,38 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
 };
 
 // ─── Chat Bubbles ─────────────────────────────────────────────────────────────
-// Crisis Banner Component
-const CrisisBanner = () => (
-  <div style={{
-    background: 'rgba(239, 68, 68, 0.95)',
-    border: '1px solid rgba(248, 113, 113, 0.5)',
-    borderRadius: 12,
-    padding: '14px 18px',
-    marginBottom: 12,
-    color: '#fff'
-  }}>
-    <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>
-      Please reach out — you don't have to go through this alone.
-    </div>
-    <div style={{ fontSize: 13, opacity: 0.95, lineHeight: 1.6 }}>
-      <div>iCall: <strong>9152987821</strong></div>
-      <div>Vandrevala Foundation: <strong>1860-2662-345</strong></div>
-    </div>
-  </div>
-);
-
 const ChatBubble = ({ msg }) => {
   const meta = msg.mode ? modeMeta[msg.mode] : null;
-  const isCrisis = msg.mode === 'CRISIS';
   // Color scheme for different modes
   const modeColors = {
     BACK_ME: '#f87171',  // Red
     HEAR_ME: '#60a5fa',  // Blue
     BE_REAL: '#c084fc',  // Purple
     VAULT:   '#9ca3af',  // Gray
-    CRISIS:  '#ef4444',  // Bright Red for crisis
+    CRISIS:  '#fbbf24',  // Yellow
     AUTO:    '#34d399',  // Green
   };
   const modeColor = msg.mode ? modeColors[msg.mode] : modeColors.AUTO;
-  
+  const isCrisisBubble = msg.role === 'ai' && msg.mode === 'CRISIS';
+
   return (
     <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
       style={{ display:'flex', flexDirection:'column', maxWidth:'82%', alignSelf:msg.role==='user'?'flex-end':'flex-start' }}>
-      {msg.role==='ai' && isCrisis && <CrisisBanner />}
       {msg.role==='ai'&&meta&&(
         <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, paddingLeft:2 }}>
           <span style={{ color:'rgba(248,250,252,0.4)' }}>RE · </span>
           <span style={{ color: modeColor, fontWeight:600 }}>{meta.label}</span>
+        </div>
+      )}
+      {isCrisisBubble&&(
+        <div style={{ marginBottom:8, padding:'10px 14px', borderRadius:10, background:'rgba(248,113,113,0.12)', border:'1px solid rgba(248,113,113,0.35)' }}>
+          <div style={{ fontSize:12, fontWeight:700, color:'#fff', letterSpacing:0.3, marginBottom:4 }}>
+            Please reach out — you don't have to go through this alone.
+          </div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', lineHeight:1.6 }}>
+            iCall: <span style={{ color:'#fff', fontWeight:600 }}>9152987821</span>{'  '}·{'  '}
+            Vandrevala Foundation: <span style={{ color:'#fff', fontWeight:600 }}>1860-2662-345</span>
+          </div>
         </div>
       )}
       {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'right', paddingRight:2 }}>You</div>}
@@ -873,8 +863,26 @@ const GossipFloatingBtn = ({ onClick }) => (
 );
 
 // ─── Desktop Sidebar ──────────────────────────────────────────────────────────
-const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession }) => {
+const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession, chatSessions, activeSessionId, onSwitchSession, onDeleteSession, onRenameSession }) => {
   const canCreate = characters.length < 3;
+  const [renamingId, setRenamingId] = React.useState(null);
+  const [renameVal, setRenameVal] = React.useState('');
+  const [newChatName, setNewChatName] = React.useState('');
+  const [showNewInput, setShowNewInput] = React.useState(false);
+  const defaultSessions = activeVibe === 'default' ? (chatSessions||[]) : [];
+  const canAddSession = defaultSessions.length < 2;
+
+  const handleRenameStart = (s) => { setRenamingId(s.session_id); setRenameVal(s.title||'New Chat'); };
+  const handleRenameSubmit = (sid) => { onRenameSession(sid, renameVal); setRenamingId(null); };
+  const handleNewChat = () => {
+    if(!canAddSession){ alert('Max 2 sessions. Delete one to create a new chat.'); return; }
+    setShowNewInput(true); setNewChatName('');
+  };
+  const handleNewChatSubmit = () => {
+    const t = newChatName.trim() || 'New Chat';
+    startNewSession(t); setShowNewInput(false); setNewChatName('');
+  };
+
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'20px 16px', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.6)', backdropFilter:'blur(20px)' }}>
       <div style={{ display:'flex', alignItems:'center', gap:10, paddingBottom:24, borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
@@ -931,13 +939,47 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           </motion.button>
         )}
       </div>
-      {/* New Chat button — RE mode only */}
+      {/* Session list — RE mode only */}
       {activeVibe==='default'&&(
-        <motion.button data-testid="sidebar-new-chat-btn" onClick={startNewSession} whileTap={{scale:0.97}}
-          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px solid rgba(52,211,153,0.2)', background:'rgba(52,211,153,0.05)', cursor:'pointer', marginTop:10, textAlign:'left' }}>
-          <span style={{ fontSize:16 }}>💬</span>
-          <span style={{ fontSize:13, fontWeight:600, color:'rgba(52,211,153,0.7)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
-        </motion.button>
+        <div style={{ marginTop:16 }}>
+          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginBottom:8 }}>Chats</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+            {defaultSessions.map(s=>(
+              <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
+                {renamingId===s.session_id?(
+                  <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+                    onBlur={()=>handleRenameSubmit(s.session_id)}
+                    onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
+                    style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
+                ):(
+                  <button onClick={()=>onSwitchSession(s.session_id)} onDoubleClick={()=>handleRenameStart(s)}
+                    title="Click to open · Double-click to rename"
+                    style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                    {s.title||'New Chat'}
+                  </button>
+                )}
+                <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
+                  style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0, lineHeight:1 }}>×</button>
+              </div>
+            ))}
+          </div>
+          {showNewInput?(
+            <div style={{ marginTop:6, display:'flex', gap:4 }}>
+              <input autoFocus value={newChatName} onChange={e=>setNewChatName(e.target.value)} placeholder="Chat name…"
+                onKeyDown={e=>{ if(e.key==='Enter')handleNewChatSubmit(); if(e.key==='Escape'){setShowNewInput(false);} }}
+                style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'7px 10px', color:'#fff', fontSize:12, outline:'none', fontFamily:"'Outfit',sans-serif" }}/>
+              <button onClick={handleNewChatSubmit} style={{ background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:8, color:'#34d399', fontSize:12, padding:'0 10px', cursor:'pointer' }}>+</button>
+            </div>
+          ):canAddSession?(
+            <motion.button data-testid="sidebar-new-chat-btn" onClick={handleNewChat} whileTap={{scale:0.97}}
+              style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
+              <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
+              <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
+            </motion.button>
+          ):(
+            <div style={{ marginTop:6, padding:'7px 10px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', fontSize:11, color:'rgba(248,250,252,0.25)', textAlign:'center' }}>Max 2 chats · delete one to add</div>
+          )}
+        </div>
       )}
       <div style={{ marginTop:16, borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:16 }}>
         <motion.button data-testid="sidebar-gossip-btn" onClick={onOpenGossip} whileTap={{scale:0.97}}
@@ -970,11 +1012,12 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
 };
 
 // ─── Chat Interface ───────────────────────────────────────────────────────────
-const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop, isCrisisMode }) => {
+const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop }) => {
   const activeChar = characters.find(c=>c.character_id===activeVibe);
   const accentColor = activeChar ? (ROLE_COLORS[activeChar.base_role]||'#a78bfa') : '#a78bfa';
-  // Crisis mode styles - dim and disable interactive elements
-  const crisisOverlay = isCrisisMode ? { opacity: 0.4, pointerEvents: 'none' } : {};
+  // Freeze UI when last AI message is CRISIS mode; unfreeze when user is no longer in crisis
+  const lastAiMsg = [...messages].reverse().find(m=>m.role==='ai');
+  const isCrisis = lastAiMsg?.mode === 'CRISIS';
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', position:'relative' }}>
       {/* Topbar */}
@@ -989,7 +1032,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
           </div>
         </div>
         {!isDesktop&&(
-          <div style={{ flex:1, overflow:'hidden', padding:'0 8px' }}>
+          <div style={{ flex:1, overflow:'hidden', padding:'0 8px', pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
             <CharacterTabStrip activeVibe={activeVibe} setActiveVibe={setActiveVibe} onOpenCreator={onOpenCreator} characters={characters}/>
           </div>
         )}
@@ -1000,7 +1043,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Mode chips */}
-      <div data-testid="mode-chips" style={{ display:'flex', gap:6, padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0, ...crisisOverlay }}>
+      <div data-testid="mode-chips" style={{ display:'flex', gap:6, padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0, pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
         {[{id:'AUTO',label:'⚡ AUTO'},{id:'HEAR_ME',label:'💙 HEAR ME'},{id:'BACK_ME',label:'🔥 BACK ME'},{id:'BE_REAL',label:'🧠 BE REAL'}].map(m=>(
           <button key={m.id} data-testid={`mode-chip-${m.id}`} onClick={()=>setManualMode(m.id)}
             style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:99, border:`1px solid ${manualMode===m.id?accentColor+'55':'rgba(255,255,255,0.06)'}`, background:manualMode===m.id?accentColor+'18':'rgba(255,255,255,0.04)', fontSize:12, fontWeight:500, color:manualMode===m.id?accentColor:'rgba(248,250,252,0.5)', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s' }}>
@@ -1037,7 +1080,9 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Emotion bar */}
-      <EmotionBar onEmotion={setManualMode} manualMode={manualMode}/>
+      <div style={{ pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
+        <EmotionBar onEmotion={setManualMode} manualMode={manualMode}/>
+      </div>
 
       {/* Input */}
       <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.8)', backdropFilter:'blur(16px)', flexShrink:0, position:'relative' }}>
@@ -1202,7 +1247,6 @@ function App() {
   const [gossipLoading,setGossipLoading]=useState(false);
   const [coinToast,setCoinToast]=useState(null);
   const [chatSessions,setChatSessions]=useState([]);
-  const [isCrisisMode,setIsCrisisMode]=useState(false);
 
   const scrollRef=useRef(null);
   const gossipScrollRef=useRef(null);
@@ -1408,12 +1452,9 @@ function App() {
     setInput('');setLoading(true);
     try{
       const res=await api.post('/api/chat',{message:userMsg.content,session_id:sessionId,language,manual_mode:manualMode,persona_config:getPersonaConfig(),force_vault:false});
-      const responseMode = res.data.mode;
-      setMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:responseMode}]);
+      setMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:res.data.mode}]);
       setIntensity(res.data.intensity_score||0);
       setBaseline(res.data.emotional_baseline||5);
-      // Track crisis mode - enable when CRISIS, disable when non-CRISIS response
-      setIsCrisisMode(responseMode === 'CRISIS');
       if(res.data.coins_remaining!==undefined)setAuthUser(prev=>prev?{...prev,coins:res.data.coins_remaining}:prev);
       if(res.data.coins_deducted>0)showCoinNotif(res.data.coins_deducted,res.data.coins_remaining);
     }catch{
@@ -1494,15 +1535,56 @@ function App() {
     }catch{}
   };
 
-  const startNewSession=()=>{
+  const startNewSession=async(title)=>{
     const newSid=genSessionId();
+    const sessionTitle=title||'New Chat';
+    try{
+      await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:activeVibe,title:sessionTitle});
+    }catch(e){
+      if(e?.response?.status===400){ alert('You already have 2 sessions. Delete one to create a new chat.'); return; }
+    }
     setSessionId(newSid);
     setMessages([]);
+    await loadSessions(activeVibe);
     if(activeVibe==='default'){
-      try{ api.get('/api/chat/welcome').then(wRes=>setMessages(wRes.data.messages||[])); }catch{ setMessages([WELCOME_MESSAGE]); }
+      try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
     } else {
       setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
     }
+  };
+
+  const switchSession=async(sid)=>{
+    if(sid===sessionId)return;
+    setSessionId(sid);
+    setMessages([]);
+    await loadChatHistory(sid);
+  };
+
+  const deleteSession=async(sid)=>{
+    try{
+      await api.delete(`/api/chat/sessions/${sid}`);
+      const sessions=await loadSessions(activeVibe);
+      if(sid===sessionId){
+        if(sessions.length>0){
+          setSessionId(sessions[0].session_id);
+          await loadChatHistory(sessions[0].session_id);
+        } else {
+          setSessionId(genSessionId());
+          setMessages([]);
+          if(activeVibe==='default'){
+            try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+          }
+        }
+      }
+    }catch{}
+  };
+
+  const renameSession=async(sid,newTitle)=>{
+    if(!newTitle.trim())return;
+    try{
+      await api.patch(`/api/chat/sessions/${sid}`,{title:newTitle.trim()});
+      await loadSessions(activeVibe);
+    }catch{}
   };
 
   const chatViewProps={
@@ -1512,8 +1594,7 @@ function App() {
     intensity,baseline,manualMode,setManualMode,authUser,
     messages,input,setInput,sendMessage,loading,scrollRef,
     language,setLanguage,isDesktop,
-    startNewSession,chatSessions,
-    isCrisisMode,
+    startNewSession,chatSessions,sessionId,
   };
 
   // Page transition variants
@@ -1573,7 +1654,7 @@ function App() {
           {isDesktop?(
             <div style={{ display:'flex', height:'100%' }}>
               <div style={{ width:240, flexShrink:0, height:'100%' }}>
-                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
+                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
               </div>
               <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
                 <ChatInterface {...chatViewProps}/>
@@ -1596,7 +1677,7 @@ function App() {
           {isDesktop?(
             <div style={{ display:'flex', height:'100%' }}>
               <div style={{ width:240, flexShrink:0, height:'100%' }}>
-                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
+                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
               </div>
               <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
                 <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
