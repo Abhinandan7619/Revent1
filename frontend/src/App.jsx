@@ -1310,6 +1310,13 @@ function App() {
     return()=>document.removeEventListener('input',h);
   },[]);
 
+  // Reload sessions whenever vibe or view changes (ensures sidebar stays in sync)
+  useEffect(()=>{
+    if(authUser && (view==='chat'||view==='creator')){
+      loadSessions(activeVibe);
+    }
+  },[activeVibe, view, authUser]);
+
   const checkAuth=async()=>{
     const savedView = loadState('view', null);
     try{
