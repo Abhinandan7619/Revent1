@@ -38,22 +38,28 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - Gossip mode (no history, no logs)
 - SessionStorage persistence (survives page reloads, no splash redirect for auth users)
 - Personality profile used subtly in AI responses
-- **Auto-reload prevention** (WebSocket interception + location.reload override in index.html)
-- **Returning user direct-to-chat** (handleAuth loads welcome/history for onboarding_complete users)
 
 ## Bug Fixes Log (Feb 2026)
+
+### Fixed: Layout Shifting / Content Cut Off (Feb 23, 2026)
+- **Problem**: App content was shifted up by ~135px, causing headers to be cut off at the top and empty space at the bottom
+- **Root Cause**: `scrollIntoView()` calls in chat scroll effects were scrolling the parent `#app-root` container instead of just the message area
+- **Solution**: 
+  1. Changed from `scrollRef.current?.scrollIntoView()` to manually setting `parent.scrollTop = parent.scrollHeight`
+  2. This ensures only the messages container scrolls, not the app root
+- **Files**: `/app/frontend/src/App.jsx` (lines ~1211-1224)
 
 ### Fixed: Auto-Reload Issue
 - **Problem**: Page auto-reloaded every 1-2 minutes due to Vite HMR WebSocket timing out in K8s ingress
 - **Solution**: 
   1. Disabled HMR in vite.config.js (`hmr: false, watch: { ignored: ['**/*'] }`)
-  2. Added reload prevention script in index.html (intercepts WebSocket errors and location.reload)
+  2. Added WebSocket error suppression in index.html
 - **Files**: `/app/frontend/vite.config.js`, `/app/frontend/index.html`
 
 ### Fixed: Empty Chat After Login
 - **Problem**: Returning users saw empty chat screen after login
-- **Solution**: Updated `handleAuth()` in App.jsx to load chat sessions and welcome messages for users with `onboarding_complete: true`
-- **File**: `/app/frontend/src/App.jsx` (handleAuth function ~line 1270)
+- **Solution**: `handleAuth()` in App.jsx loads chat sessions and welcome messages for users with `onboarding_complete: true`
+- **File**: `/app/frontend/src/App.jsx` (handleAuth function)
 
 ## Prioritized Backlog
 
