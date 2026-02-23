@@ -161,6 +161,7 @@ async def node_generator(state: ReVentState):
 
     raw_config = state.get("persona_config") or {}
     user_personality = raw_config.pop("_user_personality", None)
+    user_name = raw_config.pop("_user_name", None)
     persona = {
         "base_role": raw_config.get("base_role", "Friend"),
         "traits": raw_config.get("traits", []),

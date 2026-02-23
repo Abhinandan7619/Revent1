@@ -1,5 +1,5 @@
 """
-Onboarding chat flow for RE — 5-phase personality discovery.
+Onboarding chat flow for RE — 4-question personality discovery (1 phase).
 Only runs for new users chatting with RE (default persona), not gossip or custom characters.
 """
 

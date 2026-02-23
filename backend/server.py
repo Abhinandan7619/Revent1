@@ -308,6 +308,8 @@ async def chat(chat_req: ChatRequest, request: Request):
         persona_cfg = dict(chat_req.persona_config) if chat_req.persona_config else {}
         if user and user.get("personality_profile"):
             persona_cfg["_user_personality"] = user["personality_profile"]
+        if user and user.get("name"):
+            persona_cfg["_user_name"] = user["name"]
 
         inputs = {
             "session_id": chat_req.session_id,
