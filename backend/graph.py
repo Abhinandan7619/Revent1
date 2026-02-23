@@ -52,7 +52,13 @@ async def node_classifier(state: ReVentState):
     manual_mode = state.get("manual_mode", "AUTO")
     current_baseline = state.get("emotional_baseline", 5)
 
-    crisis_keywords = ["suicide", "kill myself", "end it all", "hurt myself", "overdose", "don't want to live"]
+    crisis_keywords = [
+        "suicide", "kill myself", "end it all", "hurt myself", "overdose", 
+        "don't want to live", "want to die", "wanna die", "take pills", 
+        "self harm", "self-harm", "better off dead", "end my life", 
+        "no reason to live", "can't go on", "cut myself", "harm myself",
+        "not worth living", "wish i was dead", "want it to end"
+    ]
     if any(k in text for k in crisis_keywords):
         return {
             "active_mode": "CRISIS",
