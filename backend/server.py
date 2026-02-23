@@ -288,11 +288,11 @@ async def chat(chat_req: ChatRequest, request: Request):
 
     # Regular chat flow
     try:
-        # Auto-create session if it doesn't exist
-        if user:
+        # Auto-create session if it doesn't exist (NOT for gossip mode)
+        is_gossip = chat_req.force_vault or chat_req.manual_mode == "GOSSIP"
+        if user and not is_gossip:
             vibe_id = "default"
             if chat_req.persona_config:
-                # Find character_id from persona_config match
                 chars = await get_characters(user["user_id"])
                 for c in chars:
                     if c.get("base_role") == chat_req.persona_config.get("base_role"):
