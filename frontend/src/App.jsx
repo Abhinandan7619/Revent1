@@ -239,8 +239,7 @@ const AppBg = ({ children }) => (
     position:'fixed', 
     top:0, left:0, right:0, bottom:0, 
     width:'100vw',
-    height:'100vh',
-    height:'100dvh', // Dynamic viewport for mobile
+    height:'calc(var(--vh, 1vh) * 100)',
     overflow:'hidden', 
     background:'linear-gradient(145deg,#1a0533,#0a1a40 55%,#003328)', 
     display:'flex', 
