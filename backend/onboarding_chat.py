@@ -30,108 +30,34 @@ PHASES = [
             {
                 "id": "welcome",
                 "type": "consent",
-                "prompt": "Greet the user by name. Then say (in the user's language style): 'We just met... asking you to spill everything right away would be awkward, right? 😅 That's not how it works here. If you're cool with it, I'll ask some chill questions to get to know you... so that when you want to talk, I already have an idea of what kind of person you are.' Then ask if they're ready. Keep it warm and casual.",
+                "prompt": "Greet the user by name. Then say (in the user's language style): 'We just met... asking you to spill everything right away would be awkward, right? 😅 That's not how it works here. If you're cool with it, I'll ask just 4 quick questions to get to know you — so when you need to vent, I already have a vibe of who you are. You can skip any question or just say \"I want to talk about something\" to jump straight to chatting.' Then ask if they're ready. Keep it warm and casual.",
                 "yes_tags": [],
                 "no_action": "respect_decline",
             }
         ],
     },
     {
-        "name": "Mood & Entertainment",
-        "phase_label": "movies aur music",
+        "name": "Core Questions",
+        "phase_label": "getting to know you",
         "questions": [
             {
-                "id": "q1_1_movie_vibe",
-                "prompt": "Ask about their movie preferences: Action where everything blows up? Slow emotional ones that lighten the heart? Or dark twisted thrillers that mess with your mind? Keep it fun with emojis.",
-                "tag_map": {"thriller": "analytical_mind", "emotional": "deep_feeler", "action": "high_energy", "mixed": "flexible"},
-            },
-            {
-                "id": "q1_2_repeat_movie",
-                "prompt": "Ask: If they had to watch ONE movie on repeat for life, which one would it be? 🔁",
-                "tag_map": {},
-            },
-            {
-                "id": "q1_3_music_vibe",
-                "prompt": "Ask about music taste: Heartbreak songs? Motivational? Or full volume car bangers? 🎶🚗",
-                "tag_map": {},
-            },
-            {
-                "id": "q1_4_shower_singer",
-                "prompt": "Last one in this section - ask if they're a shower singer or a silent listener? 😏 After their answer, say Phase 1 done and things are about to get more interesting.",
-                "tag_map": {},
-            },
-        ],
-    },
-    {
-        "name": "Emotional Style",
-        "phase_label": "emotions aur feelings",
-        "questions": [
-            {
-                "id": "q2_1_upset_behavior",
-                "prompt": "Start with 'Ab thoda real talk...' Ask: When they're upset, do they talk to people or go quiet?",
+                "id": "q1_upset_behavior",
+                "prompt": "Ask: When they're upset, do they talk to someone or go quiet and deal with it alone?",
                 "tag_map": {"quiet": "internalizer", "talk": "externalizer", "mixed": "adaptive"},
             },
             {
-                "id": "q2_2_overthinking",
-                "prompt": "Ask: Are they more of an overthinker or 'jo hoga dekha jayega' type?",
+                "id": "q2_overthinking",
+                "prompt": "Ask: Are they more of an overthinker or a 'jo hoga dekha jayega' type? 😄",
                 "tag_map": {"overthink": "overthinker", "chill": "go_with_flow"},
             },
             {
-                "id": "q2_3_anger",
-                "prompt": "Ask: When anger comes, do they express it or keep it inside? After answer, say you're starting to understand them better.",
-                "tag_map": {"express": "expressive_anger", "suppress": "suppressed_anger"},
-            },
-        ],
-    },
-    {
-        "name": "Mindset & Energy",
-        "phase_label": "personality aur energy",
-        "questions": [
-            {
-                "id": "q3_1_morning_night",
+                "id": "q3_energy",
                 "prompt": "Ask: Morning person or 2 AM philosopher? 🌅🌙",
                 "tag_map": {"morning": "morning_person", "night": "night_owl"},
             },
             {
-                "id": "q3_2_how_others_see",
-                "prompt": "Ask: How do people usually describe them? Calm? Funny? Intense? Reserved? Something else?",
-                "tag_map": {},
-            },
-            {
-                "id": "q3_3_misunderstood",
-                "prompt": "Ask: One thing people get wrong about them - any misconception? Respond with empathy if they share. Then say you're getting their vibe now.",
-                "tag_map": {},
-            },
-        ],
-    },
-    {
-        "name": "Comfort & Safe Space",
-        "phase_label": "trust aur comfort zone",
-        "questions": [
-            {
-                "id": "q4_1_trust",
-                "prompt": "Say 'going a bit deeper now, but skip is always okay 🤝'. Ask: Do they trust easily or does it take time?",
-                "tag_map": {"easy": "quick_trust", "time": "slow_trust"},
-            },
-            {
-                "id": "q4_2_passionate_topic",
-                "prompt": "Ask (positive question): Any topic they could talk about for hours? Something that genuinely excites them?",
-                "tag_map": {},
-            },
-        ],
-    },
-    {
-        "name": "Dreams & Reality",
-        "phase_label": "dreams aur decisions",
-        "questions": [
-            {
-                "id": "q5_1_no_pressure_life",
-                "prompt": "Ask: If pressure didn't exist - no family expectations, no money issues - what would they be doing in life?",
-                "tag_map": {},
-            },
-            {
-                "id": "q5_2_logic_vs_heart",
-                "prompt": "Last question! Ask: Are they more logic-driven or heart-driven when making decisions?",
+                "id": "q4_logic_vs_heart",
+                "prompt": "Last one! Ask: Are they more logic-driven or heart-driven when making big decisions?",
                 "tag_map": {"logic": "logic_driven", "heart": "heart_driven", "both": "balanced_decider"},
             },
         ],
@@ -144,6 +70,15 @@ SKIP_KEYWORDS = {"skip", "next", "agle pe chalo", "chhodo", "nahi batana", "pass
                   "don't know", "pata nahi", "kuch nahi", "whatever", "agla"}
 EXIT_KEYWORDS = {"bas", "bye", "baad mein", "later", "i'll come back", "abhi nahi",
                  "goodnight", "gotta go", "chalta hoon"}
+# Phrases that mean "I want to talk about something now, skip the questions"
+WANT_TO_TALK_PHRASES = [
+    "want to talk", "wanna talk", "need to talk", "want to vent", "wanna vent",
+    "need to vent", "i have something", "i want to tell", "can we talk about",
+    "let's talk about", "lets talk about", "i need to discuss", "something happened",
+    "kuch hua", "baat karni hai", "kuch batana hai", "sunna hai", "sunne wala",
+    "skip all", "skip questions", "skip the questions", "just chat", "just talk",
+    "no questions", "enough questions", "stop asking",
+]
 
 
 def _is_skip(text: str) -> bool:
@@ -154,6 +89,12 @@ def _is_skip(text: str) -> bool:
 def _is_exit(text: str) -> bool:
     lower = text.lower().strip()
     return any(kw in lower for kw in EXIT_KEYWORDS)
+
+
+def _wants_to_talk_now(text: str) -> bool:
+    """User wants to skip questions and start talking about something."""
+    lower = text.lower().strip()
+    return any(phrase in lower for phrase in WANT_TO_TALK_PHRASES)
 
 
 def _is_consent_yes(text: str) -> bool:
@@ -215,15 +156,14 @@ def _build_closing_prompt(user, language):
         lang_instruction = "Language: Casual English."
 
     return (
-        f"You are RE. {nickname} just finished all your getting-to-know-you questions.\n"
+        f"You are RE. {nickname} just finished your quick getting-to-know-you questions (only 4 questions).\n"
         f"{lang_instruction}\n"
         f"Their personality tags: {', '.join(tags) if tags else 'not many collected yet'}\n\n"
         f"Now send a closing message:\n"
         f"1. Say something like 'Ok {nickname}... ab mujhe thoda idea mil raha hai tum kaun ho 😌'\n"
-        f"2. Say you don't jump to conclusions but they're interesting.\n"
-        f"3. Say from now on you won't give random generic advice — you'll respond based on their vibe.\n"
-        f"4. End with 'Toh bolo... aaj ka mood kya hai? 😊'\n"
-        f"Keep it 3-4 short messages worth of content in one message (use line breaks). Be warm and natural."
+        f"2. Say from now on you'll respond based on their vibe, not give generic advice.\n"
+        f"3. End with 'Toh bolo... aaj ka mood kya hai? 😊'\n"
+        f"Keep it short — 2-3 sentences max. Be warm and natural."
     )
 
 
@@ -239,6 +179,24 @@ async def handle_onboarding_chat(user, message_text, session_id, language):
     answers = profile.get("answers", {})
     tags = profile.get("personality_tags", [])
     skipped = profile.get("skipped", [])
+
+    # Handle "I want to talk about something" — skip remaining questions, mark complete
+    if _wants_to_talk_now(message_text):
+        nickname = user.get("name", "User")
+        response = await onboarding_llm.ainvoke([
+            SystemMessage(content=(
+                f"You are RE. {nickname} wants to skip the questions and talk about something. "
+                f"React warmly — say something like 'Of course, questions can wait! I'm all ears 😊 Tell me what's going on.' "
+                f"Language: English mixed with {language}. Keep it very short and inviting."
+            )),
+            HumanMessage(content=message_text),
+        ])
+        return response.content, {
+            "onboarding_chat_status": "completed",
+            "onboarding_chat_phase": phase_idx,
+            "onboarding_chat_question": question_idx,
+            "personality_profile": {"answers": answers, "personality_tags": tags, "skipped": skipped},
+        }
 
     # Handle exit request
     if _is_exit(message_text):

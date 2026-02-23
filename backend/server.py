@@ -304,10 +304,12 @@ async def chat(chat_req: ChatRequest, request: Request):
                 title = chat_req.message[:40] if chat_req.message else "New Chat"
                 await create_chat_session(user["user_id"], chat_req.session_id, vibe_id, title)
 
-        # Include personality profile in persona config for personalized responses
+        # Include personality profile and user name in persona config for personalized responses
         persona_cfg = dict(chat_req.persona_config) if chat_req.persona_config else {}
         if user and user.get("personality_profile"):
             persona_cfg["_user_personality"] = user["personality_profile"]
+        if user and user.get("name"):
+            persona_cfg["_user_name"] = user["name"]
 
         inputs = {
             "session_id": chat_req.session_id,

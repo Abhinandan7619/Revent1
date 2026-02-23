@@ -164,6 +164,7 @@ async def node_generator(state: ReVentState):
 
     raw_config = state.get("persona_config") or {}
     user_personality = raw_config.pop("_user_personality", None)
+    user_name = raw_config.pop("_user_name", None)
     persona = {
         "base_role": raw_config.get("base_role", "Friend"),
         "traits": raw_config.get("traits", []),
@@ -171,6 +172,14 @@ async def node_generator(state: ReVentState):
         "quirks": raw_config.get("quirks", []),
         "memory_hook": raw_config.get("memory_hook", ""),
     }
+
+    # Build name context (use in ~50% of responses, naturally)
+    name_context = ""
+    if user_name:
+        name_context = (
+            f"\nUSER NAME: {user_name}. Use their name naturally in about half your responses — "
+            f"not every single message. Only when it feels genuine (e.g. 'arre {user_name}...' or '{user_name} yaar').\n"
+        )
 
     # Build personality context from onboarding (subtle, not forced)
     personality_context = ""
@@ -236,6 +245,7 @@ async def node_generator(state: ReVentState):
         f"ENERGY LEVEL: {persona['energy']}/100\n"
         f"QUIRKS: {', '.join(persona['quirks']) if persona['quirks'] else 'None'}\n"
         f"{memory_line}\n"
+        f"{name_context}"
         f"{personality_context}\n"
         f"{lang_instruction}\n"
         f"{style_rules}\n\n"
