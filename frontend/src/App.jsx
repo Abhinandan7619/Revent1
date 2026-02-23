@@ -1511,6 +1511,7 @@ function App() {
     messages,input,setInput,sendMessage,loading,scrollRef,
     language,setLanguage,isDesktop,
     startNewSession,chatSessions,
+    isCrisisMode,
   };
 
   // Page transition variants
