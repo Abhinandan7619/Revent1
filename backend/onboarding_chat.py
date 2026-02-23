@@ -194,6 +194,21 @@ async def handle_onboarding_chat(user, message_text, session_id, language):
             "onboarding_chat_question": question_idx,
         }
 
+    # Smart skip — user wants to talk/vent right now, skip all questions
+    if _is_eager_to_talk(message_text):
+        nickname = user.get("name", "User")
+        response = await onboarding_llm.ainvoke([
+            SystemMessage(content=(
+                f"You are RE. The user ({nickname}) wants to skip the getting-to-know-you questions and go straight to talking. "
+                f"Respond warmly — something like 'Arre okay okay, seedha point pe aate hain 😌 Bolo, kya hua?' or similar. "
+                f"Keep it 1-2 sentences. Don't sound offended. Language: English mixed with {language}."
+            )),
+            HumanMessage(content=message_text),
+        ])
+        return response.content, {
+            "onboarding_chat_status": "completed",
+        }
+
     # Phase 0 = Welcome consent
     if status == "not_started" or (phase_idx == 0 and question_idx == 0 and status != "completed"):
         if status == "not_started":
