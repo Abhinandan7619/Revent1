@@ -235,7 +235,7 @@ function Avatar3D({ color='#a78bfa', energy=50, height=160 }) {
 
 // ─── App background ───────────────────────────────────────────────────────────
 const AppBg = ({ children }) => (
-  <div style={{ width:'100vw', height:'100dvh', position:'fixed', inset:0, overflow:'hidden', background:'linear-gradient(145deg,#1a0533,#0a1a40 55%,#003328)', display:'flex', flexDirection:'column', fontFamily:"'DM Sans',sans-serif", color:'#f8fafc' }}>
+  <div style={{ width:'100%', height:'100%', position:'fixed', top:0, left:0, right:0, bottom:0, overflow:'hidden', background:'linear-gradient(145deg,#1a0533,#0a1a40 55%,#003328)', display:'flex', flexDirection:'column', fontFamily:"'DM Sans',sans-serif", color:'#f8fafc' }}>
     <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:0 }}>
       <div style={{ position:'absolute', width:700, height:700, borderRadius:'50%', background:'radial-gradient(circle,rgba(139,92,246,0.14),transparent)', top:'-20%', left:'-15%' }}/>
       <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle,rgba(16,185,129,0.11),transparent)', bottom:'-15%', right:'-10%' }}/>
