@@ -12,9 +12,8 @@
   padding: 0;
 }
 
-html {
-  height: 100vh;
-  height: calc(var(--vh, 1vh) * 100);
+html, body, #root {
+  height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -22,32 +21,10 @@ html {
 }
 
 body {
-  height: 100vh;
-  height: calc(var(--vh, 1vh) * 100);
-  width: 100%;
-  margin: 0;
-  padding: 0;
-  background: #0a0515;
+  background: linear-gradient(145deg,#1a0533,#0a1a40 55%,#003328);
   color: #f8fafc;
   font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-#root {
-  height: 100%;
-  width: 100%;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
 }
 
 /* scrollbar */
