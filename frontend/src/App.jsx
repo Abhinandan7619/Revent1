@@ -1000,7 +1000,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Mode chips */}
-      <div data-testid="mode-chips" style={{ display:'flex', gap:6, padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0 }}>
+      <div data-testid="mode-chips" style={{ display:'flex', gap:6, padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0, ...crisisOverlay }}>
         {[{id:'AUTO',label:'⚡ AUTO'},{id:'HEAR_ME',label:'💙 HEAR ME'},{id:'BACK_ME',label:'🔥 BACK ME'},{id:'BE_REAL',label:'🧠 BE REAL'}].map(m=>(
           <button key={m.id} data-testid={`mode-chip-${m.id}`} onClick={()=>setManualMode(m.id)}
             style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:99, border:`1px solid ${manualMode===m.id?accentColor+'55':'rgba(255,255,255,0.06)'}`, background:manualMode===m.id?accentColor+'18':'rgba(255,255,255,0.04)', fontSize:12, fontWeight:500, color:manualMode===m.id?accentColor:'rgba(248,250,252,0.5)', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s' }}>
