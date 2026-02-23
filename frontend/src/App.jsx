@@ -1208,8 +1208,25 @@ function App() {
     checkAuth();
   },[]);
 
-  useEffect(()=>{scrollRef.current?.scrollIntoView({behavior:'smooth'});},[messages]);
-  useEffect(()=>{gossipScrollRef.current?.scrollIntoView({behavior:'smooth'});},[gossipMessages]);
+  // Auto-scroll to bottom of chat messages - use block:'nearest' to prevent scrolling parent containers
+  useEffect(()=>{
+    if(scrollRef.current) {
+      try {
+        const parent = scrollRef.current.parentElement;
+        if(parent) parent.scrollTop = parent.scrollHeight;
+      } catch(e) {}
+    }
+  },[messages]);
+  
+  useEffect(()=>{
+    if(gossipScrollRef.current) {
+      try {
+        const parent = gossipScrollRef.current.parentElement;
+        if(parent) parent.scrollTop = parent.scrollHeight;
+      } catch(e) {}
+    }
+  },[gossipMessages]);
+  
   useEffect(()=>{
     const h=(e)=>{ if(e.target.tagName==='TEXTAREA'){e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,120)+'px';} };
     document.addEventListener('input',h);
