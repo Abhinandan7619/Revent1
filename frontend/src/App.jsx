@@ -608,7 +608,7 @@ const LanguageScreen = ({ onDone }) => {
 };
 
 // ─── Character Creator ────────────────────────────────────────────────────────
-const CharacterCreator = ({ onBack, onSave, language }) => {
+const CharacterCreator = ({ onBack, onSave, language, isDesktop }) => {
   const [step,setStep]=useState(1);
   const [tempChar,setTempChar]=useState({ base_role:'Close Cousin', traits:[], energy:50, quirks:[], memory_hook:'', label:'' });
   const [quirkInput,setQuirkInput]=useState('');
@@ -646,22 +646,22 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
       </div>
       <div style={{ position:'relative', background:'linear-gradient(to bottom,rgba(10,5,25,0.9),rgba(10,5,25,0.4))', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}><div style={{ width:128, height:128, borderRadius:'50%', background:avatarColor, filter:'blur(48px)', opacity:0.15 }}/></div>
-        <Avatar3D color={avatarColor} energy={tempChar.energy} height={160}/>
+        <Avatar3D color={avatarColor} energy={tempChar.energy} height={isDesktop ? 160 : 130}/>
         <div style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', display:'flex', alignItems:'center', gap:6, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(12px)', padding:'5px 12px', borderRadius:99, border:'1px solid rgba(255,255,255,0.1)', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>
           <span>{BASE_ROLES.find(r=>r.id===tempChar.base_role)?.icon}</span>
           <span style={{ color:avatarColor }}>{tempChar.base_role}</span>
         </div>
       </div>
-      <div style={{ display:'flex', gap:4, padding:'14px 16px 8px' }}>
+      <div style={{ display:'flex', gap:4, padding: isDesktop ? '14px 16px 8px' : '10px 12px 6px' }}>
         {[1,2,3,4,5].map(i=>(<div key={i} style={{ height:3, flex:1, borderRadius:99, background:step>=i?avatarColor:'rgba(255,255,255,0.08)', transition:'all 0.4s' }}/>))}
       </div>
-      <div style={{ flex:1, overflowY:'auto', padding:'8px 16px 16px' }}>
+      <div style={{ flex:1, overflowY:'auto', padding: isDesktop ? '8px 16px 16px' : '6px 12px 12px' }}>
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-16}} transition={{duration:0.18}} style={{ paddingTop:8 }}>
             {step===1&&(
               <>
                 <div style={stepTitle}>Choose a Vibe</div>
-                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10, marginTop:12 }}>
+                <div style={{ display:'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap:10, marginTop:12 }}>
                   {BASE_ROLES.map(role=>(
                     <button key={role.id} data-testid={`role-${role.id}`} onClick={()=>setTempChar({...tempChar,base_role:role.id})}
                       style={{ padding:'14px 12px', borderRadius:14, border:`1px solid ${tempChar.base_role===role.id?role.color+'60':'rgba(255,255,255,0.07)'}`, background:tempChar.base_role===role.id?role.color+'18':'rgba(255,255,255,0.03)', textAlign:'left', cursor:'pointer', transition:'all 0.2s' }}>
@@ -728,7 +728,7 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
           </motion.div>
         </AnimatePresence>
       </div>
-      <div style={{ padding:'12px 16px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.7)', backdropFilter:'blur(16px)', flexShrink:0 }}>
+      <div style={{ padding: isDesktop ? '12px 16px' : '10px 12px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.7)', backdropFilter:'blur(16px)', flexShrink:0 }}>
         {step<5
           ? <button onClick={()=>setStep(step+1)} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)` }}>Next Step →</button>
           : <button data-testid="launch-character-btn" onClick={saveAndExit} disabled={saving} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)`, opacity:saving?0.7:1 }}>{saving?'Saving…':'Launch Character ✨'}</button>
@@ -739,7 +739,7 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
 };
 
 // ─── Chat Bubbles ─────────────────────────────────────────────────────────────
-const ChatBubble = ({ msg }) => {
+const ChatBubble = ({ msg, isDesktop }) => {
   const meta = msg.mode ? modeMeta[msg.mode] : null;
   // Color scheme for different modes
   const modeColors = {
@@ -752,10 +752,13 @@ const ChatBubble = ({ msg }) => {
   };
   const modeColor = msg.mode ? modeColors[msg.mode] : modeColors.AUTO;
   const isCrisisBubble = msg.role === 'ai' && msg.mode === 'CRISIS';
+  const bubblePadding = isDesktop ? '12px 16px' : '10px 12px';
+  const bubbleFontSize = isDesktop ? 14 : 13;
+  const bubbleMaxWidth = isDesktop ? '82%' : '95%';
 
   return (
     <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
-      style={{ display:'flex', flexDirection:'column', maxWidth:'82%', alignSelf:msg.role==='user'?'flex-end':'flex-start' }}>
+      style={{ display:'flex', flexDirection:'column', maxWidth:bubbleMaxWidth, alignSelf:'flex-start' }}>
       {msg.role==='ai'&&meta&&(
         <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, paddingLeft:2 }}>
           <span style={{ color:'rgba(248,250,252,0.4)' }}>RE · </span>
@@ -773,10 +776,10 @@ const ChatBubble = ({ msg }) => {
           </div>
         </div>
       )}
-      {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'right', paddingRight:2 }}>You</div>}
-      <div style={{ padding:'12px 16px', fontSize:14, lineHeight:1.7, backdropFilter:'blur(16px)', whiteSpace:'pre-wrap',
+      {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'left', paddingLeft:2 }}>You</div>}
+      <div style={{ padding:bubblePadding, fontSize:bubbleFontSize, lineHeight:1.7, backdropFilter:'blur(16px)', whiteSpace:'pre-wrap',
         ...(msg.role==='user'
-          ?{background:'rgba(167,139,250,0.15)',border:'1px solid rgba(167,139,250,0.25)',borderRadius:'14px 2px 14px 14px'}
+          ?{background:'rgba(167,139,250,0.15)',border:'1px solid rgba(167,139,250,0.25)',borderRadius:14}
           :msg.role==='system'
             ?{background:'rgba(248,113,113,0.08)',border:'1px solid rgba(248,113,113,0.2)',borderRadius:12}
             :{background:'rgba(255,255,255,0.07)',border:'1px solid rgba(255,255,255,0.10)',borderRadius:'2px 14px 14px 14px'})
@@ -784,35 +787,35 @@ const ChatBubble = ({ msg }) => {
     </motion.div>
   );
 };
-const GossipBubble = ({ msg }) => (
+const GossipBubble = ({ msg, isDesktop }) => (
   <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
-    style={{ display:'flex', flexDirection:'column', maxWidth:'82%', alignSelf:msg.role==='user'?'flex-end':'flex-start' }}>
+    style={{ display:'flex', flexDirection:'column', maxWidth:isDesktop ? '82%' : '95%', alignSelf:'flex-start' }}>
     {msg.role==='ai'&&(
       <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5 }}>
         <span style={{ color:'rgba(251,191,36,0.5)' }}>RE · </span>
         <span style={{ color:'#fbbf24', fontWeight:600 }}>GOSSIP</span>
       </div>
     )}
-    {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'right' }}>You</div>}
-    <div style={{ padding:'12px 16px', fontSize:14, lineHeight:1.7, backdropFilter:'blur(16px)',
-      ...(msg.role==='user'?{background:'rgba(251,191,36,0.12)',border:'1px solid rgba(251,191,36,0.22)',borderRadius:'14px 2px 14px 14px'}:{background:'rgba(251,191,36,0.04)',border:'1px solid rgba(251,191,36,0.12)',borderRadius:'2px 14px 14px 14px'})
+    {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'left' }}>You</div>}
+    <div style={{ padding:isDesktop ? '12px 16px' : '10px 12px', fontSize:isDesktop ? 14 : 13, lineHeight:1.7, backdropFilter:'blur(16px)',
+      ...(msg.role==='user'?{background:'rgba(251,191,36,0.12)',border:'1px solid rgba(251,191,36,0.22)',borderRadius:14}:{background:'rgba(251,191,36,0.04)',border:'1px solid rgba(251,191,36,0.12)',borderRadius:'2px 14px 14px 14px'})
     }}>{msg.content}</div>
   </motion.div>
 );
 
 // ─── Emotion Bar ──────────────────────────────────────────────────────────────
-const EmotionBar = ({ onEmotion, manualMode }) => {
+const EmotionBar = ({ onEmotion, manualMode, isDesktop }) => {
   const [active,setActive]=useState(null);
   const handle=(item)=>{ setActive(item.emoji); onEmotion(item.mode); setTimeout(()=>setActive(null),800); };
   return (
-    <div data-testid="emotion-bar" style={{ display:'flex', alignItems:'center', gap:4, padding:'8px 14px', borderTop:'1px solid rgba(255,255,255,0.05)', background:'rgba(10,5,22,0.6)', overflowX:'auto', flexShrink:0 }}>
+    <div data-testid="emotion-bar" style={{ display:'flex', alignItems:'center', gap:4, padding: isDesktop ? '8px 14px' : '6px 10px', borderTop:'1px solid rgba(255,255,255,0.05)', background:'rgba(10,5,22,0.6)', overflowX:'auto', flexShrink:0 }}>
       {EMOTION_ITEMS.map(item=>(
         <motion.button key={item.emoji} onClick={()=>handle(item)} whileTap={{scale:0.8}} title={item.label}
-          style={{ width:38, height:38, borderRadius:10, border:`1px solid ${active===item.emoji?'rgba(167,139,250,0.4)':'rgba(255,255,255,0.06)'}`, background:active===item.emoji?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize:18, flexShrink:0, transition:'all 0.15s' }}>
+          style={{ width: isDesktop ? 38 : 34, height: isDesktop ? 38 : 34, borderRadius: isDesktop ? 10 : 9, border:`1px solid ${active===item.emoji?'rgba(167,139,250,0.4)':'rgba(255,255,255,0.06)'}`, background:active===item.emoji?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer', fontSize: isDesktop ? 18 : 16, flexShrink:0, transition:'all 0.15s' }}>
           {item.emoji}
         </motion.button>
       ))}
-      <div style={{ marginLeft:'auto', fontSize:9, color:'rgba(255,255,255,0.2)', letterSpacing:1, textTransform:'uppercase', whiteSpace:'nowrap', paddingLeft:8 }}>
+      <div style={{ marginLeft:'auto', fontSize: isDesktop ? 9 : 8, color:'rgba(255,255,255,0.2)', letterSpacing:1, textTransform:'uppercase', whiteSpace:'nowrap', paddingLeft:8 }}>
         {manualMode==='AUTO'?'auto mode':modeMeta[manualMode]?.label}
       </div>
     </div>
@@ -854,10 +857,10 @@ const CharacterTabStrip = ({ activeVibe, setActiveVibe, onOpenCreator, character
 };
 
 // ─── Gossip Floating Button ───────────────────────────────────────────────────
-const GossipFloatingBtn = ({ onClick }) => (
+const GossipFloatingBtn = ({ onClick, isDesktop }) => (
   <motion.button data-testid="gossip-floating-btn" onClick={onClick} whileHover={{scale:1.05}} whileTap={{scale:0.95}}
-    style={{ position:'absolute', right:14, bottom:68, zIndex:10, width:60, height:60, borderRadius:16, background:'linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.1))', border:'1.5px solid rgba(251,191,36,0.35)', backdropFilter:'blur(16px)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2, cursor:'pointer', boxShadow:'0 4px 20px rgba(251,191,36,0.2)' }}>
-    <span style={{ fontSize:22 }}>🤫</span>
+    style={{ position:'absolute', right:14, bottom: isDesktop ? 68 : 8, zIndex:10, width: isDesktop ? 60 : 48, height: isDesktop ? 60 : 48, borderRadius: isDesktop ? 16 : 14, background:'linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.1))', border:'1.5px solid rgba(251,191,36,0.35)', backdropFilter:'blur(16px)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2, cursor:'pointer', boxShadow:'0 4px 20px rgba(251,191,36,0.2)' }}>
+    <span style={{ fontSize: isDesktop ? 22 : 18 }}>🤫</span>
     <span style={{ fontSize:7, fontWeight:700, color:'#fbbf24', letterSpacing:0.5, fontFamily:"'Outfit',sans-serif", textTransform:'uppercase' }}>Gossip</span>
   </motion.button>
 );
@@ -1011,52 +1014,221 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
   );
 };
 
+// ─── Mobile Drawer ───────────────────────────────────────────────────────────
+const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession, chatSessions, activeSessionId, onSwitchSession, onDeleteSession, onRenameSession }) => {
+  const [renamingId, setRenamingId] = React.useState(null);
+  const [renameVal, setRenameVal] = React.useState('');
+  const defaultSessions = activeVibe === 'default' ? (chatSessions||[]) : [];
+  const canAddSession = defaultSessions.length < 2;
+  const canCreate = characters.length < 3;
+
+  const handleRenameStart = (s) => { setRenamingId(s.session_id); setRenameVal(s.title||'New Chat'); };
+  const handleRenameSubmit = (sid) => { onRenameSession(sid, renameVal); setRenamingId(null); };
+
+  if(!isOpen) return null;
+
+  return (
+    <>
+      {/* Backdrop */}
+      <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}}
+        onClick={onClose}
+        style={{ position:'fixed', inset:0, zIndex:100, background:'rgba(0,0,0,0.6)', backdropFilter:'blur(4px)' }}/>
+      {/* Drawer */}
+      <motion.div initial={{x:'-100%'}} animate={{x:0}} exit={{x:'-100%'}} transition={{type:'spring',stiffness:300,damping:30}}
+        style={{ position:'fixed', top:0, left:0, bottom:0, width:'80%', maxWidth:300, zIndex:101, background:'rgba(15,8,32,0.98)', backdropFilter:'blur(24px)', borderRight:'1px solid rgba(255,255,255,0.08)', overflowY:'auto', display:'flex', flexDirection:'column' }}>
+        {/* Header */}
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 16px 12px' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <LogoIcon size="sm"/>
+            <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:16, background:'linear-gradient(90deg,#a78bfa,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>ReVent</div>
+          </div>
+          <button onClick={onClose} style={{ background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', color:'#fff', fontSize:16, cursor:'pointer' }}>×</button>
+        </div>
+
+        {/* User info */}
+        {authUser&&(
+          <div style={{ padding:'8px 16px 12px', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
+              <div style={{ width:36, height:36, borderRadius:'50%', background:'rgba(167,139,250,0.15)', border:'1px solid rgba(167,139,250,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, flexShrink:0 }}>😤</div>
+              <div>
+                <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:13, color:'#fff' }}>{authUser.name}</div>
+                <div style={{ fontSize:10, color:'rgba(248,250,252,0.35)' }}>Beta Tester</div>
+              </div>
+            </div>
+            <CoinBadge coins={authUser.coins} onClick={()=>{onOpenSettings();onClose();}}/>
+          </div>
+        )}
+
+        <div style={{ padding:'0 16px', flex:1 }}>
+          {/* Companions */}
+          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:14, marginBottom:8 }}>Companion</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+            <motion.button onClick={()=>{setActiveVibe('default');onClose();}} whileTap={{scale:0.97}}
+              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:`1px solid ${activeVibe==='default'?'#a78bfa50':'rgba(255,255,255,0.05)'}`, background:activeVibe==='default'?'#a78bfa15':'rgba(255,255,255,0.03)', cursor:'pointer', textAlign:'left' }}>
+              <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe==='default'?'#a78bfa20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>🤖</div>
+              <span style={{ fontSize:13, fontWeight:600, color:activeVibe==='default'?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif" }}>RE</span>
+              {activeVibe==='default'&&<span style={{ marginLeft:'auto', color:'#a78bfa', fontSize:11 }}>●</span>}
+            </motion.button>
+            {characters.map(c=>{
+              const color = ROLE_COLORS[c.base_role]||'#a78bfa';
+              const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
+              return (
+                <div key={c.character_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
+                  <motion.button onClick={()=>{setActiveVibe(c.character_id);onClose();}} whileTap={{scale:0.97}}
+                    style={{ flex:1, display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:'12px 0 0 12px', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', textAlign:'left' }}>
+                    <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe===c.character_id?color+'20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>{icon}</div>
+                    <span style={{ fontSize:13, fontWeight:600, color:activeVibe===c.character_id?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.label||c.base_role}</span>
+                  </motion.button>
+                  <button onClick={()=>{onDeleteCharacter(c.character_id);onClose();}}
+                    style={{ padding:'10px 10px', borderRadius:'0 12px 12px 0', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)' }}
+                    title="Delete character">×</button>
+                </div>
+              );
+            })}
+            {canCreate&&(
+              <motion.button onClick={()=>{onOpenCreator();onClose();}} whileTap={{scale:0.97}}
+                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
+                <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>+</div>
+                <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Persona</span>
+              </motion.button>
+            )}
+          </div>
+
+          {/* Sessions — RE mode only */}
+          {activeVibe==='default'&&(
+            <div style={{ marginTop:14 }}>
+              <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginBottom:8 }}>Chats</div>
+              <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                {defaultSessions.map(s=>(
+                  <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
+                    {renamingId===s.session_id?(
+                      <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+                        onBlur={()=>handleRenameSubmit(s.session_id)}
+                        onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
+                        style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
+                    ):(
+                      <button onClick={()=>{onSwitchSession(s.session_id);onClose();}} onDoubleClick={()=>handleRenameStart(s)}
+                        title="Click to open · Double-click to rename"
+                        style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                        {s.title||'New Chat'}
+                      </button>
+                    )}
+                    <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
+                      style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0 }}>×</button>
+                  </div>
+                ))}
+              </div>
+              {canAddSession&&(
+                <motion.button onClick={()=>{startNewSession();onClose();}} whileTap={{scale:0.97}}
+                  style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
+                  <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
+                  <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
+                </motion.button>
+              )}
+            </div>
+          )}
+
+          {/* Gossip Room */}
+          <div style={{ marginTop:14, paddingTop:14, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+            <motion.button onClick={()=>{onOpenGossip();onClose();}} whileTap={{scale:0.97}}
+              style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:12, border:'1px solid rgba(251,191,36,0.2)', background:'rgba(251,191,36,0.05)', cursor:'pointer' }}>
+              <span style={{ fontSize:20 }}>🤫</span>
+              <div style={{ textAlign:'left' }}>
+                <div style={{ fontSize:13, fontWeight:700, color:'#fbbf24', fontFamily:"'Outfit',sans-serif" }}>Gossip Room</div>
+                <div style={{ fontSize:10, color:'rgba(251,191,36,0.5)' }}>No receipts · No logs</div>
+              </div>
+            </motion.button>
+          </div>
+
+          {/* Language */}
+          <div style={{ marginTop:14 }}>
+            <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginBottom:8 }}>Language</div>
+            <div style={{ position:'relative' }}>
+              <select value={language} onChange={e=>setLanguage(e.target.value)} style={{ width:'100%', appearance:'none', background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.08)', padding:'9px 28px 9px 12px', borderRadius:10, color:'#fff', fontSize:12, outline:'none', cursor:'pointer' }}>
+                <option value="Hindi">Hinglish</option><option value="English">English</option>
+                <option value="Marathi">Marathi</option><option value="Tamil">Tanglish</option><option value="Kannada">Kanglish</option>
+              </select>
+              <span style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', fontSize:9, color:'rgba(248,250,252,0.3)', pointerEvents:'none' }}>▾</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Settings at bottom */}
+        <div style={{ padding:'12px 16px', borderTop:'1px solid rgba(255,255,255,0.06)', marginTop:8 }}>
+          <motion.button onClick={()=>{onOpenSettings();onClose();}} whileTap={{scale:0.97}}
+            style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.03)', cursor:'pointer', width:'100%' }}>
+            <span style={{ fontSize:16 }}>⚙️</span>
+            <span style={{ fontSize:13, color:'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", fontWeight:600 }}>Settings</span>
+          </motion.button>
+        </div>
+      </motion.div>
+    </>
+  );
+};
+
 // ─── Chat Interface ───────────────────────────────────────────────────────────
-const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop }) => {
+const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, onDeleteCharacter, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop, onOpenGossip, startNewSession, chatSessions, sessionId, onSwitchSession, onDeleteSession, onRenameSession, onOpenSettings }) => {
   const activeChar = characters.find(c=>c.character_id===activeVibe);
   const accentColor = activeChar ? (ROLE_COLORS[activeChar.base_role]||'#a78bfa') : '#a78bfa';
-  // Freeze UI when last AI message is CRISIS mode; unfreeze when user is no longer in crisis
   const lastAiMsg = [...messages].reverse().find(m=>m.role==='ai');
   const isCrisis = lastAiMsg?.mode === 'CRISIS';
+  const [drawerOpen, setDrawerOpen] = React.useState(false);
+
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', position:'relative' }}>
+      {/* Mobile Drawer */}
+      {!isDesktop&&(
+        <AnimatePresence>
+          {drawerOpen&&(
+            <MobileDrawer isOpen={drawerOpen} onClose={()=>setDrawerOpen(false)}
+              authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe}
+              characters={characters} onOpenCreator={onOpenCreator} onDeleteCharacter={onDeleteCharacter}
+              onOpenSettings={onOpenSettings||(() => setView('settings'))} onOpenGossip={onOpenGossip||(() => setView('gossip_chat'))}
+              language={language} setLanguage={setLanguage}
+              startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId}
+              onSwitchSession={onSwitchSession} onDeleteSession={onDeleteSession} onRenameSession={onRenameSession}/>
+          )}
+        </AnimatePresence>
+      )}
+
       {/* Topbar */}
       <div style={topbar}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
+          {!isDesktop&&(
+            <button onClick={()=>setDrawerOpen(true)} style={{ ...iconBtn, width:34, height:34, fontSize:18, background:'rgba(255,255,255,0.06)' }}>☰</button>
+          )}
           <LogoIcon size="sm"/>
           <div>
             <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, background:'linear-gradient(90deg,#a78bfa,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>RE</div>
             <div style={{ fontSize:9, color:'rgba(248,250,252,0.3)', display:'flex', alignItems:'center', gap:3 }}>
-              <span style={{ display:'inline-block', width:5, height:5, borderRadius:'50%', background:'#34d399' }}/>Online · Listening
+              <span style={{ display:'inline-block', width:5, height:5, borderRadius:'50%', background:'#34d399' }}/>Online
             </div>
           </div>
         </div>
-        {!isDesktop&&(
-          <div style={{ flex:1, overflow:'hidden', padding:'0 8px', pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
-            <CharacterTabStrip activeVibe={activeVibe} setActiveVibe={setActiveVibe} onOpenCreator={onOpenCreator} characters={characters}/>
-          </div>
-        )}
         <div style={{ display:'flex', alignItems:'center', gap:6, flexShrink:0 }}>
-          {authUser&&<CoinBadge coins={authUser.coins} onClick={()=>setView('settings')}/>}
-          <button data-testid="chat-settings-btn" onClick={()=>setView('settings')} style={{ ...iconBtn, fontSize:14 }}>⚙️</button>
+          {authUser&&<CoinBadge coins={authUser.coins} onClick={onOpenSettings||(() => setView('settings'))}/>}
+          {!isDesktop&&(
+            <button onClick={onOpenGossip||(() => setView('gossip_chat'))} style={{ ...iconBtn, width:34, height:34, fontSize:16, background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.2)' }}>🤫</button>
+          )}
+          <button data-testid="chat-settings-btn" onClick={onOpenSettings||(() => setView('settings'))} style={{ ...iconBtn, width:34, height:34, fontSize:14 }}>⚙️</button>
         </div>
       </div>
 
-      {/* Mode chips */}
-      <div data-testid="mode-chips" style={{ display:'flex', gap:6, padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0, pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
+      {/* Mode chips — compact on mobile */}
+      <div data-testid="mode-chips" style={{ display:'flex', gap: isDesktop ? 6 : 4, padding: isDesktop ? '8px 14px' : '6px 10px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0, pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s', scrollbarWidth:'none' }}>
         {[{id:'AUTO',label:'⚡ AUTO'},{id:'HEAR_ME',label:'💙 HEAR ME'},{id:'BACK_ME',label:'🔥 BACK ME'},{id:'BE_REAL',label:'🧠 BE REAL'}].map(m=>(
           <button key={m.id} data-testid={`mode-chip-${m.id}`} onClick={()=>setManualMode(m.id)}
-            style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:99, border:`1px solid ${manualMode===m.id?accentColor+'55':'rgba(255,255,255,0.06)'}`, background:manualMode===m.id?accentColor+'18':'rgba(255,255,255,0.04)', fontSize:12, fontWeight:500, color:manualMode===m.id?accentColor:'rgba(248,250,252,0.5)', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s' }}>
+            style={{ display:'inline-flex', alignItems:'center', gap: isDesktop ? 6 : 4, padding: isDesktop ? '6px 14px' : '5px 10px', borderRadius:99, border:`1px solid ${manualMode===m.id?accentColor+'55':'rgba(255,255,255,0.06)'}`, background:manualMode===m.id?accentColor+'18':'rgba(255,255,255,0.04)', fontSize: isDesktop ? 12 : 11, fontWeight:500, color:manualMode===m.id?accentColor:'rgba(248,250,252,0.5)', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s', flexShrink:0 }}>
             {m.label}
           </button>
         ))}
       </div>
 
-      {/* Stats */}
-      <div style={{ display:'flex', gap:8, padding:'6px 14px', borderBottom:'1px solid rgba(255,255,255,0.04)', background:'rgba(10,5,22,0.3)', flexShrink:0 }}>
+      {/* Stats — inline on mobile */}
+      <div style={{ display:'flex', gap: isDesktop ? 8 : 6, padding: isDesktop ? '6px 14px' : '4px 10px', borderBottom:'1px solid rgba(255,255,255,0.04)', background:'rgba(10,5,22,0.3)', flexShrink:0 }}>
         {[{lbl:'INTENSITY',val:intensity,color:'#fbbf24'},{lbl:'MOOD',val:baseline,color:'#34d399'}].map(s=>(
-          <div key={s.lbl} style={{ flex:1, padding:'5px 10px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3, fontSize:8, letterSpacing:2, fontWeight:700, color:s.color, textTransform:'uppercase' }}>
+          <div key={s.lbl} style={{ flex:1, padding: isDesktop ? '5px 10px' : '3px 8px', background:'rgba(255,255,255,0.03)', borderRadius:8, border:'1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ display:'flex', justifyContent:'space-between', marginBottom:2, fontSize: isDesktop ? 8 : 7, letterSpacing: isDesktop ? 2 : 1.5, fontWeight:700, color:s.color, textTransform:'uppercase' }}>
               <span>{s.lbl}</span><span>{s.val}/10</span>
             </div>
             <div style={{ height:2, background:'rgba(255,255,255,0.06)', borderRadius:99, overflow:'hidden' }}>
@@ -1067,8 +1239,8 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Messages */}
-      <div data-testid="chat-messages" style={{ flex:1, overflowY:'auto', padding:'16px 16px 8px', display:'flex', flexDirection:'column', gap:12 }}>
-        {messages.map((msg,i)=><ChatBubble key={i} msg={msg}/>)}
+      <div data-testid="chat-messages" style={{ flex:1, overflowY:'auto', padding: isDesktop ? '16px 16px 8px' : '12px 10px 8px', display:'flex', flexDirection:'column', gap: isDesktop ? 12 : 8 }}>
+        {messages.map((msg,i)=><ChatBubble key={i} msg={msg} isDesktop={isDesktop}/>)}
         {loading&&(
           <div style={{ alignSelf:'flex-start' }}>
             <div style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'2px 14px 14px 14px' }}>
@@ -1079,16 +1251,16 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
         <div ref={scrollRef}/>
       </div>
 
-      {/* Emotion bar */}
+      {/* Emotion bar — compact on mobile */}
       <div style={{ pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
-        <EmotionBar onEmotion={setManualMode} manualMode={manualMode}/>
+        <EmotionBar onEmotion={setManualMode} manualMode={manualMode} isDesktop={isDesktop}/>
       </div>
 
       {/* Input */}
-      <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.8)', backdropFilter:'blur(16px)', flexShrink:0, position:'relative' }}>
-        <GossipFloatingBtn onClick={()=>setView('gossip_chat')}/>
-        <div style={{ display:'flex', gap:8, paddingRight:80 }}>
-          <textarea data-testid="chat-input" style={{ ...textareaCss, flex:1 }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Just say it…" rows={1}
+      <div style={{ padding: isDesktop ? '10px 14px' : '8px 10px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.8)', backdropFilter:'blur(16px)', flexShrink:0, position:'relative' }}>
+        {isDesktop&&<GossipFloatingBtn onClick={()=>setView('gossip_chat')} isDesktop={isDesktop}/>}
+        <div style={{ display:'flex', gap:8, paddingRight: isDesktop ? 80 : 0 }}>
+          <textarea data-testid="chat-input" style={{ ...textareaCss, flex:1, fontSize: isDesktop ? 14 : 15, padding: isDesktop ? '13px 16px' : '11px 14px' }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Just say it…" rows={1}
             onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }}/>
           <button data-testid="chat-send-btn" onClick={sendMessage} style={{ ...sendBtn, background:`linear-gradient(135deg,${accentColor},#34d399)` }}>↑</button>
         </div>
@@ -1098,39 +1270,39 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
 };
 
 // ─── Gossip Interface ─────────────────────────────────────────────────────────
-const GossipInterface = ({ setView, authUser, messages, input, setInput, sendMessage, loading, scrollRef }) => (
+const GossipInterface = ({ setView, authUser, messages, input, setInput, sendMessage, loading, scrollRef, isDesktop }) => (
   <div style={{ height:'100%', display:'flex', flexDirection:'column' }}>
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'14px 20px', borderBottom:'1px solid rgba(251,191,36,0.1)', background:'rgba(8,5,18,0.9)', backdropFilter:'blur(20px)', flexShrink:0 }}>
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding: isDesktop ? '14px 20px' : '10px 10px', borderBottom:'1px solid rgba(251,191,36,0.1)', background:'rgba(8,5,18,0.9)', backdropFilter:'blur(20px)', flexShrink:0, gap:8 }}>
       <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-        <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'4px 10px', borderRadius:99, background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.2)', fontSize:10, letterSpacing:1.5, textTransform:'uppercase', color:'#fbbf24' }}>
+        <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding: isDesktop ? '4px 10px' : '4px 8px', borderRadius:99, background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.2)', fontSize: isDesktop ? 10 : 9, letterSpacing:1.5, textTransform:'uppercase', color:'#fbbf24' }}>
           <motion.div style={{ width:6, height:6, borderRadius:'50%', background:'#fbbf24' }} animate={{opacity:[1,0.3,1]}} transition={{duration:1,repeat:Infinity}}/>GOSSIP MODE
         </div>
-        <span style={{ fontSize:10, color:'rgba(248,250,252,0.25)' }}>RAM only · No storage</span>
+        {isDesktop&&<span style={{ fontSize:10, color:'rgba(248,250,252,0.25)' }}>RAM only · No storage</span>}
       </div>
       <div style={{ display:'flex', alignItems:'center', gap:8 }}>
         {authUser&&<CoinBadge coins={authUser.coins}/>}
-        <button data-testid="gossip-exit-btn" onClick={()=>setView('chat')} style={{ display:'flex', alignItems:'center', gap:6, padding:'7px 14px', background:'rgba(251,191,36,0.07)', border:'1px solid rgba(251,191,36,0.18)', borderRadius:99, color:'#fbbf24', fontSize:11, cursor:'pointer' }}>
+        <button data-testid="gossip-exit-btn" onClick={()=>setView('chat')} style={{ display:'flex', alignItems:'center', gap:6, padding: isDesktop ? '7px 14px' : '7px 10px', background:'rgba(251,191,36,0.07)', border:'1px solid rgba(251,191,36,0.18)', borderRadius:99, color:'#fbbf24', fontSize: isDesktop ? 11 : 10, cursor:'pointer', whiteSpace:'nowrap' }}>
           Exit & Dissolve
         </button>
       </div>
     </div>
-    <div style={{ margin:'10px 16px 0', padding:'10px 14px', background:'rgba(251,191,36,0.05)', border:'1px solid rgba(251,191,36,0.12)', borderRadius:14, display:'flex', alignItems:'center', gap:10, fontSize:12, color:'rgba(251,191,36,0.7)', flexShrink:0 }}>
+    <div style={{ margin: isDesktop ? '10px 16px 0' : '8px 10px 0', padding: isDesktop ? '10px 14px' : '8px 10px', background:'rgba(251,191,36,0.05)', border:'1px solid rgba(251,191,36,0.12)', borderRadius:14, display:'flex', alignItems:'center', gap:10, fontSize: isDesktop ? 12 : 11, color:'rgba(251,191,36,0.7)', flexShrink:0 }}>
       <span>⚠️</span><span>This conversation will vanish when you exit. No logs. No memory. No receipts.</span>
     </div>
-    <div data-testid="gossip-messages" style={{ flex:1, overflowY:'auto', padding:'16px', display:'flex', flexDirection:'column', gap:14 }}>
+    <div data-testid="gossip-messages" style={{ flex:1, overflowY:'auto', padding: isDesktop ? '16px' : '12px 10px', display:'flex', flexDirection:'column', gap: isDesktop ? 14 : 10 }}>
       {messages.length===0&&(
         <div style={{ flex:1, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', opacity:0.4, paddingTop:30 }}>
           <div style={{ fontSize:40, marginBottom:10 }}>🤫</div>
           <p style={{ fontSize:13, color:'rgba(248,250,252,0.5)', textAlign:'center' }}>Okay, just between us.<br/>Say whatever. Zero receipts.</p>
         </div>
       )}
-      {messages.map((msg,i)=><GossipBubble key={i} msg={msg}/>)}
+      {messages.map((msg,i)=><GossipBubble key={i} msg={msg} isDesktop={isDesktop}/>)}
       {loading&&<div style={{ alignSelf:'flex-start' }}><div style={{ background:'rgba(251,191,36,0.04)', border:'1px solid rgba(251,191,36,0.12)', borderRadius:'2px 14px 14px 14px' }}><TypingDots color="#fbbf24"/></div></div>}
       <div ref={scrollRef}/>
     </div>
-    <div style={{ padding:'14px 20px', borderTop:'1px solid rgba(251,191,36,0.08)', background:'rgba(8,5,18,0.8)', backdropFilter:'blur(16px)', flexShrink:0 }}>
+    <div style={{ padding: isDesktop ? '14px 20px' : '10px 10px', borderTop:'1px solid rgba(251,191,36,0.08)', background:'rgba(8,5,18,0.8)', backdropFilter:'blur(16px)', flexShrink:0 }}>
       <div style={{ display:'flex', gap:8 }}>
-        <textarea data-testid="gossip-input" style={{ ...textareaCss, flex:1, borderColor:'rgba(251,191,36,0.15)' }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Off the record…" rows={1}
+        <textarea data-testid="gossip-input" style={{ ...textareaCss, flex:1, borderColor:'rgba(251,191,36,0.15)', fontSize: isDesktop ? 14 : 15, padding: isDesktop ? '13px 16px' : '11px 14px' }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Off the record…" rows={1}
           onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }}/>
         <button data-testid="gossip-send-btn" onClick={sendMessage} style={{ ...sendBtn, background:'linear-gradient(135deg,#fbbf24,#f59e0b)' }}>↑</button>
       </div>
@@ -1139,7 +1311,7 @@ const GossipInterface = ({ setView, authUser, messages, input, setInput, sendMes
 );
 
 // ─── Settings Screen ──────────────────────────────────────────────────────────
-const SettingsScreen = ({ authUser, onBack, language, setLanguage, onLogout }) => {
+const SettingsScreen = ({ authUser, onBack, language, setLanguage, onLogout, isDesktop }) => {
   const COIN_PACKS=[
     {coins:40,price:'₹49',label:'Starter',badge:null},{coins:100,price:'₹99',label:'Core',badge:'Popular'},
     {coins:220,price:'₹199',label:'Value',badge:'Best Value'},{coins:600,price:'₹499',label:'Power',badge:null},
@@ -1152,27 +1324,27 @@ const SettingsScreen = ({ authUser, onBack, language, setLanguage, onLogout }) =
         <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:16 }}>Settings</div>
         <div style={{ width:38 }}/>
       </div>
-      <div style={{ flex:1, overflowY:'auto', padding:'0 16px 32px' }}>
+      <div style={{ flex:1, overflowY:'auto', padding: isDesktop ? '0 16px 32px' : '0 10px 24px' }}>
         <div style={sectionLabel}>// User Profile</div>
-        <div style={{ ...glass, padding:'16px 20px', marginBottom:8, display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-          <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+        <div style={{ ...glass, padding: isDesktop ? '16px 20px' : '12px 14px', marginBottom:8, display:'flex', alignItems:'center', justifyContent:'space-between', gap:8 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:12, minWidth:0 }}>
             <div style={{ width:46, height:46, borderRadius:'50%', background:'rgba(167,139,250,0.15)', border:'1px solid rgba(167,139,250,0.3)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:20 }}>😤</div>
-            <div>
-              <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:15 }}>{authUser?.name||'User'}</div>
-              <div style={{ fontSize:11, color:'rgba(248,250,252,0.4)', marginTop:2 }}>{authUser?.email||''}</div>
+            <div style={{ minWidth:0 }}>
+              <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:15, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{authUser?.name||'User'}</div>
+              <div style={{ fontSize:11, color:'rgba(248,250,252,0.4)', marginTop:2, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{authUser?.email||''}</div>
             </div>
           </div>
           <CoinBadge coins={authUser?.coins||0}/>
         </div>
         <div style={sectionLabel}>// Recharge Coins</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(130px,1fr))', gap:10, marginBottom:8 }}>
+        <div style={{ display:'grid', gridTemplateColumns: isDesktop ? 'repeat(auto-fill,minmax(130px,1fr))' : 'repeat(2,minmax(0,1fr))', gap:10, marginBottom:8 }}>
           {COIN_PACKS.map(pack=>(
             <div key={pack.coins} data-testid={`coin-pack-${pack.label}`} style={{ ...glass, padding:'16px 12px', textAlign:'center', position:'relative' }}>
               {pack.badge&&<div style={{ position:'absolute', top:-9, left:'50%', transform:'translateX(-50%)', background:'linear-gradient(90deg,#a78bfa,#34d399)', padding:'2px 10px', borderRadius:99, fontSize:9, fontWeight:700, whiteSpace:'nowrap', color:'#fff' }}>{pack.badge}</div>}
               <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:26, background:'linear-gradient(90deg,#a78bfa,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', marginBottom:2 }}>{pack.coins}</div>
               <div style={{ fontSize:10, color:'rgba(248,250,252,0.35)', marginBottom:6 }}>coins</div>
               <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:15, marginBottom:8 }}>{pack.price}</div>
-              <button style={{ ...btnPrimary, padding:'7px 16px', fontSize:12 }}>Get</button>
+              <button style={{ ...btnPrimary, padding:'7px 12px', fontSize:12 }}>Get</button>
             </div>
           ))}
         </div>
@@ -1185,7 +1357,7 @@ const SettingsScreen = ({ authUser, onBack, language, setLanguage, onLogout }) =
               <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:500, fontSize:14 }}>Language</span>
             </div>
             <div style={{ position:'relative' }}>
-              <select value={language} onChange={e=>setLanguage(e.target.value)} style={{ appearance:'none', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', padding:'7px 28px 7px 12px', borderRadius:10, color:'#fff', fontSize:13, outline:'none', cursor:'pointer' }}>
+              <select value={language} onChange={e=>setLanguage(e.target.value)} style={{ appearance:'none', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', padding:'7px 28px 7px 12px', borderRadius:10, color:'#fff', fontSize:13, outline:'none', cursor:'pointer', maxWidth:110 }}>
                 <option value="Hindi">Hinglish</option><option value="English">English</option>
                 <option value="Marathi">Marathi</option><option value="Tamil">Tamil</option><option value="Kannada">Kannada</option>
               </select>
@@ -1620,11 +1792,14 @@ function App() {
   const chatViewProps={
     activeVibe,setActiveVibe:switchVibe,
     setView:(v)=>{ if(v==='gossip_chat'){openGossip();return;} setView(v); },
-    characters,onOpenCreator:openCreator,
+    characters,onOpenCreator:openCreator,onDeleteCharacter:handleDeleteCharacter,
     intensity,baseline,manualMode,setManualMode,authUser,
     messages,input,setInput,sendMessage,loading,scrollRef,
     language,setLanguage,isDesktop,
     startNewSession,chatSessions,sessionId,
+    onOpenGossip:openGossip,onSwitchSession:switchSession,
+    onDeleteSession:deleteSession,onRenameSession:renameSession,
+    onOpenSettings:()=>setView('settings'),
   };
 
   // Page transition variants
@@ -1698,7 +1873,7 @@ function App() {
 
       {view==='gossip_chat'&&(
         <div style={wrapFull}>
-          <GossipInterface setView={v=>setView(v==='chat'?'chat':v)} authUser={authUser} messages={gossipMessages} input={gossipInput} setInput={setGossipInput} sendMessage={sendGossipMessage} loading={gossipLoading} scrollRef={gossipScrollRef}/>
+          <GossipInterface setView={v=>setView(v==='chat'?'chat':v)} authUser={authUser} messages={gossipMessages} input={gossipInput} setInput={setGossipInput} sendMessage={sendGossipMessage} loading={gossipLoading} scrollRef={gossipScrollRef} isDesktop={isDesktop}/>
         </div>
       )}
 
@@ -1710,18 +1885,18 @@ function App() {
                 <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
               </div>
               <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
-                <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
+                <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language} isDesktop={isDesktop}/>
               </div>
             </div>
           ):(
-            <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
+            <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language} isDesktop={isDesktop}/>
           )}
         </div>
       )}
 
       {view==='settings'&&(
         <div style={wrapFull}>
-          <SettingsScreen authUser={authUser} onBack={()=>setView('chat')} language={language} setLanguage={setLanguage} onLogout={handleLogout}/>
+          <SettingsScreen authUser={authUser} onBack={()=>setView('chat')} language={language} setLanguage={setLanguage} onLogout={handleLogout} isDesktop={isDesktop}/>
         </div>
       )}
     </AppBg>
