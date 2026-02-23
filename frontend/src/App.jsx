@@ -1429,11 +1429,8 @@ function App() {
     <AppBg>
       {/* Loading state while checking auth */}
       {view===null&&(
-        <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <motion.div initial={{opacity:0,scale:0.8}} animate={{opacity:1,scale:1}} style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:16 }}>
-            <LogoIcon size="lg"/>
-            <TypingDots color="#a78bfa"/>
-          </motion.div>
+        <div style={{ ...wrapFull, display:'flex', alignItems:'center', justifyContent:'center' }}>
+          <LogoIcon size="lg"/>
         </div>
       )}
 
@@ -1445,92 +1442,81 @@ function App() {
         {coinToast&&<CoinToast toast={coinToast}/>}
       </AnimatePresence>
 
+      {/* Onboarding flow — animated transitions */}
       <AnimatePresence mode="wait">
-        {/* 1. Splash — always first */}
         {view==='splash'&&(
           <motion.div key="splash" style={wrapFull} {...fadeIn}>
             <SplashScreen onDone={handleSplashDone}/>
           </motion.div>
         )}
-
-        {/* 2. Auth */}
         {view==='auth'&&(
           <motion.div key="auth" style={wrapFull} {...fadeIn}>
             <AuthScreen onAuth={handleAuth}/>
           </motion.div>
         )}
-
-        {/* 3. Onboarding slides */}
         {view==='onboarding'&&(
           <motion.div key="ob" style={wrapFull} {...fadeIn}>
             <OnboardingScreen onDone={()=>setView('name')}/>
           </motion.div>
         )}
-
-        {/* 4. Name */}
         {view==='name'&&(
           <motion.div key="name" style={wrapFull} {...slideUp}>
             <NameScreen onDone={n=>{setUserName(n);setView('lang');}}/>
           </motion.div>
         )}
-
-        {/* 5. Language */}
         {view==='lang'&&(
           <motion.div key="lang" style={wrapFull} {...slideUp}>
             <LanguageScreen onDone={handleLangDone}/>
           </motion.div>
         )}
-
-        {/* 6. Main Chat */}
-        {view==='chat'&&(
-          <motion.div key="chat" style={wrapFull} {...fadeIn}>
-            {isDesktop?(
-              <div style={{ display:'flex', height:'100%' }}>
-                <div style={{ width:240, flexShrink:0 }}>
-                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
-                </div>
-                <div style={{ flex:1, overflow:'hidden', position:'relative' }}>
-                  <ChatInterface {...chatViewProps}/>
-                </div>
-              </div>
-            ):(
-              <ChatInterface {...chatViewProps}/>
-            )}
-          </motion.div>
-        )}
-
-        {/* Gossip */}
-        {view==='gossip_chat'&&(
-          <motion.div key="gossip" style={wrapFull} initial={{y:'100%'}} animate={{y:0}} exit={{y:'100%'}} transition={{type:'spring',stiffness:260,damping:28}}>
-            <GossipInterface setView={v=>setView(v==='chat'?'chat':v)} authUser={authUser} messages={gossipMessages} input={gossipInput} setInput={setGossipInput} sendMessage={sendGossipMessage} loading={gossipLoading} scrollRef={gossipScrollRef}/>
-          </motion.div>
-        )}
-
-        {/* Creator */}
-        {view==='creator'&&(
-          <motion.div key="creator" style={wrapFull} {...slideR}>
-            {isDesktop?(
-              <div style={{ display:'flex', height:'100%' }}>
-                <div style={{ width:240, flexShrink:0 }}>
-                  <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
-                </div>
-                <div style={{ flex:1, overflow:'hidden', position:'relative' }}>
-                  <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
-                </div>
-              </div>
-            ):(
-              <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
-            )}
-          </motion.div>
-        )}
-
-        {/* Settings */}
-        {view==='settings'&&(
-          <motion.div key="settings" style={wrapFull} {...slideR}>
-            <SettingsScreen authUser={authUser} onBack={()=>setView('chat')} language={language} setLanguage={setLanguage} onLogout={handleLogout}/>
-          </motion.div>
-        )}
       </AnimatePresence>
+
+      {/* Main app views — NO animations, render instantly */}
+      {view==='chat'&&(
+        <div style={wrapFull}>
+          {isDesktop?(
+            <div style={{ display:'flex', height:'100%' }}>
+              <div style={{ width:240, flexShrink:0, height:'100%' }}>
+                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
+              </div>
+              <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
+                <ChatInterface {...chatViewProps}/>
+              </div>
+            </div>
+          ):(
+            <ChatInterface {...chatViewProps}/>
+          )}
+        </div>
+      )}
+
+      {view==='gossip_chat'&&(
+        <div style={wrapFull}>
+          <GossipInterface setView={v=>setView(v==='chat'?'chat':v)} authUser={authUser} messages={gossipMessages} input={gossipInput} setInput={setGossipInput} sendMessage={sendGossipMessage} loading={gossipLoading} scrollRef={gossipScrollRef}/>
+        </div>
+      )}
+
+      {view==='creator'&&(
+        <div style={wrapFull}>
+          {isDesktop?(
+            <div style={{ display:'flex', height:'100%' }}>
+              <div style={{ width:240, flexShrink:0, height:'100%' }}>
+                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession}/>
+              </div>
+              <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
+                <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
+              </div>
+            </div>
+          ):(
+            <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language}/>
+          )}
+        </div>
+      )}
+
+      {view==='settings'&&(
+        <div style={wrapFull}>
+          <SettingsScreen authUser={authUser} onBack={()=>setView('chat')} language={language} setLanguage={setLanguage} onLogout={handleLogout}/>
+        </div>
+      )}
     </AppBg>
   );
 }
