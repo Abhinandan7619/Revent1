@@ -27,47 +27,27 @@
         window.addEventListener('orientationchange', setVH);
       })();
       
-      // Block ALL programmatic page reload/navigation from Vite dev server
-      // Vite triggers reload via location.reload(), location.replace(), or location.href
-      // when its HMR WebSocket reconnect fails (Emergent proxy timeout ~2min)
+      // Block programmatic reload from Vite dev server / Emergent proxy timeout
       (function() {
-        // Block location.reload()
         location.reload = function() {
           console.debug('[ReVent] Blocked auto-reload (reload)');
         };
-        // Block location.replace() — Vite beta uses this too
         var _origReplace = location.replace.bind(location);
         location.replace = function(url) {
-          if (url && (String(url).includes('/@vite') || String(url) === window.location.href)) {
-            console.debug('[ReVent] Blocked auto-reload (replace)');
-            return;
+          var s = String(url);
+          if (s === window.location.href || s.includes('/@vite') || s.includes('node_modules/.vite')) {
+            console.debug('[ReVent] Blocked auto-reload (replace)'); return;
           }
           _origReplace(url);
         };
-        // Block location.assign()
         var _origAssign = location.assign.bind(location);
         location.assign = function(url) {
-          if (url && (String(url).includes('/@vite') || String(url) === window.location.href)) {
-            console.debug('[ReVent] Blocked auto-reload (assign)');
-            return;
+          var s = String(url);
+          if (s === window.location.href || s.includes('/@vite') || s.includes('node_modules/.vite')) {
+            console.debug('[ReVent] Blocked auto-reload (assign)'); return;
           }
           _origAssign(url);
         };
-        // Block location.href setter reassigning to same page
-        var _loc = window.location;
-        try {
-          Object.defineProperty(window, 'location', {
-            get: function() { return _loc; },
-            set: function(url) {
-              if (String(url) === _loc.href || String(url).includes('/@vite')) {
-                console.debug('[ReVent] Blocked auto-reload (href set)');
-                return;
-              }
-              _loc.href = url;
-            },
-            configurable: true
-          });
-        } catch(e) {}
       })();
 
       // Suppress Vite HMR WebSocket errors silently
