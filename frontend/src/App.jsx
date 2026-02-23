@@ -236,10 +236,8 @@ function Avatar3D({ color='#a78bfa', energy=50, height=160 }) {
 // ─── App background ───────────────────────────────────────────────────────────
 const AppBg = ({ children }) => (
   <div id="app-root" style={{ 
-    position:'fixed', 
+    position:'absolute', 
     top:0, left:0, right:0, bottom:0, 
-    width:'100vw',
-    height:'calc(var(--vh, 1vh) * 100)',
     overflow:'hidden', 
     background:'linear-gradient(145deg,#1a0533,#0a1a40 55%,#003328)', 
     display:'flex', 
@@ -259,7 +257,7 @@ const AppBg = ({ children }) => (
 );
 
 // Full-screen absolute wrapper (for chat, settings, creator etc)
-const wrapFull = { position:'absolute', inset:0, display:'flex', flexDirection:'column', height:'100%' };
+const wrapFull = { position:'absolute', inset:0, display:'flex', flexDirection:'column' };
 
 // ─── Beta Welcome Modal ────────────────────────────────────────────────────────
 const BetaWelcomeModal = ({ onDismiss }) => {
