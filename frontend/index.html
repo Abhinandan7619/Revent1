@@ -6,34 +6,73 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>ReVent — Re. In. Venting. Space.</title>
     <script>
-      // Prevent Vite HMR WebSocket from causing page reloads in K8s environment
-      // This runs before Vite client loads to intercept reload attempts
+      // Prevent Vite HMR from causing page reloads in K8s environment
+      // This intercepts reload attempts before Vite client loads
       (function() {
-        // Store original reload function
-        var originalReload = window.location.reload;
-        var reloadBlocked = false;
+        'use strict';
         
-        // Override reload to prevent automatic reloads from Vite HMR
-        window.location.reload = function() {
-          // Check if this is a user-initiated reload (via keyboard or button)
-          if (window.__userInitiatedReload) {
-            window.__userInitiatedReload = false;
-            return originalReload.apply(this, arguments);
-          }
-          // Block automatic reloads and log them
-          if (!reloadBlocked) {
-            console.info('[ReVent] Blocked automatic page reload (likely from Vite HMR timeout)');
-            reloadBlocked = true;
-            setTimeout(function() { reloadBlocked = false; }, 5000);
-          }
-        };
+        // Flag to track user-initiated reloads
+        var userInitiated = false;
         
-        // Allow manual reloads via F5 or Ctrl+R
+        // Store original reload
+        var originalReload = window.location.reload.bind(window.location);
+        
+        // Override reload to block automatic reloads
+        Object.defineProperty(window.location, 'reload', {
+          value: function() {
+            if (userInitiated) {
+              userInitiated = false;
+              return originalReload();
+            }
+            console.info('[ReVent] Blocked automatic page reload');
+          },
+          writable: false,
+          configurable: false
+        });
+        
+        // Allow manual reloads via keyboard
         document.addEventListener('keydown', function(e) {
           if (e.key === 'F5' || (e.ctrlKey && e.key === 'r') || (e.metaKey && e.key === 'r')) {
-            window.__userInitiatedReload = true;
+            userInitiated = true;
           }
         });
+        
+        // Intercept WebSocket to prevent Vite HMR reconnection issues
+        var OriginalWebSocket = window.WebSocket;
+        window.WebSocket = function(url, protocols) {
+          var ws = new OriginalWebSocket(url, protocols);
+          
+          // If this is a Vite HMR socket, suppress error handlers that might reload
+          if (url && (url.includes('vite') || url.includes('/@'))) {
+            var originalOnError = null;
+            var originalOnClose = null;
+            
+            Object.defineProperty(ws, 'onerror', {
+              set: function(fn) { originalOnError = fn; },
+              get: function() {
+                return function(e) {
+                  console.debug('[ReVent] Suppressed Vite WebSocket error');
+                };
+              }
+            });
+            
+            Object.defineProperty(ws, 'onclose', {
+              set: function(fn) { originalOnClose = fn; },
+              get: function() {
+                return function(e) {
+                  console.debug('[ReVent] Suppressed Vite WebSocket close');
+                };
+              }
+            });
+          }
+          
+          return ws;
+        };
+        window.WebSocket.prototype = OriginalWebSocket.prototype;
+        window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
+        window.WebSocket.OPEN = OriginalWebSocket.OPEN;
+        window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
+        window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
       })();
     </script>
   </head>
