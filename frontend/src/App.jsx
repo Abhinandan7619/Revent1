@@ -907,15 +907,8 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           <CoinBadge coins={authUser.coins} onClick={onOpenSettings}/>
         </div>
       )}
-      <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Companion</div>
+      <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Companions</div>
       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-        {/* RE default */}
-        <motion.button data-testid="sidebar-vibe-default" onClick={()=>setActiveVibe('default')} whileTap={{scale:0.97}}
-          style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:`1px solid ${activeVibe==='default'?'#a78bfa50':'rgba(255,255,255,0.05)'}`, background:activeVibe==='default'?'#a78bfa15':'rgba(255,255,255,0.03)', cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
-          <div style={{ width:32, height:32, borderRadius:'50%', background:activeVibe==='default'?'#a78bfa20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>🤖</div>
-          <span style={{ fontSize:13, fontWeight:600, color:activeVibe==='default'?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif" }}>RE</span>
-          {activeVibe==='default'&&<span style={{ marginLeft:'auto', color:'#a78bfa', fontSize:12 }}>●</span>}
-        </motion.button>
         {/* User characters */}
         {characters.map(c=>{
           const color = ROLE_COLORS[c.base_role]||'#a78bfa';
@@ -934,6 +927,47 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
             </div>
           );
         })}
+        {/* Current chats UI moved inside Companions */}
+        {activeVibe==='default'&&(
+          <div style={{ marginTop:4 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+              {defaultSessions.map(s=>(
+                <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
+                  {renamingId===s.session_id?(
+                    <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+                      onBlur={()=>handleRenameSubmit(s.session_id)}
+                      onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
+                      style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
+                  ):(
+                    <button onClick={()=>onSwitchSession(s.session_id)} onDoubleClick={()=>handleRenameStart(s)}
+                      title="Click to open · Double-click to rename"
+                      style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                      {s.title||'New Chat'}
+                    </button>
+                  )}
+                  <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
+                    style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0, lineHeight:1 }}>×</button>
+                </div>
+              ))}
+            </div>
+            {showNewInput?(
+              <div style={{ marginTop:6, display:'flex', gap:4 }}>
+                <input autoFocus value={newChatName} onChange={e=>setNewChatName(e.target.value)} placeholder="Chat name…"
+                  onKeyDown={e=>{ if(e.key==='Enter')handleNewChatSubmit(); if(e.key==='Escape'){setShowNewInput(false);} }}
+                  style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'7px 10px', color:'#fff', fontSize:12, outline:'none', fontFamily:"'Outfit',sans-serif" }}/>
+                <button onClick={handleNewChatSubmit} style={{ background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:8, color:'#34d399', fontSize:12, padding:'0 10px', cursor:'pointer' }}>+</button>
+              </div>
+            ):canAddSession?(
+              <motion.button data-testid="sidebar-new-chat-btn" onClick={handleNewChat} whileTap={{scale:0.97}}
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
+                <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
+                <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
+              </motion.button>
+            ):(
+              <div style={{ marginTop:6, padding:'7px 10px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', fontSize:11, color:'rgba(248,250,252,0.25)', textAlign:'center' }}>Max 2 chats · delete one to add</div>
+            )}
+          </div>
+        )}
         {canCreate&&(
           <motion.button data-testid="sidebar-create-btn" onClick={onOpenCreator} whileTap={{scale:0.97}}
             style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
@@ -942,48 +976,6 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           </motion.button>
         )}
       </div>
-      {/* Session list — RE mode only */}
-      {activeVibe==='default'&&(
-        <div style={{ marginTop:16 }}>
-          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginBottom:8 }}>Chats</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-            {defaultSessions.map(s=>(
-              <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
-                {renamingId===s.session_id?(
-                  <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
-                    onBlur={()=>handleRenameSubmit(s.session_id)}
-                    onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
-                    style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
-                ):(
-                  <button onClick={()=>onSwitchSession(s.session_id)} onDoubleClick={()=>handleRenameStart(s)}
-                    title="Click to open · Double-click to rename"
-                    style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                    {s.title||'New Chat'}
-                  </button>
-                )}
-                <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
-                  style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0, lineHeight:1 }}>×</button>
-              </div>
-            ))}
-          </div>
-          {showNewInput?(
-            <div style={{ marginTop:6, display:'flex', gap:4 }}>
-              <input autoFocus value={newChatName} onChange={e=>setNewChatName(e.target.value)} placeholder="Chat name…"
-                onKeyDown={e=>{ if(e.key==='Enter')handleNewChatSubmit(); if(e.key==='Escape'){setShowNewInput(false);} }}
-                style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'7px 10px', color:'#fff', fontSize:12, outline:'none', fontFamily:"'Outfit',sans-serif" }}/>
-              <button onClick={handleNewChatSubmit} style={{ background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:8, color:'#34d399', fontSize:12, padding:'0 10px', cursor:'pointer' }}>+</button>
-            </div>
-          ):canAddSession?(
-            <motion.button data-testid="sidebar-new-chat-btn" onClick={handleNewChat} whileTap={{scale:0.97}}
-              style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
-              <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
-              <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
-            </motion.button>
-          ):(
-            <div style={{ marginTop:6, padding:'7px 10px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', fontSize:11, color:'rgba(248,250,252,0.25)', textAlign:'center' }}>Max 2 chats · delete one to add</div>
-          )}
-        </div>
-      )}
       <div style={{ marginTop:16, borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:16 }}>
         <motion.button data-testid="sidebar-gossip-btn" onClick={onOpenGossip} whileTap={{scale:0.97}}
           style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:12, border:'1px solid rgba(251,191,36,0.2)', background:'rgba(251,191,36,0.05)', cursor:'pointer' }}>
@@ -1061,14 +1053,8 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
 
         <div style={{ padding:'0 16px', flex:1 }}>
           {/* Companions */}
-          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:14, marginBottom:8 }}>Companion</div>
+          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:14, marginBottom:8 }}>Companions</div>
           <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-            <motion.button onClick={()=>{setActiveVibe('default');onClose();}} whileTap={{scale:0.97}}
-              style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:`1px solid ${activeVibe==='default'?'#a78bfa50':'rgba(255,255,255,0.05)'}`, background:activeVibe==='default'?'#a78bfa15':'rgba(255,255,255,0.03)', cursor:'pointer', textAlign:'left' }}>
-              <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe==='default'?'#a78bfa20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>🤖</div>
-              <span style={{ fontSize:13, fontWeight:600, color:activeVibe==='default'?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif" }}>RE</span>
-              {activeVibe==='default'&&<span style={{ marginLeft:'auto', color:'#a78bfa', fontSize:11 }}>●</span>}
-            </motion.button>
             {characters.map(c=>{
               const color = ROLE_COLORS[c.base_role]||'#a78bfa';
               const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
@@ -1085,6 +1071,38 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
                 </div>
               );
             })}
+            {/* Current chats UI moved inside Companions */}
+            {activeVibe==='default'&&(
+              <div style={{ marginTop:2 }}>
+                <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+                  {defaultSessions.map(s=>(
+                    <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
+                      {renamingId===s.session_id?(
+                        <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+                          onBlur={()=>handleRenameSubmit(s.session_id)}
+                          onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
+                          style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
+                      ):(
+                        <button onClick={()=>{onSwitchSession(s.session_id);onClose();}} onDoubleClick={()=>handleRenameStart(s)}
+                          title="Click to open · Double-click to rename"
+                          style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          {s.title||'New Chat'}
+                        </button>
+                      )}
+                      <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
+                        style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0 }}>×</button>
+                    </div>
+                  ))}
+                </div>
+                {canAddSession&&(
+                  <motion.button onClick={()=>{startNewSession();onClose();}} whileTap={{scale:0.97}}
+                    style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
+                    <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
+                    <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
+                  </motion.button>
+                )}
+              </div>
+            )}
             {canCreate&&(
               <motion.button onClick={()=>{onOpenCreator();onClose();}} whileTap={{scale:0.97}}
                 style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
@@ -1093,40 +1111,6 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
               </motion.button>
             )}
           </div>
-
-          {/* Sessions — RE mode only */}
-          {activeVibe==='default'&&(
-            <div style={{ marginTop:14 }}>
-              <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginBottom:8 }}>Chats</div>
-              <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                {defaultSessions.map(s=>(
-                  <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
-                    {renamingId===s.session_id?(
-                      <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
-                        onBlur={()=>handleRenameSubmit(s.session_id)}
-                        onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
-                        style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
-                    ):(
-                      <button onClick={()=>{onSwitchSession(s.session_id);onClose();}} onDoubleClick={()=>handleRenameStart(s)}
-                        title="Click to open · Double-click to rename"
-                        style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                        {s.title||'New Chat'}
-                      </button>
-                    )}
-                    <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
-                      style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0 }}>×</button>
-                  </div>
-                ))}
-              </div>
-              {canAddSession&&(
-                <motion.button onClick={()=>{startNewSession();onClose();}} whileTap={{scale:0.97}}
-                  style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
-                  <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
-                  <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
-                </motion.button>
-              )}
-            </div>
-          )}
 
           {/* Gossip Room */}
           <div style={{ marginTop:14, paddingTop:14, borderTop:'1px solid rgba(255,255,255,0.06)' }}>
