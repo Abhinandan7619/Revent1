@@ -10,6 +10,7 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - **Frontend**: React 18 + Vite + Tailwind + Framer Motion + Three.js
 - **Backend**: FastAPI + Motor (MongoDB) + LangGraph + Google Gemini 2.5 Flash
 - **Database**: MongoDB (`revent`)
+- **Environment**: Kubernetes with NGINX Ingress (requires special handling for HMR/WebSocket)
 
 ## Key Collections
 - **users**: user_id, email, name, language, coins, onboarding_complete, onboarding_chat_status/phase/question, personality_profile
@@ -37,6 +38,22 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - Gossip mode (no history, no logs)
 - SessionStorage persistence (survives page reloads, no splash redirect for auth users)
 - Personality profile used subtly in AI responses
+- **Auto-reload prevention** (WebSocket interception + location.reload override in index.html)
+- **Returning user direct-to-chat** (handleAuth loads welcome/history for onboarding_complete users)
+
+## Bug Fixes Log (Feb 2026)
+
+### Fixed: Auto-Reload Issue
+- **Problem**: Page auto-reloaded every 1-2 minutes due to Vite HMR WebSocket timing out in K8s ingress
+- **Solution**: 
+  1. Disabled HMR in vite.config.js (`hmr: false, watch: { ignored: ['**/*'] }`)
+  2. Added reload prevention script in index.html (intercepts WebSocket errors and location.reload)
+- **Files**: `/app/frontend/vite.config.js`, `/app/frontend/index.html`
+
+### Fixed: Empty Chat After Login
+- **Problem**: Returning users saw empty chat screen after login
+- **Solution**: Updated `handleAuth()` in App.jsx to load chat sessions and welcome messages for users with `onboarding_complete: true`
+- **File**: `/app/frontend/src/App.jsx` (handleAuth function ~line 1270)
 
 ## Prioritized Backlog
 
@@ -57,3 +74,7 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - Analytics dashboard
 - Multi-language prompting refinement
 - Voice messages
+
+## Test Credentials
+- **Returning user**: `returning@test.com` / `test123` (onboarding_complete=true)
+- **New user**: Register with any email/password
