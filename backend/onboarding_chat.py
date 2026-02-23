@@ -21,6 +21,7 @@ onboarding_llm = ChatGoogleGenerativeAI(
 )
 
 # ─── Onboarding Phases & Questions ────────────────────────────────────────────
+# Slim 4-question single-phase onboarding
 
 PHASES = [
     {
@@ -30,108 +31,34 @@ PHASES = [
             {
                 "id": "welcome",
                 "type": "consent",
-                "prompt": "Greet the user by name. Then say (in the user's language style): 'We just met... asking you to spill everything right away would be awkward, right? 😅 That's not how it works here. If you're cool with it, I'll ask some chill questions to get to know you... so that when you want to talk, I already have an idea of what kind of person you are.' Then ask if they're ready. Keep it warm and casual.",
+                "prompt": "Greet the user by name. Then say (in the user's language style): 'We just met... sirf 4 quick questions poochhna chahta hoon to get your vibe — taaki jab bhi baat karni ho, I already know what kind of person you are. Cool?' Keep it warm and casual.",
                 "yes_tags": [],
                 "no_action": "respect_decline",
             }
         ],
     },
     {
-        "name": "Mood & Entertainment",
-        "phase_label": "movies aur music",
+        "name": "Quick Vibe Check",
+        "phase_label": "vibe check",
         "questions": [
             {
-                "id": "q1_1_movie_vibe",
-                "prompt": "Ask about their movie preferences: Action where everything blows up? Slow emotional ones that lighten the heart? Or dark twisted thrillers that mess with your mind? Keep it fun with emojis.",
-                "tag_map": {"thriller": "analytical_mind", "emotional": "deep_feeler", "action": "high_energy", "mixed": "flexible"},
-            },
-            {
-                "id": "q1_2_repeat_movie",
-                "prompt": "Ask: If they had to watch ONE movie on repeat for life, which one would it be? 🔁",
-                "tag_map": {},
-            },
-            {
-                "id": "q1_3_music_vibe",
-                "prompt": "Ask about music taste: Heartbreak songs? Motivational? Or full volume car bangers? 🎶🚗",
-                "tag_map": {},
-            },
-            {
-                "id": "q1_4_shower_singer",
-                "prompt": "Last one in this section - ask if they're a shower singer or a silent listener? 😏 After their answer, say Phase 1 done and things are about to get more interesting.",
-                "tag_map": {},
-            },
-        ],
-    },
-    {
-        "name": "Emotional Style",
-        "phase_label": "emotions aur feelings",
-        "questions": [
-            {
-                "id": "q2_1_upset_behavior",
-                "prompt": "Start with 'Ab thoda real talk...' Ask: When they're upset, do they talk to people or go quiet?",
+                "id": "q1_upset_behavior",
+                "prompt": "Ask: When they're upset — do they talk to someone or go completely quiet and process alone?",
                 "tag_map": {"quiet": "internalizer", "talk": "externalizer", "mixed": "adaptive"},
             },
             {
-                "id": "q2_2_overthinking",
-                "prompt": "Ask: Are they more of an overthinker or 'jo hoga dekha jayega' type?",
+                "id": "q2_overthinking",
+                "prompt": "Ask: Overthinker or 'jo hoga dekha jayega' type? 😅",
                 "tag_map": {"overthink": "overthinker", "chill": "go_with_flow"},
             },
             {
-                "id": "q2_3_anger",
-                "prompt": "Ask: When anger comes, do they express it or keep it inside? After answer, say you're starting to understand them better.",
-                "tag_map": {"express": "expressive_anger", "suppress": "suppressed_anger"},
-            },
-        ],
-    },
-    {
-        "name": "Mindset & Energy",
-        "phase_label": "personality aur energy",
-        "questions": [
-            {
-                "id": "q3_1_morning_night",
-                "prompt": "Ask: Morning person or 2 AM philosopher? 🌅🌙",
-                "tag_map": {"morning": "morning_person", "night": "night_owl"},
-            },
-            {
-                "id": "q3_2_how_others_see",
-                "prompt": "Ask: How do people usually describe them? Calm? Funny? Intense? Reserved? Something else?",
+                "id": "q3_how_others_see",
+                "prompt": "Ask: How do people usually describe them — calm, funny, intense, reserved? Or something totally different?",
                 "tag_map": {},
             },
             {
-                "id": "q3_3_misunderstood",
-                "prompt": "Ask: One thing people get wrong about them - any misconception? Respond with empathy if they share. Then say you're getting their vibe now.",
-                "tag_map": {},
-            },
-        ],
-    },
-    {
-        "name": "Comfort & Safe Space",
-        "phase_label": "trust aur comfort zone",
-        "questions": [
-            {
-                "id": "q4_1_trust",
-                "prompt": "Say 'going a bit deeper now, but skip is always okay 🤝'. Ask: Do they trust easily or does it take time?",
-                "tag_map": {"easy": "quick_trust", "time": "slow_trust"},
-            },
-            {
-                "id": "q4_2_passionate_topic",
-                "prompt": "Ask (positive question): Any topic they could talk about for hours? Something that genuinely excites them?",
-                "tag_map": {},
-            },
-        ],
-    },
-    {
-        "name": "Dreams & Reality",
-        "phase_label": "dreams aur decisions",
-        "questions": [
-            {
-                "id": "q5_1_no_pressure_life",
-                "prompt": "Ask: If pressure didn't exist - no family expectations, no money issues - what would they be doing in life?",
-                "tag_map": {},
-            },
-            {
-                "id": "q5_2_logic_vs_heart",
-                "prompt": "Last question! Ask: Are they more logic-driven or heart-driven when making decisions?",
+                "id": "q4_logic_vs_heart",
+                "prompt": "Last one! Ask: More logic-driven or heart-driven when making decisions?",
                 "tag_map": {"logic": "logic_driven", "heart": "heart_driven", "both": "balanced_decider"},
             },
         ],
@@ -144,6 +71,15 @@ SKIP_KEYWORDS = {"skip", "next", "agle pe chalo", "chhodo", "nahi batana", "pass
                   "don't know", "pata nahi", "kuch nahi", "whatever", "agla"}
 EXIT_KEYWORDS = {"bas", "bye", "baad mein", "later", "i'll come back", "abhi nahi",
                  "goodnight", "gotta go", "chalta hoon"}
+
+# Smart skip — user wants to jump straight into venting/talking
+EAGER_TO_TALK_KEYWORDS = [
+    "want to talk", "want to vent", "wanna talk", "wanna vent",
+    "skip questions", "skip", "skip the questions", "just talk", "start talking",
+    "something happened", "kuch hua", "baat karni hai", "vent karna hai",
+    "bata deta hoon", "seedha baat", "let's just talk", "skip karo",
+    "chhod yeh sab", "suno pehle", "abhi kuch hua",
+]
 
 
 def _is_skip(text: str) -> bool:
