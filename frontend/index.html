@@ -27,24 +27,9 @@
         window.addEventListener('orientationchange', setVH);
       })();
       
-      // Block ALL programmatic page reload/navigation from Vite dev server
-      // Vite 8 beta uses reload(), replace(), assign(), and direct assignment depending on reconnect state
-      // Real navigation (Google auth etc.) is unaffected — only same-page reloads are blocked
+      // Block programmatic page reload/navigation from Vite dev server
+      // Note: This cannot stop reloads triggered by Emergent's filler.js blob scripts
       (function() {
-        var currentUrl = window.location.href;
-        var currentOrigin = window.location.origin;
-        
-        function isSamePageReload(url) {
-          if (!url) return true;
-          var urlStr = String(url);
-          // Block if: no URL, same URL, same origin root, or Vite internal paths
-          if (urlStr === currentUrl) return true;
-          if (urlStr === currentOrigin || urlStr === currentOrigin + '/') return true;
-          if (urlStr.includes('/@vite') || urlStr.includes('/@fs')) return true;
-          if (urlStr === '/' || urlStr === '') return true;
-          return false;
-        }
-        
         // Block location.reload()
         location.reload = function() {
           console.debug('[ReVent] Blocked location.reload()');
@@ -53,7 +38,7 @@
         // Block location.replace() for same-page reloads
         var originalReplace = location.replace.bind(location);
         location.replace = function(url) {
-          if (isSamePageReload(url)) {
+          if (!url || url === window.location.href || url === '/' || String(url).includes('/@vite')) {
             console.debug('[ReVent] Blocked location.replace()', url);
             return;
           }
@@ -63,29 +48,12 @@
         // Block location.assign() for same-page reloads
         var originalAssign = location.assign.bind(location);
         location.assign = function(url) {
-          if (isSamePageReload(url)) {
+          if (!url || url === window.location.href || url === '/' || String(url).includes('/@vite')) {
             console.debug('[ReVent] Blocked location.assign()', url);
             return;
           }
           originalAssign(url);
         };
-        
-        // Block window.location setter for same-page reloads
-        var locationDescriptor = Object.getOwnPropertyDescriptor(window, 'location');
-        if (locationDescriptor && locationDescriptor.set) {
-          var originalSetter = locationDescriptor.set.bind(window);
-          Object.defineProperty(window, 'location', {
-            get: locationDescriptor.get,
-            set: function(url) {
-              if (isSamePageReload(url)) {
-                console.debug('[ReVent] Blocked window.location assignment', url);
-                return;
-              }
-              originalSetter(url);
-            },
-            configurable: true
-          });
-        }
       })();
       
       // Suppress Vite HMR WebSocket errors silently
