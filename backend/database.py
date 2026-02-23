@@ -150,6 +150,12 @@ async def get_user_sessions(user_id: str, vibe_id: str = "default") -> list:
 
 
 async def create_chat_session(user_id: str, session_id: str, vibe_id: str = "default", title: str = "New Chat") -> dict:
+    """Create a chat session. If session_id already exists, return existing session."""
+    # Check if session already exists (globally by session_id)
+    existing = await db.chat_sessions.find_one({"session_id": session_id}, {"_id": 0})
+    if existing:
+        return existing
+    
     doc = {
         "session_id": session_id,
         "user_id": user_id,
@@ -158,7 +164,14 @@ async def create_chat_session(user_id: str, session_id: str, vibe_id: str = "def
         "created_at": datetime.now(timezone.utc),
         "updated_at": datetime.now(timezone.utc),
     }
-    await db.chat_sessions.insert_one(doc)
+    try:
+        await db.chat_sessions.insert_one(doc)
+    except Exception:
+        # Handle race condition - another request might have created it
+        existing = await db.chat_sessions.find_one({"session_id": session_id}, {"_id": 0})
+        if existing:
+            return existing
+        raise
     doc.pop("_id", None)
     return doc
 
