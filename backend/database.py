@@ -266,5 +266,3 @@ async def get_characters(user_id: str) -> list:
 async def delete_character(user_id: str, character_id: str) -> bool:
     result = await db.characters.delete_one({"user_id": user_id, "character_id": character_id})
     return result.deleted_count > 0
-
-    return new_coins
