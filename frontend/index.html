@@ -5,6 +5,37 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>ReVent — Re. In. Venting. Space.</title>
+    <script>
+      // Prevent Vite HMR WebSocket from causing page reloads in K8s environment
+      // This runs before Vite client loads to intercept reload attempts
+      (function() {
+        // Store original reload function
+        var originalReload = window.location.reload;
+        var reloadBlocked = false;
+        
+        // Override reload to prevent automatic reloads from Vite HMR
+        window.location.reload = function() {
+          // Check if this is a user-initiated reload (via keyboard or button)
+          if (window.__userInitiatedReload) {
+            window.__userInitiatedReload = false;
+            return originalReload.apply(this, arguments);
+          }
+          // Block automatic reloads and log them
+          if (!reloadBlocked) {
+            console.info('[ReVent] Blocked automatic page reload (likely from Vite HMR timeout)');
+            reloadBlocked = true;
+            setTimeout(function() { reloadBlocked = false; }, 5000);
+          }
+        };
+        
+        // Allow manual reloads via F5 or Ctrl+R
+        document.addEventListener('keydown', function(e) {
+          if (e.key === 'F5' || (e.ctrlKey && e.key === 'r') || (e.metaKey && e.key === 'r')) {
+            window.__userInitiatedReload = true;
+          }
+        });
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
