@@ -3,3 +3,7 @@ backend/venv/
 .env
 __pycache__/
 .DS_Store
+-e 
+# Environment files
+*.env
+*.env.*
