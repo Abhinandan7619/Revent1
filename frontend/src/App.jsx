@@ -1200,6 +1200,7 @@ function App() {
   const [gossipLoading,setGossipLoading]=useState(false);
   const [coinToast,setCoinToast]=useState(null);
   const [chatSessions,setChatSessions]=useState([]);
+  const [isCrisisMode,setIsCrisisMode]=useState(false);
 
   const scrollRef=useRef(null);
   const gossipScrollRef=useRef(null);
