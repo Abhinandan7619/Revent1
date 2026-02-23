@@ -1381,6 +1381,7 @@ function App() {
   // View — null = loading, 'splash' = unauthenticated landing
   // Restore from sessionStorage to survive page reloads
   const [view,setViewRaw]=useState(()=>loadState('view',null));
+  const [askAliasAfterOnboarding,setAskAliasAfterOnboarding]=useState(false);
   const setView=(v)=>{ saveState('view',v); setViewRaw(v); };
 
   // Chat state
@@ -1544,6 +1545,7 @@ function App() {
       setAuthUser(user);
       setUserName(user.name||'User');
       setLanguage(user.language||'Hindi');
+      setAskAliasAfterOnboarding(true);
       try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
       if(user.onboarding_complete){ setView('chat'); }
       else{ setView('onboarding'); }
@@ -1558,6 +1560,7 @@ function App() {
 
   // Called after login or signup
   const handleAuth=async(user)=>{
+    setAskAliasAfterOnboarding(false);
     setAuthUser(user);
     setUserName(user.name||'User');
     setLanguage(user.language||'Hindi');
@@ -1822,7 +1825,7 @@ function App() {
         )}
         {view==='onboarding'&&(
           <motion.div key="ob" style={wrapFull} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,transition:{duration:0}}}>
-            <OnboardingScreen onDone={()=>setView('name')}/>
+            <OnboardingScreen onDone={()=>setView(askAliasAfterOnboarding?'name':'chat')}/>
           </motion.div>
         )}
         {view==='name'&&(
