@@ -62,10 +62,9 @@ async def get_current_user(request: Request) -> Optional[dict]:
 
 
 def set_session_cookie(response: Response, token: str):
-    is_https = APP_URL.startswith("https://")
     response.set_cookie(
         "session_token", token,
-        httponly=True, secure=is_https, samesite="none" if is_https else "lax",
+        httponly=True, secure=True, samesite="none",
         path="/", max_age=7 * 24 * 3600,
     )
 
