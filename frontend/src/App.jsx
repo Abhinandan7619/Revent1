@@ -970,9 +970,11 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
 };
 
 // ─── Chat Interface ───────────────────────────────────────────────────────────
-const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop }) => {
+const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop, isCrisisMode }) => {
   const activeChar = characters.find(c=>c.character_id===activeVibe);
   const accentColor = activeChar ? (ROLE_COLORS[activeChar.base_role]||'#a78bfa') : '#a78bfa';
+  // Crisis mode styles - dim and disable interactive elements
+  const crisisOverlay = isCrisisMode ? { opacity: 0.4, pointerEvents: 'none' } : {};
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', position:'relative' }}>
       {/* Topbar */}
