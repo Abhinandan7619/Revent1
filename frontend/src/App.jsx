@@ -1267,7 +1267,22 @@ function App() {
       try{ await api.post('/api/auth/mark-first-login'); }catch{}
       setAuthUser(prev=>prev?{...prev,is_first_login:false}:prev);
     }else{
-      setView(user.onboarding_complete?'chat':'onboarding');
+      if(user.onboarding_complete){
+        // Load chat sessions and welcome messages
+        const sessions = await loadSessions('default');
+        let loaded = false;
+        if(sessions.length>0){
+          setSessionId(sessions[0].session_id);
+          loaded = await loadChatHistory(sessions[0].session_id);
+        }
+        if(!loaded){
+          setSessionId(genSessionId());
+          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+        }
+        setView('chat');
+      } else {
+        setView('onboarding');
+      }
     }
   };
 
