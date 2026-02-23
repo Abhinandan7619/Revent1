@@ -6,36 +6,91 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>ReVent — Re. In. Venting. Space.</title>
     <style>
-      /* Ensure proper viewport height */
       :root { --vh: 1vh; }
-      html, body { 
-        height: 100%; 
-        margin: 0; 
-        padding: 0; 
-        overflow: hidden; 
-      }
+      html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
     </style>
     <script>
-      // Fix viewport height for mobile browsers
+      // === CRITICAL: Block Emergent filler.js blob script injection ===
+      // filler.js creates blob URLs and injects them as scripts, causing page reloads
+      (function() {
+        // 1. Intercept URL.createObjectURL to track/block blob URLs from filler.js
+        var originalCreateObjectURL = URL.createObjectURL;
+        var blockedBlobURLs = new Set();
+        URL.createObjectURL = function(blob) {
+          var url = originalCreateObjectURL.call(URL, blob);
+          // Check if this is likely from filler.js (script blob)
+          if (blob && blob.type && blob.type.includes('javascript')) {
+            console.debug('[ReVent] Tracking blob URL:', url);
+            blockedBlobURLs.add(url);
+          }
+          return url;
+        };
+        
+        // 2. Block script elements with blob: src from being added to DOM
+        var originalAppendChild = Node.prototype.appendChild;
+        Node.prototype.appendChild = function(node) {
+          if (node && node.tagName === 'SCRIPT') {
+            var src = node.src || '';
+            if (src.startsWith('blob:')) {
+              console.debug('[ReVent] Blocked blob script injection:', src);
+              return node; // Return without appending
+            }
+          }
+          return originalAppendChild.call(this, node);
+        };
+        
+        var originalInsertBefore = Node.prototype.insertBefore;
+        Node.prototype.insertBefore = function(node, ref) {
+          if (node && node.tagName === 'SCRIPT') {
+            var src = node.src || '';
+            if (src.startsWith('blob:')) {
+              console.debug('[ReVent] Blocked blob script insertion:', src);
+              return node;
+            }
+          }
+          return originalInsertBefore.call(this, node, ref);
+        };
+        
+        // 3. Also intercept document.createElement to catch script creation
+        var originalCreateElement = document.createElement.bind(document);
+        document.createElement = function(tag) {
+          var el = originalCreateElement(tag);
+          if (tag.toLowerCase() === 'script') {
+            // Override the src setter to block blob URLs
+            var originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
+            if (originalSrcDescriptor) {
+              Object.defineProperty(el, 'src', {
+                set: function(val) {
+                  if (val && String(val).startsWith('blob:')) {
+                    console.debug('[ReVent] Blocked blob src assignment:', val);
+                    return;
+                  }
+                  originalSrcDescriptor.set.call(this, val);
+                },
+                get: originalSrcDescriptor.get
+              });
+            }
+          }
+          return el;
+        };
+      })();
+      
+      // === Viewport height fix for mobile ===
       (function() {
         function setVH() {
-          var vh = window.innerHeight * 0.01;
-          document.documentElement.style.setProperty('--vh', vh + 'px');
+          document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
         }
         setVH();
         window.addEventListener('resize', setVH);
         window.addEventListener('orientationchange', setVH);
       })();
       
-      // Block programmatic page reload/navigation from Vite dev server
-      // Note: This cannot stop reloads triggered by Emergent's filler.js blob scripts
+      // === Block Vite reload mechanisms ===
       (function() {
-        // Block location.reload()
         location.reload = function() {
           console.debug('[ReVent] Blocked location.reload()');
         };
         
-        // Block location.replace() for same-page reloads
         var originalReplace = location.replace.bind(location);
         location.replace = function(url) {
           if (!url || url === window.location.href || url === '/' || String(url).includes('/@vite')) {
@@ -45,7 +100,6 @@
           originalReplace(url);
         };
         
-        // Block location.assign() for same-page reloads
         var originalAssign = location.assign.bind(location);
         location.assign = function(url) {
           if (!url || url === window.location.href || url === '/' || String(url).includes('/@vite')) {
@@ -56,19 +110,14 @@
         };
       })();
       
-      // Suppress Vite HMR WebSocket errors silently
+      // === Suppress Vite WebSocket errors ===
       (function() {
         var OriginalWebSocket = window.WebSocket;
         window.WebSocket = function(url, protocols) {
           var ws = new OriginalWebSocket(url, protocols);
           if (url && (url.includes('vite') || url.includes('/@'))) {
-            ws.addEventListener('error', function(e) { 
-              e.stopPropagation(); 
-              console.debug('[ReVent] Suppressed Vite WS error'); 
-            });
-            ws.addEventListener('close', function(e) {
-              console.debug('[ReVent] Vite WS closed - this is normal');
-            });
+            ws.addEventListener('error', function(e) { e.stopPropagation(); });
+            ws.addEventListener('close', function(e) { });
           }
           return ws;
         };
