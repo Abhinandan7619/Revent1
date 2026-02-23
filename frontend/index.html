@@ -10,122 +10,102 @@
       html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
     </style>
     <script>
-      // === CRITICAL: Block Emergent filler.js blob script injection ===
-      // filler.js creates blob URLs and injects them as scripts, causing page reloads
+      // === AGGRESSIVE: Block ALL page unload/reload attempts ===
       (function() {
-        // 1. Intercept URL.createObjectURL to track/block blob URLs from filler.js
+        // Prevent page unload - this catches ALL reload mechanisms
+        window.addEventListener('beforeunload', function(e) {
+          // Only block if not a user-initiated navigation
+          if (!window.__userNavigation) {
+            console.debug('[ReVent] Blocked page unload');
+            e.preventDefault();
+            e.returnValue = '';
+            return '';
+          }
+        });
+        
+        // Mark user-initiated navigations (clicks on links)
+        document.addEventListener('click', function(e) {
+          var target = e.target.closest('a');
+          if (target && target.href && !target.href.startsWith('blob:')) {
+            window.__userNavigation = true;
+            setTimeout(function() { window.__userNavigation = false; }, 1000);
+          }
+        }, true);
+      })();
+      
+      // === Block blob script injection via MutationObserver ===
+      (function() {
+        var observer = new MutationObserver(function(mutations) {
+          mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+              if (node.tagName === 'SCRIPT') {
+                var src = node.src || node.getAttribute('src') || '';
+                if (src.startsWith('blob:')) {
+                  console.debug('[ReVent] Removing blob script:', src);
+                  node.remove();
+                }
+              }
+            });
+          });
+        });
+        observer.observe(document.documentElement, { childList: true, subtree: true });
+      })();
+      
+      // === Block URL.createObjectURL for scripts ===
+      (function() {
         var originalCreateObjectURL = URL.createObjectURL;
-        var blockedBlobURLs = new Set();
         URL.createObjectURL = function(blob) {
-          var url = originalCreateObjectURL.call(URL, blob);
-          // Check if this is likely from filler.js (script blob)
           if (blob && blob.type && blob.type.includes('javascript')) {
-            console.debug('[ReVent] Tracking blob URL:', url);
-            blockedBlobURLs.add(url);
+            console.debug('[ReVent] Blocked blob URL creation for script');
+            return 'blocked:' + Math.random();
           }
-          return url;
-        };
-        
-        // 2. Block script elements with blob: src from being added to DOM
-        var originalAppendChild = Node.prototype.appendChild;
-        Node.prototype.appendChild = function(node) {
-          if (node && node.tagName === 'SCRIPT') {
-            var src = node.src || '';
-            if (src.startsWith('blob:')) {
-              console.debug('[ReVent] Blocked blob script injection:', src);
-              return node; // Return without appending
-            }
-          }
-          return originalAppendChild.call(this, node);
-        };
-        
-        var originalInsertBefore = Node.prototype.insertBefore;
-        Node.prototype.insertBefore = function(node, ref) {
-          if (node && node.tagName === 'SCRIPT') {
-            var src = node.src || '';
-            if (src.startsWith('blob:')) {
-              console.debug('[ReVent] Blocked blob script insertion:', src);
-              return node;
-            }
-          }
-          return originalInsertBefore.call(this, node, ref);
-        };
-        
-        // 3. Also intercept document.createElement to catch script creation
-        var originalCreateElement = document.createElement.bind(document);
-        document.createElement = function(tag) {
-          var el = originalCreateElement(tag);
-          if (tag.toLowerCase() === 'script') {
-            // Override the src setter to block blob URLs
-            var originalSrcDescriptor = Object.getOwnPropertyDescriptor(HTMLScriptElement.prototype, 'src');
-            if (originalSrcDescriptor) {
-              Object.defineProperty(el, 'src', {
-                set: function(val) {
-                  if (val && String(val).startsWith('blob:')) {
-                    console.debug('[ReVent] Blocked blob src assignment:', val);
-                    return;
-                  }
-                  originalSrcDescriptor.set.call(this, val);
-                },
-                get: originalSrcDescriptor.get
-              });
-            }
-          }
-          return el;
+          return originalCreateObjectURL.call(URL, blob);
         };
       })();
       
-      // === Viewport height fix for mobile ===
+      // === Block all navigation methods ===
       (function() {
-        function setVH() {
-          document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px');
-        }
+        location.reload = function() { console.debug('[ReVent] Blocked reload()'); };
+        
+        var origReplace = location.replace.bind(location);
+        location.replace = function(url) {
+          if (!window.__userNavigation) { console.debug('[ReVent] Blocked replace()', url); return; }
+          origReplace(url);
+        };
+        
+        var origAssign = location.assign.bind(location);
+        location.assign = function(url) {
+          if (!window.__userNavigation) { console.debug('[ReVent] Blocked assign()', url); return; }
+          origAssign(url);
+        };
+        
+        // Block history-based navigation
+        history.go = function() { console.debug('[ReVent] Blocked history.go()'); };
+      })();
+      
+      // === Viewport height fix ===
+      (function() {
+        function setVH() { document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
         setVH();
         window.addEventListener('resize', setVH);
-        window.addEventListener('orientationchange', setVH);
-      })();
-      
-      // === Block Vite reload mechanisms ===
-      (function() {
-        location.reload = function() {
-          console.debug('[ReVent] Blocked location.reload()');
-        };
-        
-        var originalReplace = location.replace.bind(location);
-        location.replace = function(url) {
-          if (!url || url === window.location.href || url === '/' || String(url).includes('/@vite')) {
-            console.debug('[ReVent] Blocked location.replace()', url);
-            return;
-          }
-          originalReplace(url);
-        };
-        
-        var originalAssign = location.assign.bind(location);
-        location.assign = function(url) {
-          if (!url || url === window.location.href || url === '/' || String(url).includes('/@vite')) {
-            console.debug('[ReVent] Blocked location.assign()', url);
-            return;
-          }
-          originalAssign(url);
-        };
       })();
       
       // === Suppress Vite WebSocket errors ===
       (function() {
-        var OriginalWebSocket = window.WebSocket;
-        window.WebSocket = function(url, protocols) {
-          var ws = new OriginalWebSocket(url, protocols);
-          if (url && (url.includes('vite') || url.includes('/@'))) {
+        var WS = window.WebSocket;
+        window.WebSocket = function(url, p) {
+          var ws = new WS(url, p);
+          if (url && url.includes('vite')) {
             ws.addEventListener('error', function(e) { e.stopPropagation(); });
-            ws.addEventListener('close', function(e) { });
+            ws.addEventListener('close', function() {});
           }
           return ws;
         };
-        window.WebSocket.prototype = OriginalWebSocket.prototype;
-        window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
-        window.WebSocket.OPEN = OriginalWebSocket.OPEN;
-        window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
-        window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
+        window.WebSocket.prototype = WS.prototype;
+        window.WebSocket.CONNECTING = WS.CONNECTING;
+        window.WebSocket.OPEN = WS.OPEN;
+        window.WebSocket.CLOSING = WS.CLOSING;
+        window.WebSocket.CLOSED = WS.CLOSED;
       })();
     </script>
   </head>
