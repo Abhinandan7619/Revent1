@@ -235,20 +235,32 @@ function Avatar3D({ color='#a78bfa', energy=50, height=160 }) {
 
 // ─── App background ───────────────────────────────────────────────────────────
 const AppBg = ({ children }) => (
-  <div id="app-root" style={{ position:'fixed', top:0, left:0, right:0, bottom:0, overflow:'hidden', background:'linear-gradient(145deg,#1a0533,#0a1a40 55%,#003328)', display:'flex', flexDirection:'column', fontFamily:"'DM Sans',sans-serif", color:'#f8fafc' }}>
+  <div id="app-root" style={{ 
+    position:'fixed', 
+    top:0, left:0, right:0, bottom:0, 
+    width:'100vw',
+    height:'100vh',
+    height:'100dvh', // Dynamic viewport for mobile
+    overflow:'hidden', 
+    background:'linear-gradient(145deg,#1a0533,#0a1a40 55%,#003328)', 
+    display:'flex', 
+    flexDirection:'column', 
+    fontFamily:"'DM Sans',sans-serif", 
+    color:'#f8fafc' 
+  }}>
     <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:0 }}>
       <div style={{ position:'absolute', width:700, height:700, borderRadius:'50%', background:'radial-gradient(circle,rgba(139,92,246,0.14),transparent)', top:'-20%', left:'-15%' }}/>
       <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle,rgba(16,185,129,0.11),transparent)', bottom:'-15%', right:'-10%' }}/>
       <div style={{ position:'absolute', width:450, height:450, borderRadius:'50%', background:'radial-gradient(circle,rgba(96,165,250,0.08),transparent)', top:'35%', right:'5%' }}/>
     </div>
-    <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden' }}>
+    <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
       {children}
     </div>
   </div>
 );
 
 // Full-screen absolute wrapper (for chat, settings, creator etc)
-const wrapFull = { position:'absolute', inset:0, display:'flex', flexDirection:'column' };
+const wrapFull = { position:'absolute', inset:0, display:'flex', flexDirection:'column', height:'100%' };
 
 // ─── Beta Welcome Modal ────────────────────────────────────────────────────────
 const BetaWelcomeModal = ({ onDismiss }) => {
