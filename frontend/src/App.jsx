@@ -1152,7 +1152,7 @@ function App() {
 
   // Load chat history for current session from DB
   const loadChatHistory=async(sid)=>{
-    if(!sid)return;
+    if(!sid)return false;
     try{
       const res=await api.get(`/api/chat/history/${sid}`);
       const msgs=(res.data||[]).map(m=>({role:m.role==='ai'?'ai':'user',content:m.content,mode:m.mode}));
