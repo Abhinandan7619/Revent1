@@ -1406,9 +1406,12 @@ function App() {
     setInput('');setLoading(true);
     try{
       const res=await api.post('/api/chat',{message:userMsg.content,session_id:sessionId,language,manual_mode:manualMode,persona_config:getPersonaConfig(),force_vault:false});
-      setMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:res.data.mode}]);
+      const responseMode = res.data.mode;
+      setMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:responseMode}]);
       setIntensity(res.data.intensity_score||0);
       setBaseline(res.data.emotional_baseline||5);
+      // Track crisis mode - enable when CRISIS, disable when non-CRISIS response
+      setIsCrisisMode(responseMode === 'CRISIS');
       if(res.data.coins_remaining!==undefined)setAuthUser(prev=>prev?{...prev,coins:res.data.coins_remaining}:prev);
       if(res.data.coins_deducted>0)showCoinNotif(res.data.coins_deducted,res.data.coins_remaining);
     }catch{
