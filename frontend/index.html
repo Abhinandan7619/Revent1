@@ -6,106 +6,71 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>ReVent — Re. In. Venting. Space.</title>
     <style>
+      /* Ensure proper viewport height */
       :root { --vh: 1vh; }
-      html, body { height: 100%; margin: 0; padding: 0; overflow: hidden; }
+      html, body { 
+        height: 100%; 
+        margin: 0; 
+        padding: 0; 
+        overflow: hidden; 
+      }
     </style>
     <script>
-      // === AGGRESSIVE: Block ALL page unload/reload attempts ===
+      // Fix viewport height for mobile browsers
       (function() {
-        // Prevent page unload - this catches ALL reload mechanisms
-        window.addEventListener('beforeunload', function(e) {
-          // Only block if not a user-initiated navigation
-          if (!window.__userNavigation) {
-            console.debug('[ReVent] Blocked page unload');
-            e.preventDefault();
-            e.returnValue = '';
-            return '';
-          }
-        });
-        
-        // Mark user-initiated navigations (clicks on links)
-        document.addEventListener('click', function(e) {
-          var target = e.target.closest('a');
-          if (target && target.href && !target.href.startsWith('blob:')) {
-            window.__userNavigation = true;
-            setTimeout(function() { window.__userNavigation = false; }, 1000);
-          }
-        }, true);
-      })();
-      
-      // === Block blob script injection via MutationObserver ===
-      (function() {
-        var observer = new MutationObserver(function(mutations) {
-          mutations.forEach(function(mutation) {
-            mutation.addedNodes.forEach(function(node) {
-              if (node.tagName === 'SCRIPT') {
-                var src = node.src || node.getAttribute('src') || '';
-                if (src.startsWith('blob:')) {
-                  console.debug('[ReVent] Removing blob script:', src);
-                  node.remove();
-                }
-              }
-            });
-          });
-        });
-        observer.observe(document.documentElement, { childList: true, subtree: true });
-      })();
-      
-      // === Block URL.createObjectURL for scripts ===
-      (function() {
-        var originalCreateObjectURL = URL.createObjectURL;
-        URL.createObjectURL = function(blob) {
-          if (blob && blob.type && blob.type.includes('javascript')) {
-            console.debug('[ReVent] Blocked blob URL creation for script');
-            return 'blocked:' + Math.random();
-          }
-          return originalCreateObjectURL.call(URL, blob);
-        };
-      })();
-      
-      // === Block all navigation methods ===
-      (function() {
-        location.reload = function() { console.debug('[ReVent] Blocked reload()'); };
-        
-        var origReplace = location.replace.bind(location);
-        location.replace = function(url) {
-          if (!window.__userNavigation) { console.debug('[ReVent] Blocked replace()', url); return; }
-          origReplace(url);
-        };
-        
-        var origAssign = location.assign.bind(location);
-        location.assign = function(url) {
-          if (!window.__userNavigation) { console.debug('[ReVent] Blocked assign()', url); return; }
-          origAssign(url);
-        };
-        
-        // Block history-based navigation
-        history.go = function() { console.debug('[ReVent] Blocked history.go()'); };
-      })();
-      
-      // === Viewport height fix ===
-      (function() {
-        function setVH() { document.documentElement.style.setProperty('--vh', (window.innerHeight * 0.01) + 'px'); }
+        function setVH() {
+          var vh = window.innerHeight * 0.01;
+          document.documentElement.style.setProperty('--vh', vh + 'px');
+        }
         setVH();
         window.addEventListener('resize', setVH);
+        window.addEventListener('orientationchange', setVH);
       })();
       
-      // === Suppress Vite WebSocket errors ===
+      // Block programmatic reload from Vite dev server / Emergent proxy timeout
       (function() {
-        var WS = window.WebSocket;
-        window.WebSocket = function(url, p) {
-          var ws = new WS(url, p);
-          if (url && url.includes('vite')) {
-            ws.addEventListener('error', function(e) { e.stopPropagation(); });
-            ws.addEventListener('close', function() {});
+        location.reload = function() {
+          console.debug('[ReVent] Blocked auto-reload (reload)');
+        };
+        var _origReplace = location.replace.bind(location);
+        location.replace = function(url) {
+          var s = String(url);
+          if (s === window.location.href || s.includes('/@vite') || s.includes('node_modules/.vite')) {
+            console.debug('[ReVent] Blocked auto-reload (replace)'); return;
+          }
+          _origReplace(url);
+        };
+        var _origAssign = location.assign.bind(location);
+        location.assign = function(url) {
+          var s = String(url);
+          if (s === window.location.href || s.includes('/@vite') || s.includes('node_modules/.vite')) {
+            console.debug('[ReVent] Blocked auto-reload (assign)'); return;
+          }
+          _origAssign(url);
+        };
+      })();
+
+      // Suppress Vite HMR WebSocket errors silently
+      (function() {
+        var OriginalWebSocket = window.WebSocket;
+        window.WebSocket = function(url, protocols) {
+          var ws = new OriginalWebSocket(url, protocols);
+          if (url && (url.includes('vite') || url.includes('/@'))) {
+            ws.addEventListener('error', function(e) { 
+              e.stopPropagation(); 
+              console.debug('[ReVent] Suppressed Vite WS error'); 
+            });
+            ws.addEventListener('close', function(e) {
+              console.debug('[ReVent] Vite WS closed - this is normal');
+            });
           }
           return ws;
         };
-        window.WebSocket.prototype = WS.prototype;
-        window.WebSocket.CONNECTING = WS.CONNECTING;
-        window.WebSocket.OPEN = WS.OPEN;
-        window.WebSocket.CLOSING = WS.CLOSING;
-        window.WebSocket.CLOSED = WS.CLOSED;
+        window.WebSocket.prototype = OriginalWebSocket.prototype;
+        window.WebSocket.CONNECTING = OriginalWebSocket.CONNECTING;
+        window.WebSocket.OPEN = OriginalWebSocket.OPEN;
+        window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
+        window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
       })();
     </script>
   </head>

@@ -53,11 +53,14 @@ async def node_classifier(state: ReVentState):
     current_baseline = state.get("emotional_baseline", 5)
 
     crisis_keywords = [
-        "suicide", "kill myself", "end it all", "hurt myself", "overdose", 
-        "don't want to live", "want to die", "wanna die", "take pills", 
-        "self harm", "self-harm", "better off dead", "end my life", 
-        "no reason to live", "can't go on", "cut myself", "harm myself",
-        "not worth living", "wish i was dead", "want it to end"
+        "suicide", "kill myself", "end it all", "hurt myself", "overdose", "don't want to live",
+        "want to die", "wanna die", "gonna die", "wish i was dead", "wish i were dead",
+        "take my life", "end my life", "take my own life", "end my own life",
+        "going to kill", "gonna kill myself", "going to kill myself",
+        "take all my pills", "take the pills", "take pills to",
+        "murder myself", "self harm", "self-harm", "cut myself", "slit my wrists",
+        "no reason to live", "not worth living", "life is not worth",
+        "better off dead", "better off without me",
     ]
     if any(k in text for k in crisis_keywords):
         return {
@@ -170,6 +173,14 @@ async def node_generator(state: ReVentState):
         "memory_hook": raw_config.get("memory_hook", ""),
     }
 
+    # Build name context (use in ~50% of responses, naturally)
+    name_context = ""
+    if user_name:
+        name_context = (
+            f"\nUSER NAME: {user_name}. Use their name naturally in about half your responses — "
+            f"not every single message. Only when it feels genuine (e.g. 'arre {user_name}...' or '{user_name} yaar').\n"
+        )
+
     # Build personality context from onboarding (subtle, not forced)
     personality_context = ""
     if user_personality and user_personality.get("personality_tags"):
@@ -227,11 +238,6 @@ async def node_generator(state: ReVentState):
         "5. TONE: Sound like a real person, not an assistant."
     )
 
-    name_line = (
-        f"USER'S NAME: {user_name}. Use their name naturally in roughly 50% of your responses — not every message, "
-        "only when it feels natural (e.g. emphasis, warmth, or calling them out).\n"
-    ) if user_name else ""
-
     system_prompt = (
         f"IDENTITY: You are RE — a {persona['base_role']}. You are NOT an AI assistant.\n"
         f"MODE: {mode_prompts.get(active_mode, mode_prompts['HEAR_ME'])}\n"
@@ -239,7 +245,7 @@ async def node_generator(state: ReVentState):
         f"ENERGY LEVEL: {persona['energy']}/100\n"
         f"QUIRKS: {', '.join(persona['quirks']) if persona['quirks'] else 'None'}\n"
         f"{memory_line}\n"
-        f"{name_line}"
+        f"{name_context}"
         f"{personality_context}\n"
         f"{lang_instruction}\n"
         f"{style_rules}\n\n"

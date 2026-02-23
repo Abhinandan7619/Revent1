@@ -1310,6 +1310,13 @@ function App() {
     return()=>document.removeEventListener('input',h);
   },[]);
 
+  // Reload sessions whenever vibe or view changes (ensures sidebar stays in sync)
+  useEffect(()=>{
+    if(authUser && (view==='chat'||view==='creator')){
+      loadSessions(activeVibe);
+    }
+  },[activeVibe, view, authUser]);
+
   const checkAuth=async()=>{
     const savedView = loadState('view', null);
     try{
@@ -1324,21 +1331,37 @@ function App() {
       if(user.onboarding_complete){
         const currentSessionId = loadState('sessionId', null);
         const currentVibe = loadState('activeVibe', 'default');
-        const sessions = await loadSessions(currentVibe);
+        let sessions = await loadSessions(currentVibe);
 
         let loaded = false;
         if(currentSessionId && sessions.some(s=>s.session_id===currentSessionId)){
           loaded = await loadChatHistory(currentSessionId);
-        } else if(sessions.length>0){
+        } else if(currentSessionId && !sessions.some(s=>s.session_id===currentSessionId)){
+          // Session ID exists locally but not in DB — try to load history and register it
+          loaded = await loadChatHistory(currentSessionId);
+          if(loaded && sessions.length < 2){
+            try{
+              await api.post('/api/chat/sessions',{session_id:currentSessionId,vibe_id:currentVibe,title:'My Chats'});
+              sessions = await loadSessions(currentVibe);
+            }catch{}
+          }
+        }
+        if(!loaded && sessions.length>0){
           const latest = sessions[0];
           setSessionId(latest.session_id);
           loaded = await loadChatHistory(latest.session_id);
         }
-        
+
         if(!loaded){
           // No history found — start fresh with welcome
-          if(!currentSessionId || !sessions.some(s=>s.session_id===currentSessionId)){
-            setSessionId(genSessionId());
+          const newSid = genSessionId();
+          setSessionId(newSid);
+          // Register this new session in DB so it shows in sidebar
+          if(sessions.length < 2){
+            try{
+              await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:currentVibe,title:'My Chats'});
+              await loadSessions(currentVibe);
+            }catch{}
           }
           try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
         }
@@ -1397,7 +1420,11 @@ function App() {
           loaded = await loadChatHistory(sessions[0].session_id);
         }
         if(!loaded){
-          setSessionId(genSessionId());
+          const newSid = genSessionId();
+          setSessionId(newSid);
+          if(sessions.length < 2){
+            try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'My Chats'}); await loadSessions('default'); }catch{}
+          }
           try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
         }
         setView('chat');
@@ -1425,6 +1452,7 @@ function App() {
       // New session for this vibe
       const newSid = genSessionId();
       setSessionId(newSid);
+      try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:vibeId,title:'My Chats'}); await loadSessions(vibeId); }catch{}
       if(vibeId==='default'){
         try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
       } else {
@@ -1491,6 +1519,8 @@ function App() {
     // Generate a new session and auto-trigger onboarding message
     const newSid = genSessionId();
     setSessionId(newSid);
+    // Register session in DB so it shows in sidebar
+    try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'My Chats'}); await loadSessions('default'); }catch{}
     // Load personalized welcome
     try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
     setView('chat');
