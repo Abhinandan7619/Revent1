@@ -1445,27 +1445,27 @@ function App() {
       {/* Onboarding flow — animated transitions */}
       <AnimatePresence mode="wait">
         {view==='splash'&&(
-          <motion.div key="splash" style={wrapFull} {...fadeIn}>
+          <motion.div key="splash" style={wrapFull} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} transition={{duration:0.3}}>
             <SplashScreen onDone={handleSplashDone}/>
           </motion.div>
         )}
         {view==='auth'&&(
-          <motion.div key="auth" style={wrapFull} {...fadeIn}>
+          <motion.div key="auth" style={wrapFull} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,transition:{duration:0}}}>
             <AuthScreen onAuth={handleAuth}/>
           </motion.div>
         )}
         {view==='onboarding'&&(
-          <motion.div key="ob" style={wrapFull} {...fadeIn}>
+          <motion.div key="ob" style={wrapFull} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,transition:{duration:0}}}>
             <OnboardingScreen onDone={()=>setView('name')}/>
           </motion.div>
         )}
         {view==='name'&&(
-          <motion.div key="name" style={wrapFull} {...slideUp}>
+          <motion.div key="name" style={wrapFull} initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} exit={{opacity:0,transition:{duration:0}}}>
             <NameScreen onDone={n=>{setUserName(n);setView('lang');}}/>
           </motion.div>
         )}
         {view==='lang'&&(
-          <motion.div key="lang" style={wrapFull} {...slideUp}>
+          <motion.div key="lang" style={wrapFull} initial={{opacity:0,y:30}} animate={{opacity:1,y:0}} exit={{opacity:0,transition:{duration:0}}}>
             <LanguageScreen onDone={handleLangDone}/>
           </motion.div>
         )}
