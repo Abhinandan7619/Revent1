@@ -27,7 +27,15 @@
         window.addEventListener('orientationchange', setVH);
       })();
       
-      // Suppress Vite HMR WebSocket errors silently (don't override reload)
+      // Block programmatic location.reload() calls from Vite dev server
+      // Vite calls reload() when its HMR WebSocket reconnect fails (Emergent proxy timeout)
+      (function() {
+        location.reload = function() {
+          console.debug('[ReVent] Blocked auto-reload from Vite/proxy');
+        };
+      })();
+      
+      // Suppress Vite HMR WebSocket errors silently
       (function() {
         var OriginalWebSocket = window.WebSocket;
         window.WebSocket = function(url, protocols) {
