@@ -1429,7 +1429,7 @@ function App() {
     <AppBg>
       {/* Loading state while checking auth */}
       {view===null&&(
-        <div style={{ ...wrapFull, display:'flex', alignItems:'center', justifyContent:'center' }}>
+        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
           <LogoIcon size="lg"/>
         </div>
       )}
