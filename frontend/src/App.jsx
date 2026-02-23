@@ -751,7 +751,8 @@ const ChatBubble = ({ msg }) => {
     AUTO:    '#34d399',  // Green
   };
   const modeColor = msg.mode ? modeColors[msg.mode] : modeColors.AUTO;
-  
+  const isCrisisBubble = msg.role === 'ai' && msg.mode === 'CRISIS';
+
   return (
     <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
       style={{ display:'flex', flexDirection:'column', maxWidth:'82%', alignSelf:msg.role==='user'?'flex-end':'flex-start' }}>
@@ -759,6 +760,17 @@ const ChatBubble = ({ msg }) => {
         <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, paddingLeft:2 }}>
           <span style={{ color:'rgba(248,250,252,0.4)' }}>RE · </span>
           <span style={{ color: modeColor, fontWeight:600 }}>{meta.label}</span>
+        </div>
+      )}
+      {isCrisisBubble&&(
+        <div style={{ marginBottom:8, padding:'10px 14px', borderRadius:10, background:'rgba(248,113,113,0.12)', border:'1px solid rgba(248,113,113,0.35)' }}>
+          <div style={{ fontSize:12, fontWeight:700, color:'#fff', letterSpacing:0.3, marginBottom:4 }}>
+            Please reach out — you don't have to go through this alone.
+          </div>
+          <div style={{ fontSize:11, color:'rgba(255,255,255,0.7)', lineHeight:1.6 }}>
+            iCall: <span style={{ color:'#fff', fontWeight:600 }}>9152987821</span>{'  '}·{'  '}
+            Vandrevala Foundation: <span style={{ color:'#fff', fontWeight:600 }}>1860-2662-345</span>
+          </div>
         </div>
       )}
       {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'right', paddingRight:2 }}>You</div>}
@@ -951,6 +963,9 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
 const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop }) => {
   const activeChar = characters.find(c=>c.character_id===activeVibe);
   const accentColor = activeChar ? (ROLE_COLORS[activeChar.base_role]||'#a78bfa') : '#a78bfa';
+  // Freeze UI when last AI message is CRISIS mode; unfreeze when user is no longer in crisis
+  const lastAiMsg = [...messages].reverse().find(m=>m.role==='ai');
+  const isCrisis = lastAiMsg?.mode === 'CRISIS';
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', position:'relative' }}>
       {/* Topbar */}
@@ -965,7 +980,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
           </div>
         </div>
         {!isDesktop&&(
-          <div style={{ flex:1, overflow:'hidden', padding:'0 8px' }}>
+          <div style={{ flex:1, overflow:'hidden', padding:'0 8px', pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
             <CharacterTabStrip activeVibe={activeVibe} setActiveVibe={setActiveVibe} onOpenCreator={onOpenCreator} characters={characters}/>
           </div>
         )}
@@ -976,7 +991,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Mode chips */}
-      <div data-testid="mode-chips" style={{ display:'flex', gap:6, padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0 }}>
+      <div data-testid="mode-chips" style={{ display:'flex', gap:6, padding:'8px 14px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0, pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
         {[{id:'AUTO',label:'⚡ AUTO'},{id:'HEAR_ME',label:'💙 HEAR ME'},{id:'BACK_ME',label:'🔥 BACK ME'},{id:'BE_REAL',label:'🧠 BE REAL'}].map(m=>(
           <button key={m.id} data-testid={`mode-chip-${m.id}`} onClick={()=>setManualMode(m.id)}
             style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'6px 14px', borderRadius:99, border:`1px solid ${manualMode===m.id?accentColor+'55':'rgba(255,255,255,0.06)'}`, background:manualMode===m.id?accentColor+'18':'rgba(255,255,255,0.04)', fontSize:12, fontWeight:500, color:manualMode===m.id?accentColor:'rgba(248,250,252,0.5)', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s' }}>
@@ -1013,7 +1028,9 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Emotion bar */}
-      <EmotionBar onEmotion={setManualMode} manualMode={manualMode}/>
+      <div style={{ pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
+        <EmotionBar onEmotion={setManualMode} manualMode={manualMode}/>
+      </div>
 
       {/* Input */}
       <div style={{ padding:'10px 14px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.8)', backdropFilter:'blur(16px)', flexShrink:0, position:'relative' }}>
