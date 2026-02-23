@@ -227,6 +227,11 @@ async def node_generator(state: ReVentState):
         "5. TONE: Sound like a real person, not an assistant."
     )
 
+    name_line = (
+        f"USER'S NAME: {user_name}. Use their name naturally in roughly 50% of your responses — not every message, "
+        "only when it feels natural (e.g. emphasis, warmth, or calling them out).\n"
+    ) if user_name else ""
+
     system_prompt = (
         f"IDENTITY: You are RE — a {persona['base_role']}. You are NOT an AI assistant.\n"
         f"MODE: {mode_prompts.get(active_mode, mode_prompts['HEAR_ME'])}\n"
@@ -234,6 +239,7 @@ async def node_generator(state: ReVentState):
         f"ENERGY LEVEL: {persona['energy']}/100\n"
         f"QUIRKS: {', '.join(persona['quirks']) if persona['quirks'] else 'None'}\n"
         f"{memory_line}\n"
+        f"{name_line}"
         f"{personality_context}\n"
         f"{lang_instruction}\n"
         f"{style_rules}\n\n"
