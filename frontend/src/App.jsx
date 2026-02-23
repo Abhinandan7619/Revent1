@@ -241,7 +241,7 @@ const AppBg = ({ children }) => (
       <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle,rgba(16,185,129,0.11),transparent)', bottom:'-15%', right:'-10%' }}/>
       <div style={{ position:'absolute', width:450, height:450, borderRadius:'50%', background:'radial-gradient(circle,rgba(96,165,250,0.08),transparent)', top:'35%', right:'5%' }}/>
     </div>
-    <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
+    <div style={{ position:'absolute', inset:0, zIndex:1, overflow:'hidden' }}>
       {children}
     </div>
   </div>
