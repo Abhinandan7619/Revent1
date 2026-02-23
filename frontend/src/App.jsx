@@ -739,15 +739,36 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
 };
 
 // ─── Chat Bubbles ─────────────────────────────────────────────────────────────
+// Crisis Banner Component
+const CrisisBanner = () => (
+  <div style={{
+    background: 'rgba(239, 68, 68, 0.95)',
+    border: '1px solid rgba(248, 113, 113, 0.5)',
+    borderRadius: 12,
+    padding: '14px 18px',
+    marginBottom: 12,
+    color: '#fff'
+  }}>
+    <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 8 }}>
+      Please reach out — you don't have to go through this alone.
+    </div>
+    <div style={{ fontSize: 13, opacity: 0.95, lineHeight: 1.6 }}>
+      <div>iCall: <strong>9152987821</strong></div>
+      <div>Vandrevala Foundation: <strong>1860-2662-345</strong></div>
+    </div>
+  </div>
+);
+
 const ChatBubble = ({ msg }) => {
   const meta = msg.mode ? modeMeta[msg.mode] : null;
+  const isCrisis = msg.mode === 'CRISIS';
   // Color scheme for different modes
   const modeColors = {
     BACK_ME: '#f87171',  // Red
     HEAR_ME: '#60a5fa',  // Blue
     BE_REAL: '#c084fc',  // Purple
     VAULT:   '#9ca3af',  // Gray
-    CRISIS:  '#fbbf24',  // Yellow
+    CRISIS:  '#ef4444',  // Bright Red for crisis
     AUTO:    '#34d399',  // Green
   };
   const modeColor = msg.mode ? modeColors[msg.mode] : modeColors.AUTO;
@@ -755,6 +776,7 @@ const ChatBubble = ({ msg }) => {
   return (
     <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
       style={{ display:'flex', flexDirection:'column', maxWidth:'82%', alignSelf:msg.role==='user'?'flex-end':'flex-start' }}>
+      {msg.role==='ai' && isCrisis && <CrisisBanner />}
       {msg.role==='ai'&&meta&&(
         <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, paddingLeft:2 }}>
           <span style={{ color:'rgba(248,250,252,0.4)' }}>RE · </span>
