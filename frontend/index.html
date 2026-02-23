@@ -5,19 +5,35 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>ReVent — Re. In. Venting. Space.</title>
+    <style>
+      /* Ensure proper viewport height on all browsers */
+      :root {
+        --vh: 1vh;
+      }
+      html, body {
+        height: 100vh;
+        height: calc(var(--vh, 1vh) * 100);
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+    </style>
     <script>
+      // Fix viewport height for mobile browsers with address bars
+      function setVH() {
+        var vh = window.innerHeight * 0.01;
+        document.documentElement.style.setProperty('--vh', vh + 'px');
+      }
+      setVH();
+      window.addEventListener('resize', setVH);
+      window.addEventListener('orientationchange', setVH);
+      
       // Prevent Vite HMR from causing page reloads in K8s environment
-      // This intercepts reload attempts before Vite client loads
       (function() {
         'use strict';
-        
-        // Flag to track user-initiated reloads
         var userInitiated = false;
-        
-        // Store original reload
         var originalReload = window.location.reload.bind(window.location);
         
-        // Override reload to block automatic reloads
         Object.defineProperty(window.location, 'reload', {
           value: function() {
             if (userInitiated) {
@@ -30,42 +46,26 @@
           configurable: false
         });
         
-        // Allow manual reloads via keyboard
         document.addEventListener('keydown', function(e) {
           if (e.key === 'F5' || (e.ctrlKey && e.key === 'r') || (e.metaKey && e.key === 'r')) {
             userInitiated = true;
           }
         });
         
-        // Intercept WebSocket to prevent Vite HMR reconnection issues
+        // Suppress Vite WebSocket errors
         var OriginalWebSocket = window.WebSocket;
         window.WebSocket = function(url, protocols) {
           var ws = new OriginalWebSocket(url, protocols);
-          
-          // If this is a Vite HMR socket, suppress error handlers that might reload
           if (url && (url.includes('vite') || url.includes('/@'))) {
-            var originalOnError = null;
-            var originalOnClose = null;
-            
             Object.defineProperty(ws, 'onerror', {
-              set: function(fn) { originalOnError = fn; },
-              get: function() {
-                return function(e) {
-                  console.debug('[ReVent] Suppressed Vite WebSocket error');
-                };
-              }
+              set: function() {},
+              get: function() { return function() { console.debug('[ReVent] Suppressed WS error'); }; }
             });
-            
             Object.defineProperty(ws, 'onclose', {
-              set: function(fn) { originalOnClose = fn; },
-              get: function() {
-                return function(e) {
-                  console.debug('[ReVent] Suppressed Vite WebSocket close');
-                };
-              }
+              set: function() {},
+              get: function() { return function() { console.debug('[ReVent] Suppressed WS close'); }; }
             });
           }
-          
           return ws;
         };
         window.WebSocket.prototype = OriginalWebSocket.prototype;
