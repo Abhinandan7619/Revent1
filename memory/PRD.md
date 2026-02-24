@@ -22,7 +22,7 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 
 ## Key API Endpoints
 - Auth: `POST /api/auth/register`, `POST /api/auth/login`, `GET /api/auth/me`, `POST /api/auth/logout`
-- Chat: `POST /api/chat`, `GET /api/chat/welcome`, `GET /api/chat/sessions`, `POST /api/chat/sessions`, `GET /api/chat/history/{session_id}`
+- Chat: `POST /api/chat`, `GET /api/chat/welcome`, `GET /api/chat/sessions`, `POST /api/chat/sessions`, `GET /api/chat/history/{session_id}`, `DELETE /api/chat/sessions/{session_id}`, `PATCH /api/chat/sessions/{session_id}`
 - Characters: `POST /api/characters`, `GET /api/characters`, `DELETE /api/characters/{id}`
 - User: `POST /api/user/update-profile`
 
@@ -32,12 +32,22 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - Gemini 2.5 Flash integration with LangGraph emotional routing
 - 5-phase onboarding chatbot (personality discovery, auto-triggered)
 - Coin system (2000 on signup, deduction after 10 exchanges)
-- Character system (max 3 custom personas, CRUD with DB persistence)
+- **Clan system** (renamed from "Persona" — max 3 custom clans, 5-step wizard creator, delete from sidebar)
 - Chat history persistence (RE mode + character mode, loaded from DB on mount)
-- Session management (New Chat in RE mode, single session in character mode)
+- Session management (New Chat in RE mode, 2-session limit per vibe, rename/delete sessions)
 - Gossip mode (no history, no logs)
 - SessionStorage persistence (survives page reloads, no splash redirect for auth users)
 - Personality profile used subtly in AI responses
+
+## Recent Changes (Feb 24, 2026)
+
+### "Clan Creator" Overhaul
+- **Renamed "Persona" to "Clan"** throughout the application
+- Updated sidebar section header from "Companions" to "Clans"
+- Updated "Create Persona" button to "Create Clan"
+- Updated onboarding slide 3 to say "Create your own clans" and "3 custom clans"
+- Updated all Clan Creator wizard text to use "clan" terminology
+- No backend changes required (API still uses `characters` collection internally)
 
 ## Bug Fixes Log (Feb 2026)
 
@@ -68,13 +78,14 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 - Production readiness audit: rate limiting, security headers, CORS
 
 ### P1 (High)
-- Test all AI emotional modes end-to-end
+- Test all AI emotional modes end-to-end (Back Me, Be Real, Hear Me, Gossip)
 - Safety-net logic for distressed users
+- Payment integration for purchasing more coins
 
 ### P2 (Medium)
-- Payment integration for coin packs
 - PWA / push notifications
-- Component file splitting (App.jsx ~1500 lines)
+- Component file splitting (App.jsx ~1500 lines for better maintainability)
+- Full production deployment preparation
 
 ### P3 (Backlog)
 - Analytics dashboard
