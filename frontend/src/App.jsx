@@ -1249,7 +1249,7 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
       )}
       <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Clans</div>
       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-        {/* User characters */}
+        {/* User clans */}
         {characters.map(c=>{
           const color = ROLE_COLORS[c.base_role]||'#a78bfa';
           const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
