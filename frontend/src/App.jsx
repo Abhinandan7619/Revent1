@@ -1545,7 +1545,7 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
 };
 
 // ─── Chat Interface ───────────────────────────────────────────────────────────
-const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, onDeleteCharacter, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop, onOpenGossip, startNewSession, chatSessions, sessionId, onSwitchSession, onDeleteSession, onRenameSession, onOpenSettings }) => {
+const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenCreator, onDeleteCharacter, onEditCharacter, intensity, baseline, manualMode, setManualMode, authUser, messages, input, setInput, sendMessage, loading, scrollRef, language, setLanguage, isDesktop, onOpenGossip, startNewSession, chatSessions, sessionId, onSwitchSession, onDeleteSession, onRenameSession, onOpenSettings }) => {
   const activeChar = characters.find(c=>c.character_id===activeVibe);
   const accentColor = activeChar ? (ROLE_COLORS[activeChar.base_role]||'#a78bfa') : '#a78bfa';
   const lastAiMsg = [...messages].reverse().find(m=>m.role==='ai');
