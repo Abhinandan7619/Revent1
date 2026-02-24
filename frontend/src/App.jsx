@@ -2412,7 +2412,7 @@ function App() {
         )}
         {view==='onboarding'&&(
           <motion.div key="ob" style={wrapFull} initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0,transition:{duration:0}}}>
-            <OnboardingScreen onDone={()=>setView(askAliasAfterOnboarding?'name':'chat')}/>
+            <OnboardingScreen onDone={()=>setView(askAliasAfterOnboarding?'name':'lang')}/>
           </motion.div>
         )}
         {view==='name'&&(
