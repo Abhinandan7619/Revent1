@@ -2457,7 +2457,7 @@ function App() {
                 <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onEditCharacter={editCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
               </div>
               <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
-                <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language} isDesktop={isDesktop}/>
+                <CharacterCreator onBack={()=>{setEditingCharacter(null);setView('chat');}} onSave={handleCharacterSaved} language={language} isDesktop={isDesktop} editingCharacter={editingCharacter}/>
               </div>
             </div>
           ):(
