@@ -800,7 +800,7 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
         <LogoIcon size="sm"/>
         <div style={{ flex:1 }}>
           <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:15, ...gradText }}>
-            {step===6?`Building ${char.name||'Clan'}…`:step===7?`Your Clan`:'Create Your Clan'}
+            {step===6?`Building ${char.name||'Clan'}…`:step===7?`Your Clan`:isEditing?'Edit Your Clan':'Create Your Clan'}
           </div>
         </div>
         {step<=5&&<div style={{ fontSize:11, color:'rgba(248,250,252,0.3)' }}>Step {step} of 5</div>}
