@@ -2407,7 +2407,7 @@ function App() {
           <div style={chatLayoutStyle}>
             {isDesktop&&(
               <div style={sidebarWrapperStyle}>
-                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
+                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onEditCharacter={editCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
               </div>
             )}
             <div style={chatWrapperStyle}>
@@ -2428,7 +2428,7 @@ function App() {
           {isDesktop?(
             <div style={{ display:'flex', height:'100%' }}>
               <div style={{ width:240, flexShrink:0, height:'100%' }}>
-                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
+                <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onEditCharacter={editCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
               </div>
               <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
                 <CharacterCreator onBack={()=>setView('chat')} onSave={handleCharacterSaved} language={language} isDesktop={isDesktop}/>
