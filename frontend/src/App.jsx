@@ -42,7 +42,7 @@ const ROLE_COLORS = {
   'Close Cousin': '#a78bfa', 'Office Bro': '#60a5fa', 'Childhood Buddy': '#34d399',
   'Chill Ex': '#fbbf24', 'Blunt Senior': '#f87171', 'Protective Sister': '#f472b6',
 };
-const RE_DEFAULT = { id: 'default', label: 'RE', emoji: null, color: '#a78bfa', config: {} };
+const RE_DEFAULT = { id: 'default', label: 'Reva', emoji: null, color: '#a78bfa', config: {} };
 const EMOTION_ITEMS = [
   { emoji: '😔', label: 'Sad',     mode: 'HEAR_ME' },
   { emoji: '💀', label: 'Dead',    mode: 'HEAR_ME' },
@@ -1119,7 +1119,7 @@ const ChatBubble = ({ msg, isDesktop }) => {
       )}
       {msg.role==='ai'&&meta&&(
         <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, paddingLeft:2 }}>
-          <span style={{ color:'rgba(248,250,252,0.4)' }}>RE · </span>
+          <span style={{ color:'rgba(248,250,252,0.4)' }}>Reva · </span>
           <span style={{ color: modeColor, fontWeight:600 }}>{meta.label}</span>
         </div>
       )}
@@ -1157,7 +1157,7 @@ const GossipBubble = ({ msg, isDesktop }) => {
       )}
       {msg.role==='ai'&&(
         <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5 }}>
-          <span style={{ color:'rgba(251,191,36,0.5)' }}>RE · </span>
+          <span style={{ color:'rgba(251,191,36,0.5)' }}>Reva · </span>
           <span style={{ color:'#fbbf24', fontWeight:600 }}>GOSSIP</span>
         </div>
       )}
@@ -1197,7 +1197,7 @@ const CharacterTabStrip = ({ activeVibe, setActiveVibe, onOpenCreator, character
       <motion.button data-testid="vibe-tab-default" onClick={()=>setActiveVibe('default')} whileTap={{scale:0.9}}
         style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, padding:'6px 8px', borderRadius:12, border:`1.5px solid ${activeVibe==='default'?'#a78bfa60':'rgba(255,255,255,0.07)'}`, background:activeVibe==='default'?'#a78bfa18':'rgba(255,255,255,0.04)', cursor:'pointer', minWidth:54, transition:'all 0.2s', flexShrink:0 }}>
         <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe==='default'?'#a78bfa25':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, border:`1px solid ${activeVibe==='default'?'#a78bfa50':'rgba(255,255,255,0.08)'}` }}>🤖</div>
-        <span style={{ fontSize:9, fontWeight:600, color:activeVibe==='default'?'#a78bfa':'rgba(248,250,252,0.4)', letterSpacing:0.5, whiteSpace:'nowrap' }}>RE</span>
+        <span style={{ fontSize:9, fontWeight:600, color:activeVibe==='default'?'#a78bfa':'rgba(248,250,252,0.4)', letterSpacing:0.5, whiteSpace:'nowrap' }}>Reva</span>
       </motion.button>
       {/* User characters */}
       {characters.map(c=>{
@@ -1657,7 +1657,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
           )}
           <LogoIcon size="sm"/>
           <div>
-            <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, background:'linear-gradient(90deg,#a78bfa,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>RE</div>
+            <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, background:'linear-gradient(90deg,#a78bfa,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Reva</div>
             <div style={{ fontSize:9, color:'rgba(248,250,252,0.3)', display:'flex', alignItems:'center', gap:3 }}>
               <span style={{ display:'inline-block', width:5, height:5, borderRadius:'50%', background:'#34d399' }}/>Online
             </div>
