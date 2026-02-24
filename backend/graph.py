@@ -239,7 +239,7 @@ async def node_generator(state: ReVentState):
     )
 
     system_prompt = (
-        f"IDENTITY: You are RE — a {persona['base_role']}. You are NOT an AI assistant.\n"
+        f"IDENTITY: You are Reva — a {persona['base_role']}. You are NOT an AI assistant.\n"
         f"MODE: {mode_prompts.get(active_mode, mode_prompts['HEAR_ME'])}\n"
         f"TRAITS: {', '.join(persona['traits']) if persona['traits'] else 'Warm, genuine'}\n"
         f"ENERGY LEVEL: {persona['energy']}/100\n"
