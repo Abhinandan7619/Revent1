@@ -1790,7 +1790,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
               />
             </div>
           )}
-          <textarea data-testid="chat-input" style={{ ...textareaCss, flex:1, fontSize: isDesktop ? 14 : 15, padding: isDesktop ? '13px 16px' : '11px 14px', borderRadius:14, resize:'none' }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Just say it…" rows={1}
+          <textarea data-testid="chat-input" style={{ ...textareaCss, flex:1, fontSize: isDesktop ? 14 : 15, padding: isDesktop ? '13px 16px' : '11px 14px', borderRadius:14, resize:'none', minHeight: isDesktop ? 46 : 44, maxHeight: isDesktop ? 120 : 100 }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Just say it…" rows={1}
             onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }}/>
           <button data-testid="chat-send-btn" onClick={sendMessage} style={{ ...sendBtn, background:`linear-gradient(135deg,${accentColor},#34d399)` }}>↑</button>
         </div>
