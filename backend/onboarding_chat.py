@@ -1,6 +1,6 @@
 """
-Onboarding chat flow for RE — 5-phase personality discovery.
-Only runs for new users chatting with RE (default persona), not gossip or custom characters.
+Onboarding chat flow for Reva — 5-phase personality discovery.
+Only runs for new users chatting with Reva (default persona), not gossip or custom characters.
 """
 
 import json
