@@ -834,11 +834,11 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
             {step===2&&(
               <div style={{ paddingTop:16 }}>
                 <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Name your <span style={gradText}>Clan</span></div>
-                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:20, lineHeight:1.5 }}>Give your persona a name and pick a gender. This shapes how Reva speaks and refers to itself.</div>
+                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:20, lineHeight:1.5 }}>Give your clan a name and pick a gender. This shapes how Reva speaks and refers to itself.</div>
                 <div style={sLbl}>// What do you call them?</div>
                 <input value={char.name} onChange={e=>setChar(prev=>({...prev,name:e.target.value}))} style={{ ...inputCss, marginBottom:6 }} type="text" placeholder="e.g. Rahul, Priya, Arjun, Meera…" maxLength={24}/>
                 <div style={{ fontSize:11, color:'rgba(248,250,252,0.25)', marginBottom:20, paddingLeft:2 }}>Keep it personal — use a real name or nickname</div>
-                <div style={sLbl}>// Gender of this persona</div>
+                <div style={sLbl}>// Gender of this clan</div>
                 <div style={{ display:'flex', gap:10 }}>
                   {GENDER_OPTIONS.map(opt=>(
                     <div key={opt.id} onClick={()=>setChar(prev=>({...prev,gender:opt.id}))}
@@ -855,7 +855,7 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
             {step===3&&(
               <div style={{ paddingTop:16 }}>
                 <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Pick <span style={gradText}>their traits</span></div>
-                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:10, lineHeight:1.5 }}>Choose 2–5 traits that define how this persona communicates.</div>
+                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:10, lineHeight:1.5 }}>Choose 2–5 traits that define how this clan communicates.</div>
                 <div style={{ fontSize:12, color:'rgba(167,139,250,0.7)', marginBottom:12 }}>{char.traits.length} of 5 selected</div>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:20 }}>
                   {TRAITS.map(t=>{
@@ -886,8 +886,8 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
                 <div style={sLbl}>// Reva's read on your choices</div>
                 <div style={{ ...glCardSm, padding:'14px 16px', fontSize:12, color:char.traits.length>=2?'rgba(248,250,252,0.65)':'rgba(248,250,252,0.25)' }}>
                   {char.traits.length>=2
-                    ? `${char.name||'Your clan'} comes through as ${char.traits.slice(0,3).join(', ')} with energy at ${char.energy}/10. This persona shows up with intention.`
-                    : 'Select at least 2 traits to see your persona come to life…'}
+                    ? `${char.name||'Your clan'} comes through as ${char.traits.slice(0,3).join(', ')} with energy at ${char.energy}/10. This clan shows up with intention.`
+                    : 'Select at least 2 traits to see your clan come to life…'}
                 </div>
               </div>
             )}
