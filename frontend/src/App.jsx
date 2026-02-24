@@ -537,7 +537,7 @@ const OnboardingScreen = ({ onDone }) => {
           ) : s.characters ? (
             <div style={{ display:'flex', flexDirection:'column', gap:14, width:'100%' }}>
               <p style={{ fontSize:15, lineHeight:1.7, color:'rgba(248,250,252,0.55)', textAlign:'center', marginBottom:4 }}>
-                Beyond RE, design up to <span style={{ color:'#f472b6', fontWeight:700 }}>3 custom personas</span> — each with their own vibe, traits, and energy.
+                Beyond RE, design up to <span style={{ color:'#f472b6', fontWeight:700 }}>3 custom clans</span> — each with their own vibe, traits, and energy.
               </p>
               {[
                 { icon:'🤝', title:'Pick a base vibe', sub:'Close Cousin, Blunt Senior, Office Bro…' },
