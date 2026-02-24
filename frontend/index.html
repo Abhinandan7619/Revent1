@@ -72,6 +72,14 @@
         window.WebSocket.CLOSING = OriginalWebSocket.CLOSING;
         window.WebSocket.CLOSED = OriginalWebSocket.CLOSED;
       })();
+
+      // Final defense: block ANY page unload/reload (including from filler.js)
+      window.addEventListener('beforeunload', function(e) {
+        console.debug('[ReVent] Blocked beforeunload event');
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }, true);
     </script>
   </head>
   <body>
