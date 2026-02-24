@@ -640,180 +640,422 @@ const LanguageScreen = ({ onDone }) => {
   );
 };
 
-// ─── Character Creator ────────────────────────────────────────────────────────
-const CharacterCreator = ({ onBack, onSave, language, isDesktop }) => {
-  const STEP_TITLES = ['Choose a vibe', 'Name & gender', 'Add traits', 'Energy & quirks', 'Backstory'];
-  const [step,setStep]=useState(1);
-  const [tempChar,setTempChar]=useState({
-    base_role:'Close Cousin',
-    traits:[],
-    energy:50,
-    quirks:[],
-    memory_hook:'',
-    label:'',
-    name:'',
-    gender:'',
+// ─── Clan Creator ─────────────────────────────────────────────────────────────
+const CharacterCreator = ({ onBack, onSave, language }) => {
+  const STEP_NODES = ['Persona','Identity','Traits','Character','Memory'];
+  const PERSONAS_CREATOR = [
+    { id:'Close Cousin',      emoji:'👨‍👩‍👧', desc:'Warm, relatable, family-like',             color:'#a78bfa' },
+    { id:'Childhood Buddy',   emoji:'🎮',   desc:'Nostalgic, loyal, ride-or-die',            color:'#34d399' },
+    { id:'Chill Ex',          emoji:'😎',   desc:'Detached, neutral, mature perspective',    color:'#fbbf24' },
+    { id:'Blunt Senior',      emoji:'👴',   desc:'Direct, experienced, no sugar-coating',    color:'#f87171' },
+    { id:'Protective Sister', emoji:'👩‍❤️‍👩', desc:'Fierce, defensive, emotionally strong',   color:'#f472b6' },
+    { id:'Office Bro',        emoji:'💼',   desc:'Practical, slightly sarcastic, work-aware',color:'#60a5fa' },
+  ];
+  const IDENTITY_SECTIONS = [
+    { id:'support_style', label:'// How they support you', opts:[
+      { id:'hype',      emoji:'🔥', title:'Hype you up',            desc:'Always in your corner, no matter what' },
+      { id:'listen',    emoji:'👂', title:'Just listen',             desc:'No fixing, no advice — just space' },
+      { id:'tough',     emoji:'💪', title:'Tough love',              desc:'Calls you out when you need it' },
+      { id:'humor',     emoji:'😄', title:'Laugh it off',            desc:'Makes everything feel lighter' },
+    ]},
+    { id:'comm_style', label:'// Their signature move', opts:[
+      { id:'texts',      emoji:'💬', title:'Short blunt texts',      desc:'Gets to the point, zero fluff' },
+      { id:'latenight',  emoji:'🌙', title:'Late-night deep talks',  desc:'Best at 2AM when it gets real' },
+      { id:'memes',      emoji:'😂', title:'Memes & reactions',      desc:'Communicates in feelings and humor' },
+      { id:'voicenotes', emoji:'🎤', title:'Long voice notes',       desc:'Says everything that needs saying' },
+    ]},
+  ];
+  const QUESTIONS = [
+    { id:'meet',    type:'chips',   reva:"Tell me... how do you two know each other?",
+      text:"How did you meet?",
+      chips:['School / College','Work / Office','Online','Neighborhood','Family intro','Just happened'] },
+    { id:'support', type:'options', reva:"When you're having a rough day...",
+      text:"What do they always say when you're stressed?",
+      options:[
+        { emoji:'💪', text:'"You got this. Stop doubting yourself."' },
+        { emoji:'😭', text:'"Ugh same tbh. Life is rough."' },
+        { emoji:'👂', text:'"Tell me everything. From the start."' },
+        { emoji:'🧠', text:'"You\'re overthinking. Here\'s the plan."' },
+      ] },
+    { id:'secret',  type:'text',    reva:"What's something only they know about you?",
+      text:"One thing only they know about you?",
+      placeholder:"e.g. That I ugly cry at animated movies..." },
+  ];
+
+  const [step, setStep] = useState(1);
+  const [qIdx, setQIdx] = useState(0);
+  const [saving, setSaving] = useState(false);
+  const [char, setChar] = useState({ base_role:'', name:'', gender:'', traits:[], energy:5, identity:{}, qAnswers:{}, story:'' });
+
+  const avatarColor = ROLE_COLORS[char.base_role] || '#a78bfa';
+  const avatarPersona = PERSONAS_CREATOR.find(p=>p.id===char.base_role);
+  const energyDesc = char.energy<=3 ? 'Low-key, calm, mostly observant.' : char.energy<=6 ? 'Balanced — calm but present.' : 'High-energy, expressive, always in motion.';
+
+  const toggleTrait=(id)=>setChar(prev=>{
+    if(prev.traits.includes(id)) return {...prev,traits:prev.traits.filter(t=>t!==id)};
+    if(prev.traits.length>=5) return prev;
+    return {...prev,traits:[...prev.traits,id]};
   });
-  const [quirkInput,setQuirkInput]=useState('');
-  const [isRefining,setIsRefining]=useState(false);
-  const [saving,setSaving]=useState(false);
-  const avatarColor=ROLE_COLORS[tempChar.base_role]||'#a78bfa';
+  const setIdentity=(sid,oid)=>setChar(prev=>({...prev,identity:{...prev.identity,[sid]:oid}}));
 
-  const toggleTrait=(id)=>{
-    setTempChar(prev=>{
-      if(prev.traits.includes(id)) return {...prev,traits:prev.traits.filter(t=>t!==id)};
-      if(prev.traits.length>=4) return prev;
-      return {...prev,traits:[...prev.traits,id]};
-    });
-  };
-  const addQuirk=()=>{ if(quirkInput&&tempChar.quirks.length<2){ setTempChar(prev=>({...prev,quirks:[...prev.quirks,quirkInput]})); setQuirkInput(''); } };
-  const refineBackstory=async()=>{
-    if(!tempChar.memory_hook)return;
-    setIsRefining(true);
-    try{ const res=await api.post('/api/refine-backstory',{draft_text:tempChar.memory_hook,language}); setTempChar(prev=>({...prev,memory_hook:res.data.refined_text})); }catch{}
-    finally{setIsRefining(false);}
-  };
-  const saveAndExit=async()=>{
-    setSaving(true);
-    try{
-      const payload = { ...tempChar, label: tempChar.name || tempChar.base_role };
-      const res=await api.post('/api/characters', payload);
-      onSave(res.data);
-    }catch(err){
-      alert(err.response?.data?.detail||'Failed to save character');
-    }finally{setSaving(false);}
-  };
-
-  const stepTitle = STEP_TITLES[step-1];
-  const traitSummary = tempChar.traits.length>=2
-    ? `You've chosen ${tempChar.traits.join(', ')} and set the energy to ${tempChar.energy}%. This persona shows up with intention.`
-    : 'Pick at least two traits to see your persona come to life…';
-  const energyDesc = tempChar.energy <= 30 ? 'Low-key, calm, observant.' : tempChar.energy <= 65 ? 'Balanced and present.' : 'High-energy, expressive, always in motion.';
-  const canAdvance = () => {
-    if(step===2) return tempChar.name.trim() && tempChar.gender;
-    if(step===3) return tempChar.traits.length>=2;
+  const canAdvance=()=>{
+    if(step===1) return !!char.base_role;
+    if(step===2) return !!char.name.trim() && !!char.gender;
+    if(step===3) return char.traits.length>=2;
+    if(step===4) return true;
+    if(step===5){
+      const q=QUESTIONS[qIdx];
+      if(q.type==='chips') return !!char.qAnswers[q.id];
+      if(q.type==='options') return !!char.qAnswers[q.id];
+      if(q.type==='text') return (char.qAnswers[q.id]||'').trim().length>=3;
+    }
     return true;
   };
 
+  const handleBack=()=>{
+    if(step===1){ onBack(); return; }
+    if(step===5 && qIdx>0){ setQIdx(p=>p-1); return; }
+    setStep(p=>p-1);
+  };
+
+  const handleNext=async()=>{
+    if(step<4){ setStep(p=>p+1); return; }
+    if(step===4){ setStep(5); setQIdx(0); return; }
+    if(step===5){
+      if(qIdx<QUESTIONS.length-1){ setQIdx(p=>p+1); return; }
+      await runAIGenerate(); return;
+    }
+  };
+
+  const runAIGenerate=async()=>{
+    setStep(6);
+    const habits=Object.entries(char.identity).map(([sid,oid])=>{
+      const sect=IDENTITY_SECTIONS.find(s=>s.id===sid);
+      return sect?.opts.find(o=>o.id===oid)?.title||'';
+    }).filter(Boolean);
+    const draft=`${char.name} is a ${char.base_role} persona. Traits: ${char.traits.join(', ')}. Energy: ${char.energy}/10. Style: ${habits.join(', ')}. Background: ${Object.values(char.qAnswers).filter(v=>typeof v==='string').join('. ')}.`;
+    try{
+      const res=await api.post('/api/refine-backstory',{draft_text:draft,language});
+      setChar(prev=>({...prev,story:res.data.refined_text}));
+    }catch{
+      setChar(prev=>({...prev,story:`${char.name} is the kind of person who shows up — not just when things are good, but especially when they're not.`}));
+    }
+    setStep(7);
+  };
+
+  const saveAndActivate=async()=>{
+    setSaving(true);
+    const habitsList=Object.entries(char.identity).map(([sid,oid])=>{
+      const sect=IDENTITY_SECTIONS.find(s=>s.id===sid);
+      return sect?.opts.find(o=>o.id===oid)?.title||'';
+    }).filter(Boolean);
+    try{
+      const res=await api.post('/api/characters',{
+        base_role:char.base_role, traits:char.traits, energy:char.energy*10,
+        quirks:habitsList, memory_hook:char.story, label:char.name, name:char.name, gender:char.gender,
+      });
+      onSave(res.data);
+    }catch(err){ alert(err.response?.data?.detail||'Failed to save. Try again.'); }
+    finally{ setSaving(false); }
+  };
+
+  // Shared creator styles
+  const sLbl={ fontSize:10, letterSpacing:2.2, textTransform:'uppercase', color:'rgba(167,139,250,0.7)', fontFamily:"'DM Sans',sans-serif", fontWeight:500, marginBottom:8 };
+  const glCard={ background:'rgba(255,255,255,0.07)', backdropFilter:'blur(16px)', border:'1px solid rgba(255,255,255,0.10)', borderRadius:18 };
+  const glCardSm={ background:'rgba(255,255,255,0.04)', backdropFilter:'blur(12px)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:14 };
+  const btnContinue={ width:'100%', padding:'14px 24px', background:'linear-gradient(135deg,#a78bfa,#60a5fa,#34d399)', color:'#fff', border:'none', borderRadius:14, fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:15, cursor:'pointer' };
+  const btnBackStyle={ padding:'12px 20px', background:'transparent', border:'1px solid rgba(255,255,255,0.10)', borderRadius:999, color:'rgba(248,250,252,0.55)', fontFamily:"'Outfit',sans-serif", fontWeight:500, fontSize:14, cursor:'pointer', flexShrink:0 };
+  const gradText={ background:'linear-gradient(90deg,#a78bfa,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' };
+
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', overflow:'hidden' }}>
-      <div style={topbar}>
-        <button onClick={onBack} style={iconBtn}>←</button>
-        <div><div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:16 }}>Design Persona</div><div style={{ fontSize:10, color:'rgba(248,250,252,0.25)' }}>Craft your AI companion</div></div>
-        <div style={{ width:38 }}/>
-      </div>
-      <div style={{ position:'relative', background:'linear-gradient(to bottom,rgba(10,5,25,0.9),rgba(10,5,25,0.4))', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
-        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', pointerEvents:'none' }}><div style={{ width:128, height:128, borderRadius:'50%', background:avatarColor, filter:'blur(48px)', opacity:0.15 }}/></div>
-        <Avatar3D color={avatarColor} energy={tempChar.energy} height={isDesktop ? 160 : 130}/>
-        <div style={{ position:'absolute', bottom:10, left:'50%', transform:'translateX(-50%)', display:'flex', alignItems:'center', gap:6, background:'rgba(0,0,0,0.5)', backdropFilter:'blur(12px)', padding:'5px 12px', borderRadius:99, border:'1px solid rgba(255,255,255,0.1)', fontSize:11, fontWeight:700, whiteSpace:'nowrap' }}>
-          <span>{BASE_ROLES.find(r=>r.id===tempChar.base_role)?.icon}</span>
-          <span style={{ color:avatarColor }}>{tempChar.base_role}</span>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.9)', backdropFilter:'blur(20px)', flexShrink:0 }}>
+        <LogoIcon size="sm"/>
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:15, ...gradText }}>
+            {step===6?`Building ${char.name||'Clan'}…`:step===7?`Your Clan`:'Create Your Clan'}
+          </div>
         </div>
+        {step<=5&&<div style={{ fontSize:11, color:'rgba(248,250,252,0.3)' }}>Step {step} of 5</div>}
       </div>
-      <div style={{ display:'flex', gap:4, padding: isDesktop ? '14px 16px 8px' : '10px 12px 6px' }}>
-        {STEP_TITLES.map((_,idx)=>(
-          <div key={idx} style={{ height:3, flex:1, borderRadius:99, background:step>idx?avatarColor:'rgba(255,255,255,0.08)', transition:'all 0.4s' }}/>
-        ))}
-      </div>
-      <div style={{ flex:1, overflowY:'auto', padding: isDesktop ? '8px 16px 16px' : '6px 12px 12px' }}>
+
+      {/* Step node progress (steps 1-5) */}
+      {step<=5&&(
+        <div style={{ display:'flex', alignItems:'flex-start', padding:'10px 16px 8px', borderBottom:'1px solid rgba(255,255,255,0.04)', background:'rgba(10,5,22,0.5)', flexShrink:0, overflowX:'auto' }}>
+          {STEP_NODES.map((lbl,idx)=>{
+            const ns=idx+1; const isDone=step>ns; const isActive=step===ns;
+            return (
+              <React.Fragment key={lbl}>
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:3, flexShrink:0 }}>
+                  <div style={{ width:26, height:26, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, fontWeight:700,
+                    border:isDone?'none':`1px solid ${isActive?'#a78bfa':'rgba(255,255,255,0.08)'}`,
+                    background:isDone?'linear-gradient(135deg,#a78bfa,#34d399)':isActive?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.04)',
+                    color:isDone?'#fff':isActive?'#a78bfa':'rgba(248,250,252,0.25)' }}>
+                    {isDone?'✓':ns}
+                  </div>
+                  <div style={{ fontSize:8, color:isActive?'#a78bfa':isDone?'rgba(248,250,252,0.5)':'rgba(248,250,252,0.2)', letterSpacing:0.3, whiteSpace:'nowrap' }}>{lbl}</div>
+                </div>
+                {idx<STEP_NODES.length-1&&(
+                  <div style={{ flex:1, height:1, margin:'13px 4px 0', background:isDone?'linear-gradient(90deg,#a78bfa,#34d399)':'rgba(255,255,255,0.06)' }}/>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Content */}
+      <div style={{ flex:1, overflowY:'auto', padding:'0 16px 16px' }}>
         <AnimatePresence mode="wait">
-          <motion.div key={step} initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-16}} transition={{duration:0.18}} style={{ paddingTop:8 }}>
+          <motion.div key={`${step}-${qIdx}`} initial={{opacity:0,x:14}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-14}} transition={{duration:0.18}}>
+
+            {/* Step 1 — Persona */}
             {step===1&&(
-              <>
-                <div style={stepTitleStyle}>{stepTitle}</div>
-                <div style={{ display:'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap:10, marginTop:12 }}>
-                  {BASE_ROLES.map(role=>(
-                    <button key={role.id} data-testid={`role-${role.id}`} onClick={()=>setTempChar(prev=>({...prev,base_role:role.id}))}
-                      style={{ padding:'14px 12px', borderRadius:14, border:`1px solid ${tempChar.base_role===role.id?role.color+'60':'rgba(255,255,255,0.07)'}`, background:tempChar.base_role===role.id?role.color+'18':'rgba(255,255,255,0.03)', textAlign:'left', cursor:'pointer', transition:'all 0.2s' }}>
-                      <div style={{ fontSize:24, marginBottom:6 }}>{role.icon}</div>
-                      <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:12 }}>{role.id}</div>
-                      <div style={{ fontSize:10, color:'rgba(248,250,252,0.35)', marginTop:2 }}>{role.desc}</div>
-                    </button>
+              <div style={{ paddingTop:16 }}>
+                <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Who is <span style={gradText}>Reva</span> to you?</div>
+                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:16, lineHeight:1.5 }}>Pick a relationship type. This sets the entire tone of how Reva will show up for you.</div>
+                <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+                  {PERSONAS_CREATOR.map(p=>(
+                    <div key={p.id} onClick={()=>setChar(prev=>({...prev,base_role:p.id}))}
+                      style={{ ...glCard, padding:'14px 12px', cursor:'pointer', position:'relative', transition:'all 0.2s',
+                        ...(char.base_role===p.id?{border:`1px solid ${p.color}70`,background:`${p.color}18`}:{}) }}>
+                      {char.base_role===p.id&&<div style={{ position:'absolute', top:8, right:8, width:18, height:18, borderRadius:'50%', background:'linear-gradient(135deg,#a78bfa,#34d399)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'#fff', fontWeight:700 }}>✓</div>}
+                      <div style={{ fontSize:26, marginBottom:6 }}>{p.emoji}</div>
+                      <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:12, color:'#fff', marginBottom:3 }}>{p.id}</div>
+                      <div style={{ fontSize:10, color:'rgba(248,250,252,0.35)', lineHeight:1.4 }}>{p.desc}</div>
+                    </div>
                   ))}
                 </div>
-              </>
+              </div>
             )}
+
+            {/* Step 2 — Name + Gender */}
             {step===2&&(
-              <>
-                <div style={stepTitleStyle}>{stepTitle}</div>
-                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Give your persona a personal name and how they identify.</p>
-                <div style={{ marginBottom:12 }}>
-                  <div style={label}>Persona name</div>
-                  <input value={tempChar.name} onChange={e=>setTempChar(prev=>({...prev,name:e.target.value}))} style={inputCss} placeholder="e.g. Priya, Rahul, Mira…" maxLength={24}/>
-                </div>
+              <div style={{ paddingTop:16 }}>
+                <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Name your <span style={gradText}>Clan</span></div>
+                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:20, lineHeight:1.5 }}>Give your persona a name and pick a gender. This shapes how Reva speaks and refers to itself.</div>
+                <div style={sLbl}>// What do you call them?</div>
+                <input value={char.name} onChange={e=>setChar(prev=>({...prev,name:e.target.value}))} style={{ ...inputCss, marginBottom:6 }} type="text" placeholder="e.g. Rahul, Priya, Arjun, Meera…" maxLength={24}/>
+                <div style={{ fontSize:11, color:'rgba(248,250,252,0.25)', marginBottom:20, paddingLeft:2 }}>Keep it personal — use a real name or nickname</div>
+                <div style={sLbl}>// Gender of this persona</div>
                 <div style={{ display:'flex', gap:10 }}>
                   {GENDER_OPTIONS.map(opt=>(
-                    <button key={opt.id} onClick={()=>setTempChar(prev=>({...prev,gender:opt.id}))}
-                      style={{ flex:1, padding:'12px 10px', borderRadius:12, border:`2px solid ${tempChar.gender===opt.id?avatarColor:'rgba(255,255,255,0.15)'}`, background:tempChar.gender===opt.id?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.03)', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
-                      <span style={{ fontSize:22 }}>{opt.emoji}</span>
-                      <span style={{ fontSize:12, fontWeight:600 }}>{opt.label}</span>
-                    </button>
+                    <div key={opt.id} onClick={()=>setChar(prev=>({...prev,gender:opt.id}))}
+                      style={{ flex:1, padding:'14px 10px', borderRadius:12, border:`1px solid ${char.gender===opt.id?'#a78bfa':'rgba(255,255,255,0.08)'}`, background:char.gender===opt.id?'rgba(167,139,250,0.12)':'rgba(255,255,255,0.03)', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:5, transition:'all 0.2s' }}>
+                      <span style={{ fontSize:24 }}>{opt.emoji}</span>
+                      <span style={{ fontSize:12, fontWeight:600, color:char.gender===opt.id?'#a78bfa':'rgba(248,250,252,0.45)', fontFamily:"'Outfit',sans-serif" }}>{opt.label}</span>
+                    </div>
                   ))}
                 </div>
-              </>
+              </div>
             )}
+
+            {/* Step 3 — Traits + Energy */}
             {step===3&&(
-              <>
-                <div style={stepTitleStyle}>{stepTitle}</div>
-                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Pick 2-4 traits that define how they speak.</p>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                  {TRAITS.map(t=>(
-                    <button key={t.id} onClick={()=>toggleTrait(t.id)}
-                      style={{ padding:'8px 14px', borderRadius:99, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5, cursor:'pointer', border:`1px solid ${tempChar.traits.includes(t.id)?avatarColor+'70':'rgba(255,255,255,0.08)'}`, background:tempChar.traits.includes(t.id)?avatarColor+'20':'rgba(255,255,255,0.04)', color:tempChar.traits.includes(t.id)?'#fff':'rgba(255,255,255,0.45)', transition:'all 0.15s' }}>
-                      <span>{t.emoji}</span>{t.id}
-                    </button>
-                  ))}
+              <div style={{ paddingTop:16 }}>
+                <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Pick <span style={gradText}>their traits</span></div>
+                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:10, lineHeight:1.5 }}>Choose 2–5 traits that define how this persona communicates.</div>
+                <div style={{ fontSize:12, color:'rgba(167,139,250,0.7)', marginBottom:12 }}>{char.traits.length} of 5 selected</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:8, marginBottom:20 }}>
+                  {TRAITS.map(t=>{
+                    const isSel=char.traits.includes(t.id);
+                    const isOff=!isSel&&char.traits.length>=5;
+                    return (
+                      <div key={t.id} onClick={()=>!isOff&&toggleTrait(t.id)}
+                        style={{ padding:'8px 14px', borderRadius:99, fontSize:12, fontWeight:600, display:'flex', alignItems:'center', gap:5,
+                          cursor:isOff?'not-allowed':'pointer', transition:'all 0.15s', opacity:isOff?0.3:1,
+                          border:`1px solid ${isSel?'rgba(167,139,250,0.6)':'rgba(255,255,255,0.08)'}`,
+                          background:isSel?'rgba(167,139,250,0.13)':'rgba(255,255,255,0.04)',
+                          color:isSel?'#fff':'rgba(248,250,252,0.45)' }}>
+                        <span>{t.emoji}</span>{t.id}
+                      </div>
+                    );
+                  })}
                 </div>
-                <div style={{ marginTop:12, fontSize:11, color:'rgba(248,250,252,0.4)' }}>{tempChar.traits.length} / 4 selected</div>
-                <div style={{ marginTop:12, background:'rgba(255,255,255,0.03)', padding:'14px', borderRadius:12, border:'1px solid rgba(255,255,255,0.06)', fontSize:12, color:'rgba(248,250,252,0.65)' }}>
-                  {traitSummary}
+                <div style={sLbl}>// Energy level</div>
+                <div style={{ ...glCardSm, padding:'14px 16px', marginBottom:16 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
+                    <span style={{ fontSize:11, color:'rgba(248,250,252,0.35)', flexShrink:0 }}>Low</span>
+                    <input type="range" min="1" max="10" value={char.energy} onChange={e=>setChar(prev=>({...prev,energy:parseInt(e.target.value)}))} style={{ flex:1, accentColor:'#a78bfa', cursor:'pointer' }}/>
+                    <span style={{ fontSize:13, fontWeight:700, color:'#a78bfa', minWidth:18, textAlign:'right' }}>{char.energy}</span>
+                    <span style={{ fontSize:11, color:'rgba(248,250,252,0.35)', flexShrink:0 }}>High</span>
+                  </div>
+                  <div style={{ fontSize:11, color:'rgba(248,250,252,0.4)' }}>{energyDesc}</div>
                 </div>
-              </>
+                <div style={sLbl}>// Reva's read on your choices</div>
+                <div style={{ ...glCardSm, padding:'14px 16px', fontSize:12, color:char.traits.length>=2?'rgba(248,250,252,0.65)':'rgba(248,250,252,0.25)' }}>
+                  {char.traits.length>=2
+                    ? `${char.name||'Your clan'} comes through as ${char.traits.slice(0,3).join(', ')} with energy at ${char.energy}/10. This persona shows up with intention.`
+                    : 'Select at least 2 traits to see your persona come to life…'}
+                </div>
+              </div>
             )}
+
+            {/* Step 4 — Character Identity */}
             {step===4&&(
-              <>
-                <div style={stepTitleStyle}>{stepTitle}</div>
-                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Set how lively they feel and add those little habits.</p>
-                <div style={{ background:'rgba(255,255,255,0.03)', padding:'18px 16px', borderRadius:14, border:'1px solid rgba(255,255,255,0.06)', marginBottom:16 }}>
-                  <div style={{ fontSize:42, marginBottom:18 }}>{tempChar.energy>70?'🔥':tempChar.energy<40?'🧘':'🙂'}</div>
-                  <input type="range" min="0" max="100" value={tempChar.energy} onChange={e=>setTempChar(prev=>({...prev,energy:parseInt(e.target.value)}))} style={{ width:'100%', accentColor:avatarColor }}/>
-                  <div style={{ marginTop:12, fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, color:avatarColor }}>{tempChar.energy}% intensity</div>
-                  <div style={{ marginTop:4, fontSize:11, color:'rgba(248,250,252,0.45)' }}>{energyDesc}</div>
-                </div>
-                <div style={{ display:'flex', gap:8, marginBottom:10 }}>
-                  <input style={{ ...inputCss, flex:1, padding:'12px 14px' }} type="text" value={quirkInput} onChange={e=>setQuirkInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addQuirk()} placeholder="e.g. Always starts conversations with 'Listen…'"/>
-                  <button onClick={addQuirk} style={{ padding:'12px 16px', background:avatarColor, border:'none', borderRadius:10, color:'#fff', fontWeight:800, fontSize:18, cursor:'pointer' }}>+</button>
-                </div>
-                {tempChar.quirks.map(q=>(
-                  <div key={q} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 14px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, fontSize:13, color:'rgba(248,250,252,0.6)', marginBottom:8 }}>
-                    <span>{q}</span>
-                    <button onClick={()=>setTempChar(prev=>({...prev,quirks:prev.quirks.filter(x=>x!==q)}))} style={{ background:'none', border:'none', color:'rgba(248,250,252,0.3)', cursor:'pointer', fontSize:16 }}>×</button>
+              <div style={{ paddingTop:16 }}>
+                <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Character <span style={gradText}>identity</span></div>
+                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:18, lineHeight:1.5 }}>What are their signature habits? These make Reva feel like a real person, not just an AI.</div>
+                {IDENTITY_SECTIONS.map(section=>(
+                  <div key={section.id} style={{ marginBottom:20 }}>
+                    <div style={sLbl}>{section.label}</div>
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      {section.opts.map(opt=>{
+                        const isSel=char.identity[section.id]===opt.id;
+                        return (
+                          <div key={opt.id} onClick={()=>setIdentity(section.id,opt.id)}
+                            style={{ display:'flex', alignItems:'flex-start', gap:12, padding:'12px 14px', borderRadius:14, cursor:'pointer', transition:'all 0.2s',
+                              border:`1px solid ${isSel?'rgba(167,139,250,0.5)':'rgba(255,255,255,0.07)'}`,
+                              background:isSel?'rgba(167,139,250,0.10)':'rgba(255,255,255,0.04)' }}>
+                            <span style={{ fontSize:20, flexShrink:0, marginTop:1 }}>{opt.emoji}</span>
+                            <div style={{ flex:1 }}>
+                              <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:13, color:isSel?'#fff':'rgba(248,250,252,0.75)', marginBottom:2 }}>{opt.title}</div>
+                              <div style={{ fontSize:11, color:'rgba(248,250,252,0.35)' }}>{opt.desc}</div>
+                            </div>
+                            <div style={{ width:18, height:18, borderRadius:'50%', flexShrink:0, marginTop:2, display:'flex', alignItems:'center', justifyContent:'center',
+                              background:isSel?'linear-gradient(135deg,#a78bfa,#34d399)':'rgba(255,255,255,0.06)',
+                              border:`1px solid ${isSel?'transparent':'rgba(255,255,255,0.12)'}` }}>
+                              {isSel&&<span style={{ fontSize:9, color:'#fff', fontWeight:700 }}>✓</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
-              </>
+              </div>
             )}
-            {step===5&&(
-              <>
-                <div style={stepTitleStyle}>{stepTitle}</div>
-                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Write a rough idea, then hit the wand ✨</p>
-                <div style={{ position:'relative' }}>
-                  <textarea style={{ ...inputCss, minHeight:120, resize:'none', lineHeight:1.6 }} value={tempChar.memory_hook} onChange={e=>setTempChar(prev=>({...prev,memory_hook:e.target.value}))} placeholder="e.g. We survived high school together…"/>
-                  <button onClick={refineBackstory} disabled={isRefining||!tempChar.memory_hook}
-                    style={{ position:'absolute', bottom:12, right:12, width:36, height:36, borderRadius:8, background:avatarColor, border:'none', color:'#fff', fontSize:16, cursor:'pointer', opacity:(!isRefining&&tempChar.memory_hook)?1:0.4, display:'flex', alignItems:'center', justifyContent:'center' }}>
-                    {isRefining?'⟳':'✨'}
-                  </button>
+
+            {/* Step 5 — Memory Hook Q&A */}
+            {step===5&&(()=>{
+              const q=QUESTIONS[qIdx];
+              return (
+                <div style={{ paddingTop:16 }}>
+                  <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Build the <span style={gradText}>memory</span></div>
+                  <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:14 }}>A few quick questions. Reva uses these to feel real — not scripted.</div>
+                  <div style={{ height:3, background:'rgba(255,255,255,0.06)', borderRadius:99, marginBottom:6, overflow:'hidden' }}>
+                    <motion.div animate={{ width:`${((qIdx+1)/QUESTIONS.length)*100}%` }} style={{ height:'100%', background:'linear-gradient(90deg,#a78bfa,#34d399)', borderRadius:99 }}/>
+                  </div>
+                  <div style={{ fontSize:11, color:'rgba(248,250,252,0.3)', textAlign:'right', marginBottom:14 }}>Question {qIdx+1} of {QUESTIONS.length}</div>
+                  <div style={{ background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:12, padding:'10px 14px', marginBottom:14 }}>
+                    <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:'rgba(167,139,250,0.6)', marginBottom:4 }}>Reva says</div>
+                    <div style={{ fontSize:13, color:'rgba(248,250,252,0.7)', lineHeight:1.5 }}>{q.reva}</div>
+                  </div>
+                  <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:14, color:'#fff', marginBottom:12 }}>{q.text}</div>
+                  {q.type==='chips'&&(
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
+                      {q.chips.map(chip=>{
+                        const isSel=char.qAnswers[q.id]===chip;
+                        return (
+                          <div key={chip} onClick={()=>setChar(prev=>({...prev,qAnswers:{...prev.qAnswers,[q.id]:chip}}))}
+                            style={{ padding:'8px 14px', borderRadius:99, fontSize:12, fontWeight:500, cursor:'pointer', transition:'all 0.15s',
+                              border:`1px solid ${isSel?'rgba(167,139,250,0.5)':'rgba(255,255,255,0.08)'}`,
+                              background:isSel?'rgba(167,139,250,0.12)':'rgba(255,255,255,0.04)',
+                              color:isSel?'#fff':'rgba(248,250,252,0.5)' }}>
+                            {chip}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {q.type==='options'&&(
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      {q.options.map(opt=>{
+                        const isSel=char.qAnswers[q.id]===opt.text;
+                        return (
+                          <div key={opt.text} onClick={()=>setChar(prev=>({...prev,qAnswers:{...prev.qAnswers,[q.id]:opt.text}}))}
+                            style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:12, cursor:'pointer', transition:'all 0.2s',
+                              border:`1px solid ${isSel?'rgba(167,139,250,0.5)':'rgba(255,255,255,0.07)'}`,
+                              background:isSel?'rgba(167,139,250,0.12)':'rgba(255,255,255,0.04)' }}>
+                            <span style={{ fontSize:18, flexShrink:0 }}>{opt.emoji}</span>
+                            <span style={{ flex:1, fontSize:13, color:isSel?'#fff':'rgba(248,250,252,0.6)' }}>{opt.text}</span>
+                            <div style={{ width:16, height:16, borderRadius:'50%', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center',
+                              background:isSel?'linear-gradient(135deg,#a78bfa,#34d399)':'rgba(255,255,255,0.06)',
+                              border:`1px solid ${isSel?'transparent':'rgba(255,255,255,0.12)'}` }}>
+                              {isSel&&<span style={{ fontSize:8, color:'#fff' }}>✓</span>}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {q.type==='text'&&(
+                    <textarea value={char.qAnswers[q.id]||''} onChange={e=>setChar(prev=>({...prev,qAnswers:{...prev.qAnswers,[q.id]:e.target.value}}))}
+                      style={{ ...inputCss, minHeight:100, resize:'none', lineHeight:1.6 }} placeholder={q.placeholder}/>
+                  )}
                 </div>
-              </>
+              );
+            })()}
+
+            {/* Step 6 — AI Generating */}
+            {step===6&&(
+              <div style={{ paddingTop:40, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', minHeight:300, gap:20 }}>
+                <div style={{ position:'relative', width:100, height:100 }}>
+                  <div style={{ position:'absolute', inset:0, borderRadius:'50%', background:'linear-gradient(135deg,#a78bfa,#34d399)', opacity:0.15 }}/>
+                  <motion.div animate={{ rotate:360 }} transition={{ duration:2, repeat:Infinity, ease:'linear' }}
+                    style={{ position:'absolute', inset:4, borderRadius:'50%', border:'2px solid transparent', borderTopColor:'#a78bfa', borderRightColor:'#34d399' }}/>
+                  <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center', fontSize:28 }}>✨</div>
+                </div>
+                <div style={{ textAlign:'center' }}>
+                  <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:18, color:'#fff', marginBottom:6 }}>{char.name||'Reva'} is being born…</div>
+                  <div style={{ fontSize:13, color:'rgba(248,250,252,0.4)' }}>Weaving your backstory with AI</div>
+                </div>
+              </div>
             )}
+
+            {/* Step 7 — Complete */}
+            {step===7&&(
+              <div style={{ paddingTop:16 }}>
+                <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:4 }}>
+                  <span style={gradText}>Meet {char.name}.</span> 🎉
+                </div>
+                <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:16 }}>Your clan is ready. Here's who they are.</div>
+                <div style={{ ...glCard, padding:'20px 18px', marginBottom:16 }}>
+                  <div style={{ display:'flex', alignItems:'center', gap:14, marginBottom:14 }}>
+                    <div style={{ width:52, height:52, borderRadius:'50%', background:`${avatarColor}25`, border:`2px solid ${avatarColor}50`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:24, flexShrink:0 }}>
+                      {avatarPersona?.emoji||'✨'}
+                    </div>
+                    <div>
+                      <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:20, background:`linear-gradient(90deg,${avatarColor},#34d399)`, WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>{char.name}</div>
+                      <div style={{ fontSize:11, color:'rgba(248,250,252,0.4)', marginTop:2 }}>{char.base_role} · {char.gender} · Energy {char.energy}/10</div>
+                    </div>
+                  </div>
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:12 }}>
+                    {char.traits.map(t=>(
+                      <span key={t} style={{ padding:'4px 10px', borderRadius:99, background:`${avatarColor}18`, border:`1px solid ${avatarColor}40`, fontSize:11, color:'rgba(248,250,252,0.75)' }}>
+                        {TRAITS.find(x=>x.id===t)?.emoji} {t}
+                      </span>
+                    ))}
+                  </div>
+                  {char.story&&<div style={{ fontSize:13, color:'rgba(248,250,252,0.55)', lineHeight:1.7, padding:'12px 0', borderTop:'1px solid rgba(255,255,255,0.06)' }}>{char.story}</div>}
+                </div>
+                <div style={{ display:'flex', gap:10 }}>
+                  <button onClick={()=>{ setStep(1); setChar({base_role:'',name:'',gender:'',traits:[],energy:5,identity:{},qAnswers:{},story:''}); setQIdx(0); }}
+                    style={{ ...btnBackStyle, flex:1, textAlign:'center' }}>Start over</button>
+                  <button data-testid="launch-character-btn" onClick={saveAndActivate} disabled={saving}
+                    style={{ ...btnContinue, flex:2, opacity:saving?0.7:1 }}>{saving?'Activating…':'Activate Clan ✨'}</button>
+                </div>
+                <div style={{ height:16 }}/>
+              </div>
+            )}
+
           </motion.div>
         </AnimatePresence>
       </div>
-      <div style={{ padding: isDesktop ? '12px 16px' : '10px 12px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.7)', backdropFilter:'blur(16px)', flexShrink:0 }}>
-        {step<5
-          ? <button onClick={()=>setStep(prev=>Math.min(prev+1,5))} disabled={!canAdvance()} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)`, opacity:canAdvance()?1:0.4, cursor:canAdvance()?'pointer':'not-allowed' }}>Next Step →</button>
-          : <button data-testid="launch-character-btn" onClick={saveAndExit} disabled={saving} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)`, opacity:saving?0.7:1 }}>{saving?'Saving…':'Launch Character ✨'}</button>
-        }
-      </div>
+
+      {/* Bottom nav (steps 1–5 only) */}
+      {step<=5&&(
+        <div style={{ padding:'12px 16px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.9)', backdropFilter:'blur(16px)', flexShrink:0 }}>
+          <div style={{ display:'flex', gap:10 }}>
+            <button onClick={handleBack} style={btnBackStyle}>← Back</button>
+            <button onClick={handleNext} disabled={!canAdvance()}
+              style={{ ...btnContinue, flex:1, opacity:canAdvance()?1:0.35, cursor:canAdvance()?'pointer':'not-allowed' }}>
+              {step===5&&qIdx===QUESTIONS.length-1?'✨ Build my Clan':'Continue →'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
