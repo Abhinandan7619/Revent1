@@ -33,6 +33,11 @@ const TRAITS = [
   { id: 'Talks A Lot', emoji: '🗣️' }, { id: 'Minimal Talker', emoji: '🤐' },
   { id: 'Protective', emoji: '🛡️' },
 ];
+const GENDER_OPTIONS = [
+  { id: 'female', emoji: '👧', label: 'Female' },
+  { id: 'male', emoji: '👦', label: 'Male' },
+  { id: 'neutral', emoji: '🧑', label: 'Neutral' },
+];
 const ROLE_COLORS = {
   'Close Cousin': '#a78bfa', 'Office Bro': '#60a5fa', 'Childhood Buddy': '#34d399',
   'Chill Ex': '#fbbf24', 'Blunt Senior': '#f87171', 'Protective Sister': '#f472b6',
@@ -186,8 +191,7 @@ const glass = {
 };
 const label = { fontSize: 10, letterSpacing: 2.5, textTransform: 'uppercase', color: '#a78bfa', fontFamily: "'DM Sans',sans-serif", fontWeight: 500, marginBottom: 8 };
 const sectionLabel = { fontSize: 10, letterSpacing: 2.5, textTransform: 'uppercase', color: 'rgba(167,139,250,0.6)', fontFamily: "'DM Sans',sans-serif", fontWeight: 500, marginBottom: 10, marginTop: 16 };
-const stepTitle = { fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 22, color: '#fff', letterSpacing: -0.3 };
-
+const stepTitleStyle = { fontFamily: "'Outfit',sans-serif", fontWeight: 800, fontSize: 22, color: '#fff', letterSpacing: -0.3 };
 // ─── Logo ─────────────────────────────────────────────────────────────────────
 const LogoIcon = ({ size = 'sm' }) => {
   const cfg = {
@@ -638,32 +642,57 @@ const LanguageScreen = ({ onDone }) => {
 
 // ─── Character Creator ────────────────────────────────────────────────────────
 const CharacterCreator = ({ onBack, onSave, language, isDesktop }) => {
+  const STEP_TITLES = ['Choose a vibe', 'Name & gender', 'Add traits', 'Energy & quirks', 'Backstory'];
   const [step,setStep]=useState(1);
-  const [tempChar,setTempChar]=useState({ base_role:'Close Cousin', traits:[], energy:50, quirks:[], memory_hook:'', label:'' });
+  const [tempChar,setTempChar]=useState({
+    base_role:'Close Cousin',
+    traits:[],
+    energy:50,
+    quirks:[],
+    memory_hook:'',
+    label:'',
+    name:'',
+    gender:'',
+  });
   const [quirkInput,setQuirkInput]=useState('');
   const [isRefining,setIsRefining]=useState(false);
   const [saving,setSaving]=useState(false);
   const avatarColor=ROLE_COLORS[tempChar.base_role]||'#a78bfa';
 
   const toggleTrait=(id)=>{
-    if(tempChar.traits.includes(id)) setTempChar({...tempChar,traits:tempChar.traits.filter(t=>t!==id)});
-    else if(tempChar.traits.length<4) setTempChar({...tempChar,traits:[...tempChar.traits,id]});
+    setTempChar(prev=>{
+      if(prev.traits.includes(id)) return {...prev,traits:prev.traits.filter(t=>t!==id)};
+      if(prev.traits.length>=4) return prev;
+      return {...prev,traits:[...prev.traits,id]};
+    });
   };
-  const addQuirk=()=>{ if(quirkInput&&tempChar.quirks.length<2){setTempChar({...tempChar,quirks:[...tempChar.quirks,quirkInput]});setQuirkInput('');} };
+  const addQuirk=()=>{ if(quirkInput&&tempChar.quirks.length<2){ setTempChar(prev=>({...prev,quirks:[...prev.quirks,quirkInput]})); setQuirkInput(''); } };
   const refineBackstory=async()=>{
     if(!tempChar.memory_hook)return;
     setIsRefining(true);
-    try{ const res=await api.post('/api/refine-backstory',{draft_text:tempChar.memory_hook,language}); setTempChar({...tempChar,memory_hook:res.data.refined_text}); }catch{}
+    try{ const res=await api.post('/api/refine-backstory',{draft_text:tempChar.memory_hook,language}); setTempChar(prev=>({...prev,memory_hook:res.data.refined_text})); }catch{}
     finally{setIsRefining(false);}
   };
   const saveAndExit=async()=>{
     setSaving(true);
     try{
-      const res=await api.post('/api/characters',{...tempChar, label: tempChar.base_role});
+      const payload = { ...tempChar, label: tempChar.name || tempChar.base_role };
+      const res=await api.post('/api/characters', payload);
       onSave(res.data);
     }catch(err){
       alert(err.response?.data?.detail||'Failed to save character');
     }finally{setSaving(false);}
+  };
+
+  const stepTitle = STEP_TITLES[step-1];
+  const traitSummary = tempChar.traits.length>=2
+    ? `You've chosen ${tempChar.traits.join(', ')} and set the energy to ${tempChar.energy}%. This persona shows up with intention.`
+    : 'Pick at least two traits to see your persona come to life…';
+  const energyDesc = tempChar.energy <= 30 ? 'Low-key, calm, observant.' : tempChar.energy <= 65 ? 'Balanced and present.' : 'High-energy, expressive, always in motion.';
+  const canAdvance = () => {
+    if(step===2) return tempChar.name.trim() && tempChar.gender;
+    if(step===3) return tempChar.traits.length>=2;
+    return true;
   };
 
   return (
@@ -682,17 +711,19 @@ const CharacterCreator = ({ onBack, onSave, language, isDesktop }) => {
         </div>
       </div>
       <div style={{ display:'flex', gap:4, padding: isDesktop ? '14px 16px 8px' : '10px 12px 6px' }}>
-        {[1,2,3,4,5].map(i=>(<div key={i} style={{ height:3, flex:1, borderRadius:99, background:step>=i?avatarColor:'rgba(255,255,255,0.08)', transition:'all 0.4s' }}/>))}
+        {STEP_TITLES.map((_,idx)=>(
+          <div key={idx} style={{ height:3, flex:1, borderRadius:99, background:step>idx?avatarColor:'rgba(255,255,255,0.08)', transition:'all 0.4s' }}/>
+        ))}
       </div>
       <div style={{ flex:1, overflowY:'auto', padding: isDesktop ? '8px 16px 16px' : '6px 12px 12px' }}>
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{opacity:0,x:16}} animate={{opacity:1,x:0}} exit={{opacity:0,x:-16}} transition={{duration:0.18}} style={{ paddingTop:8 }}>
             {step===1&&(
               <>
-                <div style={stepTitle}>Choose a Vibe</div>
+                <div style={stepTitleStyle}>{stepTitle}</div>
                 <div style={{ display:'grid', gridTemplateColumns: isDesktop ? '1fr 1fr' : '1fr', gap:10, marginTop:12 }}>
                   {BASE_ROLES.map(role=>(
-                    <button key={role.id} data-testid={`role-${role.id}`} onClick={()=>setTempChar({...tempChar,base_role:role.id})}
+                    <button key={role.id} data-testid={`role-${role.id}`} onClick={()=>setTempChar(prev=>({...prev,base_role:role.id}))}
                       style={{ padding:'14px 12px', borderRadius:14, border:`1px solid ${tempChar.base_role===role.id?role.color+'60':'rgba(255,255,255,0.07)'}`, background:tempChar.base_role===role.id?role.color+'18':'rgba(255,255,255,0.03)', textAlign:'left', cursor:'pointer', transition:'all 0.2s' }}>
                       <div style={{ fontSize:24, marginBottom:6 }}>{role.icon}</div>
                       <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:12 }}>{role.id}</div>
@@ -704,8 +735,27 @@ const CharacterCreator = ({ onBack, onSave, language, isDesktop }) => {
             )}
             {step===2&&(
               <>
-                <div style={stepTitle}>Add Flavor</div>
-                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Pick up to 4 traits</p>
+                <div style={stepTitleStyle}>{stepTitle}</div>
+                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Give your persona a personal name and how they identify.</p>
+                <div style={{ marginBottom:12 }}>
+                  <div style={label}>Persona name</div>
+                  <input value={tempChar.name} onChange={e=>setTempChar(prev=>({...prev,name:e.target.value}))} style={inputCss} placeholder="e.g. Priya, Rahul, Mira…" maxLength={24}/>
+                </div>
+                <div style={{ display:'flex', gap:10 }}>
+                  {GENDER_OPTIONS.map(opt=>(
+                    <button key={opt.id} onClick={()=>setTempChar(prev=>({...prev,gender:opt.id}))}
+                      style={{ flex:1, padding:'12px 10px', borderRadius:12, border:`2px solid ${tempChar.gender===opt.id?avatarColor:'rgba(255,255,255,0.15)'}`, background:tempChar.gender===opt.id?'rgba(167,139,250,0.15)':'rgba(255,255,255,0.03)', cursor:'pointer', display:'flex', flexDirection:'column', alignItems:'center', gap:4 }}>
+                      <span style={{ fontSize:22 }}>{opt.emoji}</span>
+                      <span style={{ fontSize:12, fontWeight:600 }}>{opt.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {step===3&&(
+              <>
+                <div style={stepTitleStyle}>{stepTitle}</div>
+                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Pick 2-4 traits that define how they speak.</p>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
                   {TRAITS.map(t=>(
                     <button key={t.id} onClick={()=>toggleTrait(t.id)}
@@ -714,39 +764,40 @@ const CharacterCreator = ({ onBack, onSave, language, isDesktop }) => {
                     </button>
                   ))}
                 </div>
-              </>
-            )}
-            {step===3&&(
-              <>
-                <div style={stepTitle}>Energy Level</div>
-                <div style={{ background:'rgba(255,255,255,0.03)', padding:'24px 20px', borderRadius:14, border:'1px solid rgba(255,255,255,0.06)', textAlign:'center', marginTop:12 }}>
-                  <div style={{ fontSize:52, marginBottom:20 }}>{tempChar.energy>70?'🔥':tempChar.energy<40?'🧘':'🙂'}</div>
-                  <input type="range" min="0" max="100" value={tempChar.energy} onChange={e=>setTempChar({...tempChar,energy:parseInt(e.target.value)})} style={{ width:'100%', accentColor:avatarColor }}/>
-                  <div style={{ marginTop:12, fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, color:avatarColor }}>{tempChar.energy}% Intensity</div>
+                <div style={{ marginTop:12, fontSize:11, color:'rgba(248,250,252,0.4)' }}>{tempChar.traits.length} / 4 selected</div>
+                <div style={{ marginTop:12, background:'rgba(255,255,255,0.03)', padding:'14px', borderRadius:12, border:'1px solid rgba(255,255,255,0.06)', fontSize:12, color:'rgba(248,250,252,0.65)' }}>
+                  {traitSummary}
                 </div>
               </>
             )}
             {step===4&&(
               <>
-                <div style={stepTitle}>Quirks</div>
-                <div style={{ display:'flex', gap:8, marginTop:12, marginBottom:10 }}>
-                  <input style={{ ...inputCss, flex:1, padding:'12px 14px' }} type="text" value={quirkInput} onChange={e=>setQuirkInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addQuirk()} placeholder="e.g. Always starts with 'Listen…'"/>
+                <div style={stepTitleStyle}>{stepTitle}</div>
+                <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Set how lively they feel and add those little habits.</p>
+                <div style={{ background:'rgba(255,255,255,0.03)', padding:'18px 16px', borderRadius:14, border:'1px solid rgba(255,255,255,0.06)', marginBottom:16 }}>
+                  <div style={{ fontSize:42, marginBottom:18 }}>{tempChar.energy>70?'🔥':tempChar.energy<40?'🧘':'🙂'}</div>
+                  <input type="range" min="0" max="100" value={tempChar.energy} onChange={e=>setTempChar(prev=>({...prev,energy:parseInt(e.target.value)}))} style={{ width:'100%', accentColor:avatarColor }}/>
+                  <div style={{ marginTop:12, fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, color:avatarColor }}>{tempChar.energy}% intensity</div>
+                  <div style={{ marginTop:4, fontSize:11, color:'rgba(248,250,252,0.45)' }}>{energyDesc}</div>
+                </div>
+                <div style={{ display:'flex', gap:8, marginBottom:10 }}>
+                  <input style={{ ...inputCss, flex:1, padding:'12px 14px' }} type="text" value={quirkInput} onChange={e=>setQuirkInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&addQuirk()} placeholder="e.g. Always starts conversations with 'Listen…'"/>
                   <button onClick={addQuirk} style={{ padding:'12px 16px', background:avatarColor, border:'none', borderRadius:10, color:'#fff', fontWeight:800, fontSize:18, cursor:'pointer' }}>+</button>
                 </div>
                 {tempChar.quirks.map(q=>(
                   <div key={q} style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'12px 14px', background:'rgba(255,255,255,0.04)', border:'1px solid rgba(255,255,255,0.06)', borderRadius:10, fontSize:13, color:'rgba(248,250,252,0.6)', marginBottom:8 }}>
                     <span>{q}</span>
-                    <button onClick={()=>setTempChar({...tempChar,quirks:tempChar.quirks.filter(x=>x!==q)})} style={{ background:'none', border:'none', color:'rgba(248,250,252,0.3)', cursor:'pointer', fontSize:16 }}>×</button>
+                    <button onClick={()=>setTempChar(prev=>({...prev,quirks:prev.quirks.filter(x=>x!==q)}))} style={{ background:'none', border:'none', color:'rgba(248,250,252,0.3)', cursor:'pointer', fontSize:16 }}>×</button>
                   </div>
                 ))}
               </>
             )}
             {step===5&&(
               <>
-                <div style={stepTitle}>Backstory</div>
+                <div style={stepTitleStyle}>{stepTitle}</div>
                 <p style={{ fontSize:11, color:'rgba(248,250,252,0.3)', marginTop:4, marginBottom:12 }}>Write a rough idea, then hit the wand ✨</p>
                 <div style={{ position:'relative' }}>
-                  <textarea style={{ ...inputCss, minHeight:120, resize:'none', lineHeight:1.6 }} value={tempChar.memory_hook} onChange={e=>setTempChar({...tempChar,memory_hook:e.target.value})} placeholder="e.g. We survived high school together…"/>
+                  <textarea style={{ ...inputCss, minHeight:120, resize:'none', lineHeight:1.6 }} value={tempChar.memory_hook} onChange={e=>setTempChar(prev=>({...prev,memory_hook:e.target.value}))} placeholder="e.g. We survived high school together…"/>
                   <button onClick={refineBackstory} disabled={isRefining||!tempChar.memory_hook}
                     style={{ position:'absolute', bottom:12, right:12, width:36, height:36, borderRadius:8, background:avatarColor, border:'none', color:'#fff', fontSize:16, cursor:'pointer', opacity:(!isRefining&&tempChar.memory_hook)?1:0.4, display:'flex', alignItems:'center', justifyContent:'center' }}>
                     {isRefining?'⟳':'✨'}
@@ -759,7 +810,7 @@ const CharacterCreator = ({ onBack, onSave, language, isDesktop }) => {
       </div>
       <div style={{ padding: isDesktop ? '12px 16px' : '10px 12px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.7)', backdropFilter:'blur(16px)', flexShrink:0 }}>
         {step<5
-          ? <button onClick={()=>setStep(step+1)} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)` }}>Next Step →</button>
+          ? <button onClick={()=>setStep(prev=>Math.min(prev+1,5))} disabled={!canAdvance()} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)`, opacity:canAdvance()?1:0.4, cursor:canAdvance()?'pointer':'not-allowed' }}>Next Step →</button>
           : <button data-testid="launch-character-btn" onClick={saveAndExit} disabled={saving} style={{ ...btnPrimary, background:`linear-gradient(90deg,${avatarColor},#34d399)`, opacity:saving?0.7:1 }}>{saving?'Saving…':'Launch Character ✨'}</button>
         }
       </div>
@@ -783,7 +834,8 @@ const ChatBubble = ({ msg, isDesktop }) => {
   const isCrisisBubble = msg.role === 'ai' && msg.mode === 'CRISIS';
   const bubblePadding = isDesktop ? '12px 16px' : '10px 12px';
   const bubbleFontSize = isDesktop ? 14 : 13;
-  const bubbleMaxWidth = isDesktop ? '82%' : '95%';
+  const bubbleMaxWidth = isDesktop ? '82%' : '92%';
+  const bubbleAlign = isDesktop ? (msg.role==='user' ? 'flex-end' : 'flex-start') : 'flex-start';
   const timestamp = formatTimestamp(msg.timestamp);
   const [hovered,setHovered] = useState(false);
 
@@ -791,7 +843,7 @@ const ChatBubble = ({ msg, isDesktop }) => {
     <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
       onMouseEnter={()=>setHovered(true)}
       onMouseLeave={()=>setHovered(false)}
-      style={{ display:'flex', flexDirection:'column', maxWidth:bubbleMaxWidth, alignSelf:'flex-start', position:'relative' }}>
+      style={{ display:'flex', flexDirection:'column', maxWidth:bubbleMaxWidth, alignSelf:bubbleAlign, position:'relative' }}>
       {timestamp&&(
         <div style={{ position:'absolute', top:-20, right:0, fontSize:10, color:'rgba(248,250,252,0.45)', opacity:hovered?1:0, transition:'opacity 0.2s', whiteSpace:'nowrap' }}>
           {timestamp}
@@ -1676,6 +1728,8 @@ function App() {
       setAuthUser(user);
       setUserName(user.name||'User');
       setLanguage(user.language||'Hindi');
+      const needsAliasAfterOnboarding = Boolean(user.google_id);
+      setAskAliasAfterOnboarding(needsAliasAfterOnboarding);
       // Load characters
       try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
 
@@ -1717,11 +1771,8 @@ function App() {
           try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
         }
 
-        if(savedView && ['chat','settings','creator','gossip_chat'].includes(savedView)){
-          setView(savedView);
-        } else {
-          setView('chat');
-        }
+        const defaultView = needsAliasAfterOnboarding ? 'name' : (savedView && ['chat','settings','creator','gossip_chat'].includes(savedView) ? savedView : 'chat');
+        setView(defaultView);
       }else{
         setView('onboarding');
       }
@@ -1741,7 +1792,7 @@ function App() {
       setLanguage(user.language||'Hindi');
       setAskAliasAfterOnboarding(true);
       try{ const cRes=await api.get('/api/characters'); setCharacters(cRes.data); }catch{}
-      if(user.onboarding_complete){ setView('chat'); }
+      if(user.onboarding_complete){ setView('name'); }
       else{ setView('onboarding'); }
     }catch{
       setAuthUser(null);
@@ -1754,7 +1805,8 @@ function App() {
 
   // Called after login or signup
   const handleAuth=async(user)=>{
-    setAskAliasAfterOnboarding(false);
+    const needsAliasAfterOnboarding = Boolean(user.google_id);
+    setAskAliasAfterOnboarding(needsAliasAfterOnboarding);
     setAuthUser(user);
     setUserName(user.name||'User');
     setLanguage(user.language||'Hindi');
@@ -1780,7 +1832,7 @@ function App() {
           }
           try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
         }
-        setView('chat');
+        setView(needsAliasAfterOnboarding ? 'name' : 'chat');
       } else {
         setView('onboarding');
       }
