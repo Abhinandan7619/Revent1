@@ -2196,7 +2196,7 @@ function App() {
 
   const getPersonaConfig=()=>{
     const char = characters.find(c=>c.character_id===activeVibe);
-    if(char) return { base_role:char.base_role, traits:char.traits, energy:char.energy, quirks:char.quirks, memory_hook:char.memory_hook };
+    if(char) return { base_role:char.base_role, traits:char.traits, energy:char.energy, quirks:char.quirks, memory_hook:char.memory_hook, label:char.label };
     return {};
   };
 
