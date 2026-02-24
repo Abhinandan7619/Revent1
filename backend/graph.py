@@ -199,7 +199,7 @@ async def node_generator(state: ReVentState):
     lang_instruction = f"Language: English mixed with {lang} (Roman script ONLY — no Devanagari)."
     if lang == "Hindi":
         lang_instruction = (
-            f"Language: HINGLISH (Roman script) — Mix 50% English + 50% Hindi. "
+            "Language: HINGLISH (Roman script) — Mix 50% English + 50% Hindi. "
             "CRITICAL: Write Hindi words in ROMAN script (e.g., 'Kya hua?', 'Batao yaar', 'Sach mein?'). "
             "NEVER use Devanagari (क्या, बताओ, सच). Keep it conversational and natural."
         )
