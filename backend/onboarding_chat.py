@@ -128,7 +128,7 @@ def _build_onboarding_system_prompt(user, phase_idx, question_idx, language):
             previous_context += f"  - Personality traits so far: {', '.join(tags)}\n"
 
     return (
-        f"You are RE — a warm, witty, gender-neutral conversational companion. You are NOT an AI assistant.\n"
+        f"You are Reva — a warm, witty, gender-neutral conversational companion. You are NOT an AI assistant.\n"
         f"The user's name is {nickname}.\n"
         f"{lang_instruction}\n\n"
         f"You are in ONBOARDING MODE — getting to know {nickname} through casual questions.\n\n"
@@ -156,7 +156,7 @@ def _build_closing_prompt(user, language):
         lang_instruction = "Language: Casual English."
 
     return (
-        f"You are RE. {nickname} just finished your quick getting-to-know-you questions (only 4 questions).\n"
+        f"You are Reva. {nickname} just finished your quick getting-to-know-you questions (only 4 questions).\n"
         f"{lang_instruction}\n"
         f"Their personality tags: {', '.join(tags) if tags else 'not many collected yet'}\n\n"
         f"Now send a closing message:\n"
@@ -185,7 +185,7 @@ async def handle_onboarding_chat(user, message_text, session_id, language):
         nickname = user.get("name", "User")
         response = await onboarding_llm.ainvoke([
             SystemMessage(content=(
-                f"You are RE. {nickname} wants to skip the questions and talk about something. "
+                f"You are Reva. {nickname} wants to skip the questions and talk about something. "
                 f"React warmly — say something like 'Of course, questions can wait! I'm all ears 😊 Tell me what's going on.' "
                 f"Language: English mixed with {language}. Keep it very short and inviting."
             )),
@@ -201,7 +201,7 @@ async def handle_onboarding_chat(user, message_text, session_id, language):
     # Handle exit request
     if _is_exit(message_text):
         response = await onboarding_llm.ainvoke([
-            SystemMessage(content=f"You are RE. The user wants to leave. Say something warm like 'No problem! Whenever you feel like it, I'll be here. Just say hey 😊'. Language: English mixed with {language}."),
+            SystemMessage(content=f"You are Reva. The user wants to leave. Say something warm like 'No problem! Whenever you feel like it, I'll be here. Just say hey 😊'. Language: English mixed with {language}."),
             HumanMessage(content=message_text),
         ])
         return response.content, {
@@ -232,7 +232,7 @@ async def handle_onboarding_chat(user, message_text, session_id, language):
             system = _build_onboarding_system_prompt(user, 1, 0, language)
             response = await onboarding_llm.ainvoke([
                 SystemMessage(content=(
-                    f"You are RE. The user just agreed to your getting-to-know-you questions. "
+                    f"You are Reva. The user just agreed to your getting-to-know-you questions. "
                     f"React positively (like 'Okaaay, relax, it's not an interview... just a vibe check 😌 "
                     f"And you can skip any question, no pressure.'). Then ask the first question:\n\n"
                     f"{PHASES[1]['questions'][0]['prompt']}\n\n"
@@ -248,7 +248,7 @@ async def handle_onboarding_chat(user, message_text, session_id, language):
         else:
             # User said no — respect that
             response = await onboarding_llm.ainvoke([
-                SystemMessage(content=f"You are RE. The user doesn't want to do the questions right now. Say something warm like 'No worries at all! Whenever you feel like it, I'm here. Just say hey 😊'. Language: English mixed with {language}."),
+                SystemMessage(content=f"You are Reva. The user doesn't want to do the questions right now. Say something warm like 'No worries at all! Whenever you feel like it, I'm here. Just say hey 😊'. Language: English mixed with {language}."),
                 HumanMessage(content=message_text),
             ])
             return response.content, {
@@ -316,7 +316,7 @@ async def handle_onboarding_chat(user, message_text, session_id, language):
             phase_transition = f"\nYou're moving to a new section. Briefly acknowledge the transition (e.g. 'Nice, now let's go a bit deeper...').\n"
 
         system = (
-            f"You are RE — warm, witty, gender-neutral companion. User's name: {user.get('name', 'User')}.\n"
+            f"You are Reva — warm, witty, gender-neutral companion. User's name: {user.get('name', 'User')}.\n"
             f"Language: English mixed with {language} (Roman script). Sound like a real friend.\n\n"
         )
 
