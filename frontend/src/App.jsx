@@ -768,10 +768,18 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
       return sect?.opts.find(o=>o.id===oid)?.title||'';
     }).filter(Boolean);
     try{
-      const res=await api.post('/api/characters',{
+      const payload = {
         base_role:char.base_role, traits:char.traits, energy:char.energy*10,
         quirks:habitsList, memory_hook:char.story, label:char.name, name:char.name, gender:char.gender,
-      });
+      };
+      let res;
+      if (isEditing && editingCharacter?.character_id) {
+        // Update existing character
+        res = await api.put(`/api/characters/${editingCharacter.character_id}`, payload);
+      } else {
+        // Create new character
+        res = await api.post('/api/characters', payload);
+      }
       onSave(res.data);
     }catch(err){ alert(err.response?.data?.detail||'Failed to save. Try again.'); }
     finally{ setSaving(false); }
