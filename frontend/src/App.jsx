@@ -733,7 +733,7 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
       const sect=IDENTITY_SECTIONS.find(s=>s.id===sid);
       return sect?.opts.find(o=>o.id===oid)?.title||'';
     }).filter(Boolean);
-    const draft=`${char.name} is a ${char.base_role} persona. Traits: ${char.traits.join(', ')}. Energy: ${char.energy}/10. Style: ${habits.join(', ')}. Background: ${Object.values(char.qAnswers).filter(v=>typeof v==='string').join('. ')}.`;
+    const draft=`${char.name} is a ${char.base_role} clan. Traits: ${char.traits.join(', ')}. Energy: ${char.energy}/10. Style: ${habits.join(', ')}. Background: ${Object.values(char.qAnswers).filter(v=>typeof v==='string').join('. ')}.`;
     try{
       const res=await api.post('/api/refine-backstory',{draft_text:draft,language});
       setChar(prev=>({...prev,story:res.data.refined_text}));
