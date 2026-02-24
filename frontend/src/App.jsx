@@ -1614,7 +1614,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
           {drawerOpen&&(
             <MobileDrawer isOpen={drawerOpen} onClose={()=>setDrawerOpen(false)}
               authUser={authUser} activeVibe={activeVibe} setActiveVibe={setActiveVibe}
-              characters={characters} onOpenCreator={onOpenCreator} onDeleteCharacter={onDeleteCharacter}
+              characters={characters} onOpenCreator={onOpenCreator} onDeleteCharacter={onDeleteCharacter} onEditCharacter={onEditCharacter}
               onOpenSettings={onOpenSettings||(() => setView('settings'))} onOpenGossip={onOpenGossip||(() => setView('gossip_chat'))}
               language={language} setLanguage={setLanguage}
               startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId}
