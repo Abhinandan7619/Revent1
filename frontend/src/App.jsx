@@ -1247,7 +1247,7 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           <CoinBadge coins={authUser.coins} onClick={onOpenSettings}/>
         </div>
       )}
-      <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Companions</div>
+      <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Clans</div>
       <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
         {/* User characters */}
         {characters.map(c=>{
@@ -1312,7 +1312,7 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           <motion.button data-testid="sidebar-create-btn" onClick={onOpenCreator} whileTap={{scale:0.97}}
             style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
             <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>+</div>
-            <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Persona</span>
+            <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Clan</span>
           </motion.button>
         )}
       </div>
@@ -1392,8 +1392,8 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
         )}
 
         <div style={{ padding:'0 16px', flex:1 }}>
-          {/* Companions */}
-          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:14, marginBottom:8 }}>Companions</div>
+          {/* Clans */}
+          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:14, marginBottom:8 }}>Clans</div>
           <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
             {characters.map(c=>{
               const color = ROLE_COLORS[c.base_role]||'#a78bfa';
@@ -1447,7 +1447,7 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
               <motion.button onClick={()=>{onOpenCreator();onClose();}} whileTap={{scale:0.97}}
                 style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
                 <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>+</div>
-                <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Persona</span>
+                <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Clan</span>
               </motion.button>
             )}
           </div>
