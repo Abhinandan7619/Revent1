@@ -41,6 +41,21 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 
 ## Recent Changes (Feb 24, 2026)
 
+### Branding Update - "RE" to "Reva"
+- Changed bot name from "RE" to "Reva" throughout the application:
+  - Chat header
+  - Message bubble labels (e.g., "REVA · AUTO")
+  - Mode selector ("Let Reva decide the vibe")
+  - Onboarding screens ("Beyond Reva, design up to 3 custom clans")
+  - Beta modal ("Reva is listening")
+  - Backend AI prompts updated
+
+### Clan Creator Navigation Fixes
+- **Added Cancel (×) button** in clan creator header for easy exit
+- **Sidebar companion clicks now exit creator**: Clicking a companion in the sidebar while in clan creator exits and opens that chat
+- **Sidebar clan clicks now exit creator**: Clicking a clan while in creator exits and opens that chat
+- **Back button** on step 1 properly exits to chat view
+
 ### Sidebar Restructure - Dual-Header Structure
 - **COMPANIONS section (top)**: Green header showing chat sessions
   - Max 2 companions allowed
