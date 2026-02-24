@@ -15,7 +15,7 @@ from database import (
     save_message, get_history,
     increment_exchange, reset_exchange_counter,
     get_coins, deduct_coins, _clean_user,
-    create_character, get_characters, delete_character,
+    create_character, get_characters, delete_character, update_character,
     get_user_sessions, create_chat_session, update_session_title,
     delete_chat_session, delete_sessions_for_character,
 )
