@@ -1206,28 +1206,34 @@ const GossipFloatingBtn = ({ onClick, isDesktop }) => (
 );
 
 // ─── Desktop Sidebar ──────────────────────────────────────────────────────────
-const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession, chatSessions, activeSessionId, onSwitchSession, onDeleteSession, onRenameSession }) => {
-  const canCreate = characters.length < 3;
+const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onEditCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession, chatSessions, activeSessionId, onSwitchSession, onDeleteSession, onRenameSession }) => {
+  // Companions = chat sessions (max 2)
+  const companions = chatSessions || [];
+  const canCreateCompanion = companions.length < 2;
+  
+  // Clans = characters (max 3)
+  const canCreateClan = characters.length < 3;
+  
+  // State for renaming companions
   const [renamingId, setRenamingId] = React.useState(null);
   const [renameVal, setRenameVal] = React.useState('');
-  const [newChatName, setNewChatName] = React.useState('');
-  const [showNewInput, setShowNewInput] = React.useState(false);
-  const defaultSessions = activeVibe === 'default' ? (chatSessions||[]) : [];
-  const canAddSession = defaultSessions.length < 2;
+  const [showNewCompanionInput, setShowNewCompanionInput] = React.useState(false);
+  const [newCompanionName, setNewCompanionName] = React.useState('');
 
-  const handleRenameStart = (s) => { setRenamingId(s.session_id); setRenameVal(s.title||'New Chat'); };
+  const handleRenameStart = (s) => { setRenamingId(s.session_id); setRenameVal(s.title||'Companion'); };
   const handleRenameSubmit = (sid) => { onRenameSession(sid, renameVal); setRenamingId(null); };
-  const handleNewChat = () => {
-    if(!canAddSession){ alert('Max 2 sessions. Delete one to create a new chat.'); return; }
-    setShowNewInput(true); setNewChatName('');
+  const handleNewCompanion = () => {
+    if(!canCreateCompanion){ return; }
+    setShowNewCompanionInput(true); setNewCompanionName('');
   };
-  const handleNewChatSubmit = () => {
-    const t = newChatName.trim() || 'New Chat';
-    startNewSession(t); setShowNewInput(false); setNewChatName('');
+  const handleNewCompanionSubmit = () => {
+    const t = newCompanionName.trim() || 'New Companion';
+    startNewSession(t); setShowNewCompanionInput(false); setNewCompanionName('');
   };
 
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', padding:'20px 16px', overflowY:'auto', borderRight:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.6)', backdropFilter:'blur(20px)' }}>
+      {/* Logo */}
       <div style={{ display:'flex', alignItems:'center', gap:10, paddingBottom:24, borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
         <LogoIcon size="sm"/>
         <div>
@@ -1235,6 +1241,8 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           <div style={{ fontSize:8, color:'rgba(248,250,252,0.2)', letterSpacing:2, textTransform:'uppercase' }}>Re · In · Venting · Space</div>
         </div>
       </div>
+      
+      {/* User info */}
       {authUser&&(
         <div style={{ padding:'16px 0', borderBottom:'1px solid rgba(255,255,255,0.06)' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:8 }}>
@@ -1247,75 +1255,94 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           <CoinBadge coins={authUser.coins} onClick={onOpenSettings}/>
         </div>
       )}
-      <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Clans</div>
-      <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
-        {/* User clans */}
-        {characters.map(c=>{
-          const color = ROLE_COLORS[c.base_role]||'#a78bfa';
-          const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
+      
+      {/* ═══════════════════════════════════════════════════════════════════════
+          COMPANIONS SECTION (Chat Sessions) - Max 2
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(52,211,153,0.6)', textTransform:'uppercase', marginTop:16, marginBottom:10 }}>Companions</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+        {companions.map(s=>{
+          const isActive = s.session_id === activeSessionId;
           return (
-            <div key={c.character_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
-              <motion.button data-testid={`sidebar-vibe-${c.character_id}`} onClick={()=>setActiveVibe(c.character_id)} whileTap={{scale:0.97}}
-                style={{ flex:1, display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:'12px 0 0 12px', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
-                <div style={{ width:32, height:32, borderRadius:'50%', background:activeVibe===c.character_id?color+'20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:15, flexShrink:0 }}>{icon}</div>
-                <span style={{ fontSize:13, fontWeight:600, color:activeVibe===c.character_id?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.label||c.base_role}</span>
-                {activeVibe===c.character_id&&<span style={{ marginLeft:'auto', color, fontSize:12 }}>●</span>}
-              </motion.button>
-              <button data-testid={`delete-char-${c.character_id}`} onClick={()=>onDeleteCharacter(c.character_id)}
-                style={{ padding:'10px 10px', borderRadius:'0 12px 12px 0', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)', transition:'all 0.2s', display:'flex', alignItems:'center', height:'100%' }}
-                title="Delete character">×</button>
+            <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
+              {renamingId===s.session_id?(
+                <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+                  onBlur={()=>handleRenameSubmit(s.session_id)}
+                  onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
+                  style={{ flex:1, background:'rgba(52,211,153,0.08)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:'10px 0 0 10px', outline:'none', color:'#fff', fontSize:12, padding:'10px 12px', fontFamily:"'Outfit',sans-serif" }}/>
+              ):(
+                <motion.button data-testid={`sidebar-companion-${s.session_id}`} onClick={()=>onSwitchSession(s.session_id)} whileTap={{scale:0.97}}
+                  style={{ flex:1, display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:'10px 0 0 10px', border:`1px solid ${isActive?'rgba(52,211,153,0.35)':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:isActive?'rgba(52,211,153,0.1)':'rgba(255,255,255,0.03)', cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
+                  <div style={{ width:28, height:28, borderRadius:'50%', background:isActive?'rgba(52,211,153,0.2)':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>💬</div>
+                  <span style={{ fontSize:12, fontWeight:isActive?600:400, color:isActive?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.title||'Companion'}</span>
+                  {isActive&&<span style={{ marginLeft:'auto', color:'#34d399', fontSize:10 }}>●</span>}
+                </motion.button>
+              )}
+              {/* Edit button */}
+              <button onClick={()=>handleRenameStart(s)} title="Edit name"
+                style={{ padding:'10px 8px', border:`1px solid ${isActive?'rgba(52,211,153,0.35)':'rgba(255,255,255,0.05)'}`, borderLeft:'none', borderRight:'none', background:isActive?'rgba(52,211,153,0.1)':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:11, color:'rgba(167,139,250,0.6)', transition:'all 0.2s', display:'flex', alignItems:'center' }}>✎</button>
+              {/* Delete button */}
+              <button data-testid={`delete-companion-${s.session_id}`} onClick={()=>onDeleteSession(s.session_id)} title="Delete companion"
+                style={{ padding:'10px 8px', borderRadius:'0 10px 10px 0', border:`1px solid ${isActive?'rgba(52,211,153,0.35)':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:isActive?'rgba(52,211,153,0.1)':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)', transition:'all 0.2s', display:'flex', alignItems:'center' }}>×</button>
             </div>
           );
         })}
-        {/* Current chats UI moved inside Clans */}
-        {activeVibe==='default'&&(
-          <div style={{ marginTop:4 }}>
-            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-              {defaultSessions.map(s=>(
-                <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
-                  {renamingId===s.session_id?(
-                    <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
-                      onBlur={()=>handleRenameSubmit(s.session_id)}
-                      onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
-                      style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
-                  ):(
-                    <button onClick={()=>onSwitchSession(s.session_id)} onDoubleClick={()=>handleRenameStart(s)}
-                      title="Click to open · Double-click to rename"
-                      style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                      {s.title||'New Chat'}
-                    </button>
-                  )}
-                  <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
-                    style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0, lineHeight:1 }}>×</button>
-                </div>
-              ))}
-            </div>
-            {showNewInput?(
-              <div style={{ marginTop:6, display:'flex', gap:4 }}>
-                <input autoFocus value={newChatName} onChange={e=>setNewChatName(e.target.value)} placeholder="Chat name…"
-                  onKeyDown={e=>{ if(e.key==='Enter')handleNewChatSubmit(); if(e.key==='Escape'){setShowNewInput(false);} }}
-                  style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:8, padding:'7px 10px', color:'#fff', fontSize:12, outline:'none', fontFamily:"'Outfit',sans-serif" }}/>
-                <button onClick={handleNewChatSubmit} style={{ background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:8, color:'#34d399', fontSize:12, padding:'0 10px', cursor:'pointer' }}>+</button>
-              </div>
-            ):canAddSession?(
-              <motion.button data-testid="sidebar-new-chat-btn" onClick={handleNewChat} whileTap={{scale:0.97}}
-                style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
-                <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
-                <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
-              </motion.button>
-            ):(
-              <div style={{ marginTop:6, padding:'7px 10px', borderRadius:10, background:'rgba(255,255,255,0.02)', border:'1px solid rgba(255,255,255,0.05)', fontSize:11, color:'rgba(248,250,252,0.25)', textAlign:'center' }}>Max 2 chats · delete one to add</div>
-            )}
+        
+        {/* Create Companion button - only visible when < 2 */}
+        {showNewCompanionInput?(
+          <div style={{ display:'flex', gap:4, marginTop:4 }}>
+            <input autoFocus value={newCompanionName} onChange={e=>setNewCompanionName(e.target.value)} placeholder="Companion name…"
+              onKeyDown={e=>{ if(e.key==='Enter')handleNewCompanionSubmit(); if(e.key==='Escape'){setShowNewCompanionInput(false);} }}
+              style={{ flex:1, background:'rgba(255,255,255,0.05)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:8, padding:'8px 10px', color:'#fff', fontSize:12, outline:'none', fontFamily:"'Outfit',sans-serif" }}/>
+            <button onClick={handleNewCompanionSubmit} style={{ background:'rgba(52,211,153,0.15)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:8, color:'#34d399', fontSize:12, padding:'0 12px', cursor:'pointer' }}>+</button>
           </div>
-        )}
-        {canCreate&&(
-          <motion.button data-testid="sidebar-create-btn" onClick={onOpenCreator} whileTap={{scale:0.97}}
-            style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
-            <div style={{ width:32, height:32, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>+</div>
-            <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Clan</span>
+        ):canCreateCompanion&&(
+          <motion.button data-testid="sidebar-create-companion-btn" onClick={handleNewCompanion} whileTap={{scale:0.97}}
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.3)', background:'transparent', cursor:'pointer', marginTop:4, width:'100%' }}>
+            <div style={{ width:28, height:28, borderRadius:'50%', background:'rgba(52,211,153,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'rgba(52,211,153,0.5)', flexShrink:0 }}>+</div>
+            <span style={{ fontSize:12, fontWeight:600, color:'rgba(52,211,153,0.5)', fontFamily:"'Outfit',sans-serif" }}>Create Companion</span>
           </motion.button>
         )}
       </div>
+
+      {/* ═══════════════════════════════════════════════════════════════════════
+          CLANS SECTION (Characters) - Max 3
+      ═══════════════════════════════════════════════════════════════════════ */}
+      <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:20, marginBottom:10 }}>Clans</div>
+      <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+        {characters.map(c=>{
+          const color = ROLE_COLORS[c.base_role]||'#a78bfa';
+          const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
+          const isActive = activeVibe===c.character_id;
+          return (
+            <div key={c.character_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
+              <motion.button data-testid={`sidebar-clan-${c.character_id}`} onClick={()=>setActiveVibe(c.character_id)} whileTap={{scale:0.97}}
+                style={{ flex:1, display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:'10px 0 0 10px', border:`1px solid ${isActive?color+'50':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:isActive?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', transition:'all 0.2s', textAlign:'left' }}>
+                <div style={{ width:28, height:28, borderRadius:'50%', background:isActive?color+'20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:13, flexShrink:0 }}>{icon}</div>
+                <span style={{ fontSize:12, fontWeight:600, color:isActive?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.label||c.base_role}</span>
+                {isActive&&<span style={{ marginLeft:'auto', color, fontSize:10 }}>●</span>}
+              </motion.button>
+              {/* Edit button - opens clan creator with existing data */}
+              <button data-testid={`edit-clan-${c.character_id}`} onClick={()=>onEditCharacter&&onEditCharacter(c.character_id)} title="Edit clan"
+                style={{ padding:'10px 8px', border:`1px solid ${isActive?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', borderRight:'none', background:isActive?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:11, color:'rgba(167,139,250,0.6)', transition:'all 0.2s', display:'flex', alignItems:'center' }}>✎</button>
+              {/* Delete button */}
+              <button data-testid={`delete-clan-${c.character_id}`} onClick={()=>onDeleteCharacter(c.character_id)} title="Delete clan"
+                style={{ padding:'10px 8px', borderRadius:'0 10px 10px 0', border:`1px solid ${isActive?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:isActive?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)', transition:'all 0.2s', display:'flex', alignItems:'center' }}>×</button>
+            </div>
+          );
+        })}
+        
+        {/* Create Clan button - only visible when < 3 */}
+        {canCreateClan&&(
+          <motion.button data-testid="sidebar-create-clan-btn" onClick={onOpenCreator} whileTap={{scale:0.97}}
+            style={{ display:'flex', alignItems:'center', gap:8, padding:'9px 12px', borderRadius:10, border:'1px dashed rgba(167,139,250,0.3)', background:'transparent', cursor:'pointer', marginTop:4, width:'100%' }}>
+            <div style={{ width:28, height:28, borderRadius:'50%', background:'rgba(167,139,250,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, color:'rgba(167,139,250,0.5)', flexShrink:0 }}>+</div>
+            <span style={{ fontSize:12, fontWeight:600, color:'rgba(167,139,250,0.5)', fontFamily:"'Outfit',sans-serif" }}>Create Clan</span>
+          </motion.button>
+        )}
+      </div>
+
+      {/* Gossip Room */}
       <div style={{ marginTop:16, borderTop:'1px solid rgba(255,255,255,0.06)', paddingTop:16 }}>
         <motion.button data-testid="sidebar-gossip-btn" onClick={onOpenGossip} whileTap={{scale:0.97}}
           style={{ width:'100%', display:'flex', alignItems:'center', gap:10, padding:'12px 14px', borderRadius:12, border:'1px solid rgba(251,191,36,0.2)', background:'rgba(251,191,36,0.05)', cursor:'pointer' }}>
@@ -1326,6 +1353,8 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           </div>
         </motion.button>
       </div>
+      
+      {/* Language */}
       <div style={{ marginTop:16 }}>
         <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginBottom:8 }}>Language</div>
         <div style={{ position:'relative' }}>
@@ -1336,7 +1365,10 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
           <span style={{ position:'absolute', right:10, top:'50%', transform:'translateY(-50%)', fontSize:9, color:'rgba(248,250,252,0.3)', pointerEvents:'none' }}>▾</span>
         </div>
       </div>
+      
       <div style={{ flex:1 }}/>
+      
+      {/* Settings */}
       <motion.button data-testid="sidebar-settings-btn" onClick={onOpenSettings} whileTap={{scale:0.97}}
         style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px solid rgba(255,255,255,0.05)', background:'rgba(255,255,255,0.03)', cursor:'pointer', marginTop:16, width:'100%' }}>
         <span style={{ fontSize:16 }}>⚙️</span>
