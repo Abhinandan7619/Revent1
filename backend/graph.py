@@ -165,6 +165,7 @@ async def node_generator(state: ReVentState):
     raw_config = state.get("persona_config") or {}
     user_personality = raw_config.pop("_user_personality", None)
     user_name = raw_config.pop("_user_name", None)
+    clan_name = raw_config.get("label", None)  # Get the clan/character name
     persona = {
         "base_role": raw_config.get("base_role", "Friend"),
         "traits": raw_config.get("traits", []),
@@ -252,8 +253,11 @@ async def node_generator(state: ReVentState):
         "9. BACKSTORY: If you have shared memory, reference it subtly only when naturally relevant (not every message)."
     )
 
+    # Determine identity name: use clan name if available, otherwise "Reva"
+    identity_name = clan_name if clan_name else "Reva"
+    
     system_prompt = (
-        f"IDENTITY: You are Reva — a {persona['base_role']}. You are NOT an AI assistant.\n"
+        f"IDENTITY: You are {identity_name} — a {persona['base_role']}. You are NOT an AI assistant.\n"
         f"MODE: {mode_prompts.get(active_mode, mode_prompts['HEAR_ME'])}\n"
         f"TRAITS: {', '.join(persona['traits']) if persona['traits'] else 'Warm, genuine'}\n"
         f"ENERGY LEVEL: {persona['energy']}/100\n"
