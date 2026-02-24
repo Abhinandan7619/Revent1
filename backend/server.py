@@ -242,6 +242,17 @@ async def api_delete_character(character_id: str, request: Request):
     return {"ok": True}
 
 
+@app.put("/api/characters/{character_id}")
+async def api_update_character(character_id: str, req: CreateCharacterRequest, request: Request):
+    user = await get_current_user(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    updated = await update_character(user["user_id"], character_id, req.dict())
+    if not updated:
+        raise HTTPException(status_code=404, detail="Character not found")
+    return updated
+
+
 # ===================== CHAT ROUTE =====================
 
 @app.post("/api/chat")
