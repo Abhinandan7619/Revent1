@@ -1741,7 +1741,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Messages */}
-      <div style={{ position:'relative', flex:1 }}>
+      <div style={{ position:'relative', flex:1, display:'flex', flexDirection:'column', minHeight:0 }}>
         <div data-testid="chat-messages" ref={messagesWrapperRef} onScroll={handleScroll}
           style={{ flex:1, overflowY:'auto', padding: isDesktop ? '16px 16px 8px' : '12px 10px 8px', display:'flex', flexDirection:'column', gap: isDesktop ? 12 : 8 }}>
           {messages.map((msg,i)=><ChatBubble key={i} msg={msg} isDesktop={isDesktop}/>)}
