@@ -1920,6 +1920,7 @@ function App() {
   const [activeVibe,setActiveVibeRaw]=useState(()=>loadState('activeVibe','default'));
   const setActiveVibe=(v)=>{ saveState('activeVibe',v); setActiveVibeRaw(v); };
   const [characters,setCharacters]=useState([]);
+  const [editingCharacter,setEditingCharacter]=useState(null);
   const [loading,setLoading]=useState(false);
   const [gossipLoading,setGossipLoading]=useState(false);
   const [coinToast,setCoinToast]=useState(null);
