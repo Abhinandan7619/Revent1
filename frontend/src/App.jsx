@@ -2210,29 +2210,21 @@ function App() {
   };
 
   const sendMessage=async()=>{
-    console.log('[sendMessage] Called - input:', input, 'loading:', loading, 'sessionId:', sessionId);
     const sanitizedInput = sanitizeText(input);
-    if(!sanitizedInput||loading){
-      console.log('[sendMessage] Early return - sanitizedInput:', sanitizedInput, 'loading:', loading);
-      return;
-    }
-    console.log('[sendMessage] Sending message...');
+    if(!sanitizedInput||loading)return;
     const userMsg={role:'user',content:sanitizedInput,timestamp:new Date().toISOString()};
     setMessages(prev=>[...prev,userMsg]);
     setInput('');
-    setShowEmojiPicker(false);
     setLoading(true);
     try{
       const res=await api.post('/api/chat',{message:userMsg.content,session_id:sessionId,language,manual_mode:manualMode,persona_config:getPersonaConfig(),force_vault:false});
-      console.log('[sendMessage] Response:', res.data);
       const aiMsg=ensureMessage({role:'ai',content:res.data.response,mode:res.data.mode||'AUTO'});
       setMessages(prev=>[...prev,aiMsg]);
       setIntensity(res.data.intensity_score||0);
       setBaseline(res.data.emotional_baseline||5);
       if(res.data.coins_remaining!==undefined)setAuthUser(prev=>prev?{...prev,coins:res.data.coins_remaining}:prev);
       if(res.data.coins_deducted>0)showCoinNotif(res.data.coins_deducted,res.data.coins_remaining);
-    }catch(err){
-      console.error('[sendMessage] Error:', err);
+    }catch{
       setMessages(prev=>[...prev,ensureMessage({role:'system',content:'⚠️ Connection failed. Try again.'})]);
     }finally{setLoading(false);}
   };
