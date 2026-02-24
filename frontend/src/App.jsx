@@ -804,6 +804,9 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
           </div>
         </div>
         {step<=5&&<div style={{ fontSize:11, color:'rgba(248,250,252,0.3)' }}>Step {step} of 5</div>}
+        {/* Cancel button */}
+        <button data-testid="creator-cancel-btn" onClick={onBack} title="Cancel and go back"
+          style={{ background:'rgba(248,113,113,0.1)', border:'1px solid rgba(248,113,113,0.3)', borderRadius:8, width:32, height:32, display:'flex', alignItems:'center', justifyContent:'center', color:'rgba(248,113,113,0.8)', fontSize:16, cursor:'pointer', flexShrink:0 }}>×</button>
       </div>
 
       {/* Step node progress (steps 1-5) */}
