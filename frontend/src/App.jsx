@@ -1379,14 +1379,19 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
 };
 
 // ─── Mobile Drawer ───────────────────────────────────────────────────────────
-const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession, chatSessions, activeSessionId, onSwitchSession, onDeleteSession, onRenameSession }) => {
+const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, characters, onOpenCreator, onDeleteCharacter, onEditCharacter, onOpenSettings, onOpenGossip, language, setLanguage, startNewSession, chatSessions, activeSessionId, onSwitchSession, onDeleteSession, onRenameSession }) => {
+  // Companions = chat sessions (max 2)
+  const companions = chatSessions || [];
+  const canCreateCompanion = companions.length < 2;
+  
+  // Clans = characters (max 3)
+  const canCreateClan = characters.length < 3;
+  
+  // State for renaming companions
   const [renamingId, setRenamingId] = React.useState(null);
   const [renameVal, setRenameVal] = React.useState('');
-  const defaultSessions = activeVibe === 'default' ? (chatSessions||[]) : [];
-  const canAddSession = defaultSessions.length < 2;
-  const canCreate = characters.length < 3;
 
-  const handleRenameStart = (s) => { setRenamingId(s.session_id); setRenameVal(s.title||'New Chat'); };
+  const handleRenameStart = (s) => { setRenamingId(s.session_id); setRenameVal(s.title||'Companion'); };
   const handleRenameSubmit = (sid) => { onRenameSession(sid, renameVal); setRenamingId(null); };
 
   if(!isOpen) return null;
@@ -1424,62 +1429,79 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
         )}
 
         <div style={{ padding:'0 16px', flex:1 }}>
-          {/* Clans */}
-          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:14, marginBottom:8 }}>Clans</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
-            {characters.map(c=>{
-              const color = ROLE_COLORS[c.base_role]||'#a78bfa';
-              const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
+          {/* ═══════════════════════════════════════════════════════════════════════
+              COMPANIONS SECTION (Chat Sessions) - Max 2
+          ═══════════════════════════════════════════════════════════════════════ */}
+          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(52,211,153,0.6)', textTransform:'uppercase', marginTop:14, marginBottom:8 }}>Companions</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+            {companions.map(s=>{
+              const isActive = s.session_id === activeSessionId;
               return (
-                <div key={c.character_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
-                  <motion.button onClick={()=>{setActiveVibe(c.character_id);onClose();}} whileTap={{scale:0.97}}
-                    style={{ flex:1, display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:'12px 0 0 12px', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', textAlign:'left' }}>
-                    <div style={{ width:30, height:30, borderRadius:'50%', background:activeVibe===c.character_id?color+'20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:14, flexShrink:0 }}>{icon}</div>
-                    <span style={{ fontSize:13, fontWeight:600, color:activeVibe===c.character_id?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.label||c.base_role}</span>
-                  </motion.button>
-                  <button onClick={()=>{onDeleteCharacter(c.character_id);onClose();}}
-                    style={{ padding:'10px 10px', borderRadius:'0 12px 12px 0', border:`1px solid ${activeVibe===c.character_id?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:activeVibe===c.character_id?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)' }}
-                    title="Delete character">×</button>
+                <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
+                  {renamingId===s.session_id?(
+                    <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
+                      onBlur={()=>handleRenameSubmit(s.session_id)}
+                      onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
+                      style={{ flex:1, background:'rgba(52,211,153,0.08)', border:'1px solid rgba(52,211,153,0.3)', borderRadius:'10px 0 0 10px', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
+                  ):(
+                    <motion.button onClick={()=>{onSwitchSession(s.session_id);onClose();}} whileTap={{scale:0.97}}
+                      style={{ flex:1, display:'flex', alignItems:'center', gap:8, padding:'9px 10px', borderRadius:'10px 0 0 10px', border:`1px solid ${isActive?'rgba(52,211,153,0.35)':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:isActive?'rgba(52,211,153,0.1)':'rgba(255,255,255,0.03)', cursor:'pointer', textAlign:'left' }}>
+                      <div style={{ width:26, height:26, borderRadius:'50%', background:isActive?'rgba(52,211,153,0.2)':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>💬</div>
+                      <span style={{ fontSize:12, fontWeight:isActive?600:400, color:isActive?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{s.title||'Companion'}</span>
+                    </motion.button>
+                  )}
+                  {/* Edit button */}
+                  <button onClick={()=>handleRenameStart(s)} title="Edit name"
+                    style={{ padding:'9px 7px', border:`1px solid ${isActive?'rgba(52,211,153,0.35)':'rgba(255,255,255,0.05)'}`, borderLeft:'none', borderRight:'none', background:isActive?'rgba(52,211,153,0.1)':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:10, color:'rgba(167,139,250,0.6)' }}>✎</button>
+                  {/* Delete button */}
+                  <button onClick={()=>onDeleteSession(s.session_id)} title="Delete companion"
+                    style={{ padding:'9px 7px', borderRadius:'0 10px 10px 0', border:`1px solid ${isActive?'rgba(52,211,153,0.35)':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:isActive?'rgba(52,211,153,0.1)':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)' }}>×</button>
                 </div>
               );
             })}
-            {/* Current chats UI moved inside Clans */}
-            {activeVibe==='default'&&(
-              <div style={{ marginTop:2 }}>
-                <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                  {defaultSessions.map(s=>(
-                    <div key={s.session_id} style={{ display:'flex', alignItems:'center', gap:0, borderRadius:10, border:`1px solid ${s.session_id===activeSessionId?'rgba(167,139,250,0.3)':'rgba(255,255,255,0.05)'}`, background:s.session_id===activeSessionId?'rgba(167,139,250,0.1)':'rgba(255,255,255,0.03)', overflow:'hidden' }}>
-                      {renamingId===s.session_id?(
-                        <input autoFocus value={renameVal} onChange={e=>setRenameVal(e.target.value)}
-                          onBlur={()=>handleRenameSubmit(s.session_id)}
-                          onKeyDown={e=>{ if(e.key==='Enter')handleRenameSubmit(s.session_id); if(e.key==='Escape')setRenamingId(null); }}
-                          style={{ flex:1, background:'transparent', border:'none', outline:'none', color:'#fff', fontSize:12, padding:'9px 10px', fontFamily:"'Outfit',sans-serif" }}/>
-                      ):(
-                        <button onClick={()=>{onSwitchSession(s.session_id);onClose();}} onDoubleClick={()=>handleRenameStart(s)}
-                          title="Click to open · Double-click to rename"
-                          style={{ flex:1, background:'transparent', border:'none', cursor:'pointer', textAlign:'left', padding:'9px 10px', color:s.session_id===activeSessionId?'#fff':'rgba(248,250,252,0.5)', fontSize:12, fontWeight:s.session_id===activeSessionId?600:400, fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
-                          {s.title||'New Chat'}
-                        </button>
-                      )}
-                      <button onClick={()=>onDeleteSession(s.session_id)} title="Delete session"
-                        style={{ background:'transparent', border:'none', cursor:'pointer', padding:'9px 8px', color:'rgba(248,113,113,0.5)', fontSize:13, flexShrink:0 }}>×</button>
-                    </div>
-                  ))}
-                </div>
-                {canAddSession&&(
-                  <motion.button onClick={()=>{startNewSession();onClose();}} whileTap={{scale:0.97}}
-                    style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.25)', background:'transparent', cursor:'pointer', marginTop:6, width:'100%' }}>
-                    <span style={{ fontSize:14, color:'rgba(52,211,153,0.6)' }}>+</span>
-                    <span style={{ fontSize:12, fontWeight:500, color:'rgba(52,211,153,0.6)', fontFamily:"'Outfit',sans-serif" }}>New Chat</span>
-                  </motion.button>
-                )}
-              </div>
+            
+            {/* Create Companion button - only visible when < 2 */}
+            {canCreateCompanion&&(
+              <motion.button onClick={()=>{startNewSession();onClose();}} whileTap={{scale:0.97}}
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:10, border:'1px dashed rgba(52,211,153,0.3)', background:'transparent', cursor:'pointer', marginTop:4, width:'100%' }}>
+                <div style={{ width:26, height:26, borderRadius:'50%', background:'rgba(52,211,153,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'rgba(52,211,153,0.5)', flexShrink:0 }}>+</div>
+                <span style={{ fontSize:11, fontWeight:600, color:'rgba(52,211,153,0.5)', fontFamily:"'Outfit',sans-serif" }}>Create Companion</span>
+              </motion.button>
             )}
-            {canCreate&&(
+          </div>
+
+          {/* ═══════════════════════════════════════════════════════════════════════
+              CLANS SECTION (Characters) - Max 3
+          ═══════════════════════════════════════════════════════════════════════ */}
+          <div style={{ fontSize:9, letterSpacing:2.5, color:'rgba(167,139,250,0.5)', textTransform:'uppercase', marginTop:16, marginBottom:8 }}>Clans</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+            {characters.map(c=>{
+              const color = ROLE_COLORS[c.base_role]||'#a78bfa';
+              const icon = BASE_ROLES.find(r=>r.id===c.base_role)?.icon||'✨';
+              const isActive = activeVibe===c.character_id;
+              return (
+                <div key={c.character_id} style={{ display:'flex', alignItems:'center', gap:0 }}>
+                  <motion.button onClick={()=>{setActiveVibe(c.character_id);onClose();}} whileTap={{scale:0.97}}
+                    style={{ flex:1, display:'flex', alignItems:'center', gap:8, padding:'9px 10px', borderRadius:'10px 0 0 10px', border:`1px solid ${isActive?color+'50':'rgba(255,255,255,0.05)'}`, borderRight:'none', background:isActive?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', textAlign:'left' }}>
+                    <div style={{ width:26, height:26, borderRadius:'50%', background:isActive?color+'20':'rgba(255,255,255,0.06)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, flexShrink:0 }}>{icon}</div>
+                    <span style={{ fontSize:12, fontWeight:600, color:isActive?'#fff':'rgba(248,250,252,0.5)', fontFamily:"'Outfit',sans-serif", overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{c.label||c.base_role}</span>
+                  </motion.button>
+                  {/* Edit button - opens clan creator with existing data */}
+                  <button onClick={()=>{onEditCharacter&&onEditCharacter(c.character_id);onClose();}} title="Edit clan"
+                    style={{ padding:'9px 7px', border:`1px solid ${isActive?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', borderRight:'none', background:isActive?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:10, color:'rgba(167,139,250,0.6)' }}>✎</button>
+                  {/* Delete button */}
+                  <button onClick={()=>{onDeleteCharacter(c.character_id);onClose();}} title="Delete clan"
+                    style={{ padding:'9px 7px', borderRadius:'0 10px 10px 0', border:`1px solid ${isActive?color+'50':'rgba(255,255,255,0.05)'}`, borderLeft:'none', background:isActive?color+'15':'rgba(255,255,255,0.03)', cursor:'pointer', fontSize:12, color:'rgba(248,113,113,0.6)' }}>×</button>
+                </div>
+              );
+            })}
+            
+            {/* Create Clan button - only visible when < 3 */}
+            {canCreateClan&&(
               <motion.button onClick={()=>{onOpenCreator();onClose();}} whileTap={{scale:0.97}}
-                style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:12, border:'1px dashed rgba(255,255,255,0.1)', background:'transparent', cursor:'pointer', textAlign:'left' }}>
-                <div style={{ width:30, height:30, borderRadius:'50%', background:'rgba(255,255,255,0.04)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:'rgba(255,255,255,0.3)', flexShrink:0 }}>+</div>
-                <span style={{ fontSize:13, fontWeight:600, color:'rgba(248,250,252,0.3)', fontFamily:"'Outfit',sans-serif" }}>Create Clan</span>
+                style={{ display:'flex', alignItems:'center', gap:8, padding:'8px 10px', borderRadius:10, border:'1px dashed rgba(167,139,250,0.3)', background:'transparent', cursor:'pointer', marginTop:4, width:'100%' }}>
+                <div style={{ width:26, height:26, borderRadius:'50%', background:'rgba(167,139,250,0.08)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, color:'rgba(167,139,250,0.5)', flexShrink:0 }}>+</div>
+                <span style={{ fontSize:11, fontWeight:600, color:'rgba(167,139,250,0.5)', fontFamily:"'Outfit',sans-serif" }}>Create Clan</span>
               </motion.button>
             )}
           </div>
