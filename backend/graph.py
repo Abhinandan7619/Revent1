@@ -212,12 +212,14 @@ async def node_generator(state: ReVentState):
 
     use_backstory = False
     if persona["memory_hook"]:
-        if random.random() < 0.2:
+        # Only use backstory 15% of the time OR when user's message clearly relates to it
+        if random.random() < 0.15:
             use_backstory = True
-        if len(set(persona["memory_hook"].lower().split()) & set(text.lower().split())) > 1:
+        # Check if user's message overlaps with backstory keywords
+        if len(set(persona["memory_hook"].lower().split()) & set(text.lower().split())) > 2:
             use_backstory = True
 
-    memory_line = f"Subtly reference: '{persona['memory_hook']}'" if use_backstory else ""
+    memory_line = f"Relevant context (weave in naturally, don't repeat verbatim): '{persona['memory_hook']}'" if use_backstory else ""
 
     mode_prompts = {
         "BACK_ME": "You are ANGRY WITH the user. Validate their rage. Match their energy. You are completely on their side.",
@@ -274,7 +276,13 @@ async def node_generator(state: ReVentState):
 
     messages = [SystemMessage(content=system_prompt)] + history_messages + [HumanMessage(content=text)]
     response = await generator_llm.ainvoke(messages)
-    return {"final_response": response.content}
+    
+    # Strip markdown formatting from response
+    clean_response = response.content
+    clean_response = clean_response.replace('**', '').replace('##', '').replace('__', '')
+    clean_response = clean_response.strip()
+    
+    return {"final_response": clean_response}
 
 
 async def node_db_manager(state: ReVentState):
