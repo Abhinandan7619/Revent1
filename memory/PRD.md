@@ -41,7 +41,28 @@ Complete a 90% finished AI emotional companion app called **ReVent**. The AI com
 
 ## Recent Changes (Feb 24, 2026)
 
-### "Clan Creator" Overhaul
+### Sidebar Restructure - Dual-Header Structure
+- **COMPANIONS section (top)**: Green header showing chat sessions
+  - Max 2 companions allowed
+  - "Create Companion" button visible only when < 2 companions
+  - Each companion has Edit (✎) and Delete (×) icons
+  - Default companion created on signup completion
+- **CLANS section (below)**: Purple header showing custom personas/characters
+  - Max 3 clans allowed
+  - "Create Clan" button visible only when < 3 clans
+  - Each clan has Edit (✎) and Delete (×) icons
+  - Edit button opens clan creator with existing data pre-populated
+
+### Backend Updates
+- Added `PUT /api/characters/{character_id}` endpoint for updating clans
+- Added `update_character()` function in database.py
+
+### Bug Fixes
+- **Fixed onboarding flow**: Email signups now properly go through language screen before chat
+  - Previously email signups skipped language selection and went directly to chat without creating a companion session
+  - Flow is now: `onboarding` → `lang` → `handleLangDone` (creates session) → `chat`
+
+### "Clan Creator" Overhaul (Previous)
 - **Renamed "Persona" to "Clan"** throughout the application
 - Updated sidebar section header from "Companions" to "Clans"
 - Updated "Create Persona" button to "Create Clan"
