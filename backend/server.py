@@ -303,15 +303,18 @@ async def chat(chat_req: ChatRequest, request: Request):
         is_gossip = chat_req.force_vault or chat_req.manual_mode == "GOSSIP"
         if user and not is_gossip:
             vibe_id = "default"
-            if chat_req.persona_config:
+            # Check if this is a clan chat (has persona_config with label)
+            if chat_req.persona_config and chat_req.persona_config.get("label"):
+                # This is a clan - find the correct vibe_id by label
                 chars = await get_characters(user["user_id"])
                 for c in chars:
-                    if c.get("base_role") == chat_req.persona_config.get("base_role"):
+                    if c.get("label") == chat_req.persona_config.get("label"):
                         vibe_id = c["character_id"]
                         break
             existing = await get_user_sessions(user["user_id"], vibe_id)
             session_exists = any(s["session_id"] == chat_req.session_id for s in existing)
-            if not session_exists and len(existing) < 2:
+            # Only auto-create for default (companion) or if explicitly doesn't exist
+            if not session_exists and (vibe_id == "default" and len(existing) < 2):
                 title = chat_req.message[:40] if chat_req.message else "New Chat"
                 await create_chat_session(user["user_id"], chat_req.session_id, vibe_id, title)
 
