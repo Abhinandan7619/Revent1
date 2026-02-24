@@ -1884,7 +1884,6 @@ function App() {
     const userMsg={role:'user',content:sanitizedInput,timestamp:new Date().toISOString()};
     setMessages(prev=>[...prev,userMsg]);
     setInput('');
-    setShowEmojiPicker(false);
     setLoading(true);
     try{
       const res=await api.post('/api/chat',{message:userMsg.content,session_id:sessionId,language,manual_mode:manualMode,persona_config:getPersonaConfig(),force_vault:false});
