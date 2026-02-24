@@ -1267,7 +1267,7 @@ const DesktopSidebar = ({ authUser, activeVibe, setActiveVibe, characters, onOpe
             </div>
           );
         })}
-        {/* Current chats UI moved inside Companions */}
+        {/* Current chats UI moved inside Clans */}
         {activeVibe==='default'&&(
           <div style={{ marginTop:4 }}>
             <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
@@ -1411,7 +1411,7 @@ const MobileDrawer = ({ isOpen, onClose, authUser, activeVibe, setActiveVibe, ch
                 </div>
               );
             })}
-            {/* Current chats UI moved inside Companions */}
+            {/* Current chats UI moved inside Clans */}
             {activeVibe==='default'&&(
               <div style={{ marginTop:2 }}>
                 <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
