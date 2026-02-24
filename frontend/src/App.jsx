@@ -2180,12 +2180,17 @@ function App() {
       // New session for this vibe
       const newSid = genSessionId();
       setSessionId(newSid);
-      try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:vibeId,title:'My Chats'}); await loadSessions(vibeId); }catch{}
+      try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:vibeId,title:'Companion'}); await loadSessions(vibeId); }catch{}
       if(vibeId==='default'){
         try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
       } else {
         setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
       }
+    }
+    // Exit any other view (like creator) and go to chat
+    if(view !== 'chat') {
+      setEditingCharacter(null);
+      setView('chat');
     }
   };
 
