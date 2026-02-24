@@ -2151,7 +2151,7 @@ function App() {
           const newSid = genSessionId();
           setSessionId(newSid);
           if(sessions.length < 2){
-            try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'My Chats'}); await loadSessions('default'); }catch{}
+            try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'Companion'}); await loadSessions('default'); }catch{}
           }
           try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
         }
@@ -2254,7 +2254,7 @@ function App() {
     const newSid = genSessionId();
     setSessionId(newSid);
     // Register session in DB so it shows in sidebar
-    try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'My Chats'}); await loadSessions('default'); }catch{}
+    try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'Companion'}); await loadSessions('default'); }catch{}
     // Load personalized welcome
     try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
     setView('chat');
