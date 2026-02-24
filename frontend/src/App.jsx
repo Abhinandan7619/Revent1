@@ -1106,7 +1106,7 @@ const ChatBubble = ({ msg, isDesktop }) => {
   const bubblePadding = isDesktop ? '12px 16px' : '10px 12px';
   const bubbleFontSize = isDesktop ? 14 : 13;
   const bubbleMaxWidth = isDesktop ? '82%' : '92%';
-  const bubbleAlign = isDesktop ? (msg.role==='user' ? 'flex-end' : 'flex-start') : 'flex-start';
+  const bubbleAlign = msg.role==='user' ? 'flex-end' : 'flex-start';
   const timestamp = formatTimestamp(msg.timestamp);
   const [hovered,setHovered] = useState(false);
 
