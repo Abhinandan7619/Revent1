@@ -2329,10 +2329,15 @@ function App() {
   };
 
   const switchSession=async(sid)=>{
-    if(sid===sessionId)return;
+    if(sid===sessionId && view==='chat')return;
     setSessionId(sid);
     setMessages([]);
     await loadChatHistory(sid);
+    // Exit any other view (like creator) and go to chat
+    if(view !== 'chat') {
+      setEditingCharacter(null);
+      setView('chat');
+    }
   };
 
   const deleteSession=async(sid)=>{
