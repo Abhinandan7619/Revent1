@@ -641,7 +641,7 @@ const LanguageScreen = ({ onDone }) => {
 };
 
 // ─── Clan Creator ─────────────────────────────────────────────────────────────
-const CharacterCreator = ({ onBack, onSave, language }) => {
+const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
   const STEP_NODES = ['Persona','Identity','Traits','Character','Memory'];
   const PERSONAS_CREATOR = [
     { id:'Close Cousin',      emoji:'👨‍👩‍👧', desc:'Warm, relatable, family-like',             color:'#a78bfa' },
@@ -682,10 +682,28 @@ const CharacterCreator = ({ onBack, onSave, language }) => {
       placeholder:"e.g. That I ugly cry at animated movies..." },
   ];
 
-  const [step, setStep] = useState(1);
+  // Initialize state with editingCharacter data if available
+  const getInitialChar = () => {
+    if (editingCharacter) {
+      return {
+        base_role: editingCharacter.base_role || '',
+        name: editingCharacter.label || editingCharacter.name || '',
+        gender: editingCharacter.gender || '',
+        traits: editingCharacter.traits || [],
+        energy: Math.round((editingCharacter.energy || 50) / 10),
+        identity: {},
+        qAnswers: {},
+        story: editingCharacter.memory_hook || ''
+      };
+    }
+    return { base_role:'', name:'', gender:'', traits:[], energy:5, identity:{}, qAnswers:{}, story:'' };
+  };
+
+  const [step, setStep] = useState(editingCharacter ? 1 : 1);
   const [qIdx, setQIdx] = useState(0);
   const [saving, setSaving] = useState(false);
-  const [char, setChar] = useState({ base_role:'', name:'', gender:'', traits:[], energy:5, identity:{}, qAnswers:{}, story:'' });
+  const [char, setChar] = useState(getInitialChar);
+  const isEditing = !!editingCharacter;
 
   const avatarColor = ROLE_COLORS[char.base_role] || '#a78bfa';
   const avatarPersona = PERSONAS_CREATOR.find(p=>p.id===char.base_role);
