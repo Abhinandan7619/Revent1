@@ -864,10 +864,10 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
               <div style={{ paddingTop:16 }}>
                 <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Name your <span style={gradText}>Clan</span></div>
                 <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:20, lineHeight:1.5 }}>Give your clan a name and pick a gender. This shapes how Reva speaks and refers to itself.</div>
-                <div style={sLbl}>// What do you call them?</div>
+                <div style={sLbl}>What do you call them?</div>
                 <input value={char.name} onChange={e=>setChar(prev=>({...prev,name:e.target.value}))} style={{ ...inputCss, marginBottom:6 }} type="text" placeholder="e.g. Rahul, Priya, Arjun, Meera…" maxLength={24}/>
                 <div style={{ fontSize:11, color:'rgba(248,250,252,0.25)', marginBottom:20, paddingLeft:2 }}>Keep it personal — use a real name or nickname</div>
-                <div style={sLbl}>// Gender of this clan</div>
+                <div style={sLbl}>Gender of this clan</div>
                 <div style={{ display:'flex', gap:10 }}>
                   {GENDER_OPTIONS.map(opt=>(
                     <div key={opt.id} onClick={()=>setChar(prev=>({...prev,gender:opt.id}))}
