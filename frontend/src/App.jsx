@@ -492,7 +492,7 @@ const OnboardingScreen = ({ onDone }) => {
       accent: '#f472b6',
       icon: '✨',
       iconBg: 'rgba(244,114,182,0.12)',
-      title: <>Create your {GT('own')} companions.</>,
+      title: <>Create your {GT('own')} clans.</>,
       characters: true,
     },
   ];
