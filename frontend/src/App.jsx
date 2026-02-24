@@ -2243,9 +2243,20 @@ function App() {
   };
 
   const openGossip=()=>{ setGossipMessages([]);setGossipSessionId(genSessionId());setView('gossip_chat'); };
-  const openCreator=()=>{ if(characters.length>=3)return; setView('creator'); };
+  const openCreator=()=>{ if(characters.length>=3)return; setEditingCharacter(null); setView('creator'); };
+  const editCharacter=(charId)=>{
+    const charToEdit = characters.find(c=>c.character_id===charId);
+    if(charToEdit) { setEditingCharacter(charToEdit); setView('creator'); }
+  };
   const handleCharacterSaved=(newChar)=>{
-    setCharacters(prev=>[...prev,newChar]);
+    if(editingCharacter) {
+      // Updating existing character - replace in array
+      setCharacters(prev=>prev.map(c=>c.character_id===newChar.character_id?newChar:c));
+    } else {
+      // Creating new character - add to array
+      setCharacters(prev=>[...prev,newChar]);
+    }
+    setEditingCharacter(null);
     setActiveVibe(newChar.character_id);
     const newSid=genSessionId();
     setSessionId(newSid);
