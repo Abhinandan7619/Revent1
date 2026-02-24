@@ -273,3 +273,27 @@ async def get_characters(user_id: str) -> list:
 async def delete_character(user_id: str, character_id: str) -> bool:
     result = await db.characters.delete_one({"user_id": user_id, "character_id": character_id})
     return result.deleted_count > 0
+
+
+async def update_character(user_id: str, character_id: str, config: dict) -> dict:
+    """Update an existing character"""
+    update_data = {
+        "base_role": config.get("base_role"),
+        "traits": config.get("traits", []),
+        "energy": config.get("energy", 50),
+        "quirks": config.get("quirks", []),
+        "memory_hook": config.get("memory_hook", ""),
+        "label": config.get("label", "Custom"),
+        "updated_at": datetime.now(timezone.utc),
+    }
+    # Remove None values
+    update_data = {k: v for k, v in update_data.items() if v is not None}
+    
+    result = await db.characters.find_one_and_update(
+        {"user_id": user_id, "character_id": character_id},
+        {"$set": update_data},
+        return_document=True
+    )
+    if result:
+        result.pop("_id", None)
+    return result
