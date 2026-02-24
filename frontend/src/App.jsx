@@ -902,7 +902,7 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
                     );
                   })}
                 </div>
-                <div style={sLbl}>// Energy level</div>
+                <div style={sLbl}>Energy level</div>
                 <div style={{ ...glCardSm, padding:'14px 16px', marginBottom:16 }}>
                   <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:8 }}>
                     <span style={{ fontSize:11, color:'rgba(248,250,252,0.35)', flexShrink:0 }}>Low</span>
@@ -912,7 +912,7 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
                   </div>
                   <div style={{ fontSize:11, color:'rgba(248,250,252,0.4)' }}>{energyDesc}</div>
                 </div>
-                <div style={sLbl}>// Reva's read on your choices</div>
+                <div style={sLbl}>Reva's read on your choices</div>
                 <div style={{ ...glCardSm, padding:'14px 16px', fontSize:12, color:char.traits.length>=2?'rgba(248,250,252,0.65)':'rgba(248,250,252,0.25)' }}>
                   {char.traits.length>=2
                     ? `${char.name||'Your clan'} comes through as ${char.traits.slice(0,3).join(', ')} with energy at ${char.energy}/10. This clan shows up with intention.`
@@ -1748,7 +1748,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
           {loading&&(
             <div style={{ alignSelf:'flex-start', display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:12, background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.18)' }}>
               <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                <span style={{ fontSize:11, letterSpacing:1.5, textTransform:'uppercase', color:'#fbbf24' }}>Reva</span>
+                <span style={{ fontSize:11, letterSpacing:1.5, textTransform:'uppercase', color:'#fbbf24' }}>{activeChar ? (activeChar.label || 'Reva') : 'Reva'}</span>
                 <span style={{ fontSize:13, color:'#f8fafc' }}>is typing</span>
               </div>
               <div style={{ display:'flex', gap:4 }}>
@@ -1769,10 +1769,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
         )}
       </div>
 
-      {/* Emotion bar — compact on mobile */}
-      <div style={{ pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s' }}>
-        <EmotionBar onEmotion={setManualMode} manualMode={manualMode} isDesktop={isDesktop}/>
-      </div>
+      {/* Emotion bar removed as per user request */}
 
       {/* Input */}
       <div style={{ padding: isDesktop ? '10px 14px' : '8px 10px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.8)', backdropFilter:'blur(16px)', flexShrink:0, position:'relative' }}>
