@@ -3,6 +3,8 @@ import axios from 'axios';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+import { Toaster, toast } from 'react-hot-toast';
+import EmojiPicker from 'emoji-picker-react';
 
 // ─── API ──────────────────────────────────────────────────────────────────────
 const BASE_URL = import.meta.env.REACT_APP_BACKEND_URL || '';
@@ -54,6 +56,33 @@ const modeMeta = {
   CRISIS:  { label: 'CRISIS',  emoji: '🛡️' },
   AUTO:    { label: 'AUTO',    emoji: '⚡' },
 };
+const MODE_TRAY = [
+  { id: 'AUTO', emoji: '⚡', name: 'AUTO MODE', shortDesc: 'Let Reva decide the vibe' },
+  { id: 'HEAR_ME', emoji: '💙', name: 'HEAR ME', shortDesc: 'I just need someone to listen' },
+  { id: 'BACK_ME', emoji: '🔥', name: 'BACK ME', shortDesc: 'Match my energy and hype me' },
+  { id: 'BE_REAL', emoji: '🧠', name: 'BE REAL', shortDesc: 'Tell me what I need to hear' },
+];
+const formatTimestamp = (ts) => {
+  if(!ts) return '';
+  const date = new Date(ts);
+  if(Number.isNaN(date.getTime())) return '';
+  const today = new Date();
+  const sameDay = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const isYesterday = date.getDate() === yesterday.getDate() && date.getMonth() === yesterday.getMonth() && date.getFullYear() === yesterday.getFullYear();
+  const time = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if(sameDay) return time;
+  if(isYesterday) return `Yesterday ${time}`;
+  const day = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return `${day}, ${time}`;
+};
+const sanitizeText = (text) => (text || '').replace(/<[^>]+>/g, '').trim();
+const ensureMessage = (msg) => ({
+  ...msg,
+  content: sanitizeText(msg.content),
+  timestamp: msg.timestamp || msg.created_at || msg.ts || msg.time || new Date().toISOString(),
+});
 const WELCOME_MESSAGE = {
   role: 'ai',
   content: 'Hey. You showed up — that already took something. 💜\n\nThis is your space. Say whatever. I\'m not going anywhere.',
@@ -755,10 +784,19 @@ const ChatBubble = ({ msg, isDesktop }) => {
   const bubblePadding = isDesktop ? '12px 16px' : '10px 12px';
   const bubbleFontSize = isDesktop ? 14 : 13;
   const bubbleMaxWidth = isDesktop ? '82%' : '95%';
+  const timestamp = formatTimestamp(msg.timestamp);
+  const [hovered,setHovered] = useState(false);
 
   return (
     <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
-      style={{ display:'flex', flexDirection:'column', maxWidth:bubbleMaxWidth, alignSelf:'flex-start' }}>
+      onMouseEnter={()=>setHovered(true)}
+      onMouseLeave={()=>setHovered(false)}
+      style={{ display:'flex', flexDirection:'column', maxWidth:bubbleMaxWidth, alignSelf:'flex-start', position:'relative' }}>
+      {timestamp&&(
+        <div style={{ position:'absolute', top:-20, right:0, fontSize:10, color:'rgba(248,250,252,0.45)', opacity:hovered?1:0, transition:'opacity 0.2s', whiteSpace:'nowrap' }}>
+          {timestamp}
+        </div>
+      )}
       {msg.role==='ai'&&meta&&(
         <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5, paddingLeft:2 }}>
           <span style={{ color:'rgba(248,250,252,0.4)' }}>RE · </span>
@@ -787,21 +825,29 @@ const ChatBubble = ({ msg, isDesktop }) => {
     </motion.div>
   );
 };
-const GossipBubble = ({ msg, isDesktop }) => (
-  <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
-    style={{ display:'flex', flexDirection:'column', maxWidth:isDesktop ? '82%' : '95%', alignSelf:'flex-start' }}>
-    {msg.role==='ai'&&(
-      <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5 }}>
-        <span style={{ color:'rgba(251,191,36,0.5)' }}>RE · </span>
-        <span style={{ color:'#fbbf24', fontWeight:600 }}>GOSSIP</span>
-      </div>
-    )}
-    {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'left' }}>You</div>}
-    <div style={{ padding:isDesktop ? '12px 16px' : '10px 12px', fontSize:isDesktop ? 14 : 13, lineHeight:1.7, backdropFilter:'blur(16px)',
-      ...(msg.role==='user'?{background:'rgba(251,191,36,0.12)',border:'1px solid rgba(251,191,36,0.22)',borderRadius:14}:{background:'rgba(251,191,36,0.04)',border:'1px solid rgba(251,191,36,0.12)',borderRadius:'2px 14px 14px 14px'})
-    }}>{msg.content}</div>
-  </motion.div>
-);
+const GossipBubble = ({ msg, isDesktop }) => {
+  const timestamp = formatTimestamp(msg.timestamp);
+  const [hovered,setHovered]=useState(false);
+  return (
+    <motion.div initial={{opacity:0,y:10}} animate={{opacity:1,y:0}} transition={{type:'spring',stiffness:280,damping:28}}
+      onMouseEnter={()=>setHovered(true)} onMouseLeave={()=>setHovered(false)}
+      style={{ display:'flex', flexDirection:'column', maxWidth:isDesktop ? '82%' : '95%', alignSelf:'flex-start', position:'relative' }}>
+      {timestamp&&(
+        <div style={{ position:'absolute', top:-18, right:0, fontSize:10, color:'rgba(248,250,252,0.45)', opacity:hovered?1:0, transition:'opacity 0.2s' }}>{timestamp}</div>
+      )}
+      {msg.role==='ai'&&(
+        <div style={{ fontSize:10, letterSpacing:1.2, textTransform:'uppercase', marginBottom:5 }}>
+          <span style={{ color:'rgba(251,191,36,0.5)' }}>RE · </span>
+          <span style={{ color:'#fbbf24', fontWeight:600 }}>GOSSIP</span>
+        </div>
+      )}
+      {msg.role==='user'&&<div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:'rgba(248,250,252,0.25)', marginBottom:4, textAlign:'left' }}>You</div>}
+      <div style={{ padding:isDesktop ? '12px 16px' : '10px 12px', fontSize:isDesktop ? 14 : 13, lineHeight:1.7, backdropFilter:'blur(16px)',
+        ...(msg.role==='user'?{background:'rgba(251,191,36,0.12)',border:'1px solid rgba(251,191,36,0.22)',borderRadius:14}:{background:'rgba(251,191,36,0.04)',border:'1px solid rgba(251,191,36,0.12)',borderRadius:'2px 14px 14px 14px'})
+      }}>{msg.content}</div>
+    </motion.div>
+  );
+};
 
 // ─── Emotion Bar ──────────────────────────────────────────────────────────────
 const EmotionBar = ({ onEmotion, manualMode, isDesktop }) => {
@@ -1157,6 +1203,60 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
   const lastAiMsg = [...messages].reverse().find(m=>m.role==='ai');
   const isCrisis = lastAiMsg?.mode === 'CRISIS';
   const [drawerOpen, setDrawerOpen] = React.useState(false);
+  const [modeDropdownOpen, setModeDropdownOpen] = React.useState(false);
+  const modeTrayRef = React.useRef(null);
+  const [showEmojiPicker, setShowEmojiPicker] = React.useState(false);
+  const [showScrollToBottom, setShowScrollToBottom] = React.useState(false);
+  const messagesWrapperRef = React.useRef(null);
+  const emojiPickerRef = React.useRef(null);
+
+  React.useEffect(()=>{
+    const handleOutside = (event) => { if(modeTrayRef.current && !modeTrayRef.current.contains(event.target)) { setModeDropdownOpen(false); } };
+    document.addEventListener('mousedown', handleOutside);
+    return () => document.removeEventListener('mousedown', handleOutside);
+  },[]);
+  const currentMode = MODE_TRAY.find(m=>m.id===manualMode) || MODE_TRAY[0];
+  const handleModeSelect = (modeId) => {
+    if(isCrisis) return;
+    if(modeId===manualMode){ setModeDropdownOpen(false); return; }
+    setManualMode(modeId);
+    setModeDropdownOpen(false);
+    const selected = MODE_TRAY.find(m=>m.id===modeId);
+    if(selected){
+      toast.success(`Switched to ${selected.name}`, { icon: selected.emoji });
+    }
+  };
+  React.useEffect(()=>{
+    setModeDropdownOpen(false);
+  },[manualMode]);
+  React.useEffect(()=>{
+    if(!showEmojiPicker) return;
+    const handler = (event) => {
+      if(emojiPickerRef.current && !emojiPickerRef.current.contains(event.target) && !event.target.closest('[data-testid="emoji-button"]')){
+        setShowEmojiPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  },[showEmojiPicker]);
+  const handleScroll = () => {
+    const el = messagesWrapperRef.current;
+    if(!el) return;
+    const { scrollTop, scrollHeight, clientHeight } = el;
+    setShowScrollToBottom(scrollHeight - scrollTop - clientHeight > 120);
+  };
+  const scrollToBottom = () => {
+    if(messagesWrapperRef.current){
+      messagesWrapperRef.current.scrollTo({ top: messagesWrapperRef.current.scrollHeight, behavior: 'smooth' });
+      setShowScrollToBottom(false);
+    }
+    if(scrollRef.current){
+      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  };
+  React.useEffect(()=>{
+    scrollToBottom();
+  },[messages, loading]);
 
   return (
     <div style={{ height:'100%', display:'flex', flexDirection:'column', position:'relative' }}>
@@ -1198,14 +1298,55 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
         </div>
       </div>
 
-      {/* Mode chips — compact on mobile */}
-      <div data-testid="mode-chips" style={{ display:'flex', gap: isDesktop ? 6 : 4, padding: isDesktop ? '8px 14px' : '6px 10px', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', overflowX:'auto', flexShrink:0, pointerEvents:isCrisis?'none':'auto', opacity:isCrisis?0.3:1, transition:'opacity 0.3s', scrollbarWidth:'none' }}>
-        {[{id:'AUTO',label:'⚡ AUTO'},{id:'HEAR_ME',label:'💙 HEAR ME'},{id:'BACK_ME',label:'🔥 BACK ME'},{id:'BE_REAL',label:'🧠 BE REAL'}].map(m=>(
-          <button key={m.id} data-testid={`mode-chip-${m.id}`} onClick={()=>setManualMode(m.id)}
-            style={{ display:'inline-flex', alignItems:'center', gap: isDesktop ? 6 : 4, padding: isDesktop ? '6px 14px' : '5px 10px', borderRadius:99, border:`1px solid ${manualMode===m.id?accentColor+'55':'rgba(255,255,255,0.06)'}`, background:manualMode===m.id?accentColor+'18':'rgba(255,255,255,0.04)', fontSize: isDesktop ? 12 : 11, fontWeight:500, color:manualMode===m.id?accentColor:'rgba(248,250,252,0.5)', cursor:'pointer', whiteSpace:'nowrap', transition:'all 0.2s', flexShrink:0 }}>
-            {m.label}
+      {/* Mode selector */}
+      <div style={{ display:'flex', justifyContent:'center', padding: isDesktop ? '12px 0 8px' : '8px 0', borderBottom:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.5)', flexShrink:0 }}>
+        <div ref={modeTrayRef} style={{ width:'100%', maxWidth:isDesktop?380:'100%', position:'relative' }}>
+          <button data-testid="mode-selector-btn"
+            disabled={isCrisis}
+            onClick={()=>setModeDropdownOpen(prev=>!prev)}
+            style={{
+              width:'100%', display:'flex', alignItems:'center', justifyContent:'space-between',
+              padding: isDesktop ? '10px 18px' : '8px 14px',
+              borderRadius:14, border:'1px solid rgba(255,255,255,0.12)',
+              background:isCrisis?'rgba(255,255,255,0.04)':'rgba(255,255,255,0.03)',
+              color:'#fff', cursor:isCrisis?'not-allowed':'pointer', fontFamily:"'Outfit',sans-serif",
+              fontWeight:600, fontSize:isDesktop?14:13, letterSpacing:0.5, gap:12,
+              justifyContent:'space-between',
+            }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6 }}>
+              <span style={{ fontSize:isDesktop?18:16 }}>{currentMode?.emoji}</span>
+              <div style={{ textAlign:'left', lineHeight:1 }}>
+                <div style={{ fontSize:isDesktop?14:13 }}>{currentMode?.name}</div>
+                <div style={{ fontSize:10, letterSpacing:1, color:'rgba(248,250,252,0.6)' }}>{currentMode?.shortDesc}</div>
+              </div>
+            </div>
+            <span style={{ fontSize:18 }}>{modeDropdownOpen?'▲':'▼'}</span>
           </button>
-        ))}
+          {modeDropdownOpen && !isCrisis && (
+            <div style={{
+              position:'absolute', top:'110%', left:0, right:0, background:'rgba(10,5,22,0.9)', border:'1px solid rgba(255,255,255,0.08)',
+              borderRadius:14, marginTop:8, padding:'10px 0', boxShadow:'0 12px 30px rgba(0,0,0,0.35)', zIndex:10, maxHeight:220, overflowY:'auto'
+            }}>
+              {MODE_TRAY.map(opt=>(
+                <button key={opt.id} data-testid={`mode-option-${opt.id}`}
+                  onClick={()=>handleModeSelect(opt.id)}
+                  style={{
+                    width:'100%', display:'flex', alignItems:'center', gap:10, padding:'10px 18px',
+                    background:manualMode===opt.id?'rgba(167,139,250,0.15)':'transparent',
+                    border:'none', borderBottom:'1px solid rgba(255,255,255,0.05)',
+                    color:'#fff', cursor:'pointer', textAlign:'left', fontFamily:"'Outfit',sans-serif", fontSize:13,
+                    justifyContent:'space-between',
+                  }}>
+                  <div>
+                    <div style={{ fontSize:14, fontWeight:600 }}>{opt.name}</div>
+                    <div style={{ fontSize:11, color:'rgba(248,250,252,0.5)' }}>{opt.shortDesc}</div>
+                  </div>
+                  <span style={{ fontSize:18 }}>{opt.emoji}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Stats — inline on mobile */}
@@ -1223,16 +1364,32 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       </div>
 
       {/* Messages */}
-      <div data-testid="chat-messages" style={{ flex:1, overflowY:'auto', padding: isDesktop ? '16px 16px 8px' : '12px 10px 8px', display:'flex', flexDirection:'column', gap: isDesktop ? 12 : 8 }}>
-        {messages.map((msg,i)=><ChatBubble key={i} msg={msg} isDesktop={isDesktop}/>)}
-        {loading&&(
-          <div style={{ alignSelf:'flex-start' }}>
-            <div style={{ background:'rgba(255,255,255,0.07)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'2px 14px 14px 14px' }}>
-              <TypingDots color={accentColor}/>
+      <div style={{ position:'relative', flex:1 }}>
+        <div data-testid="chat-messages" ref={messagesWrapperRef} onScroll={handleScroll}
+          style={{ flex:1, overflowY:'auto', padding: isDesktop ? '16px 16px 8px' : '12px 10px 8px', display:'flex', flexDirection:'column', gap: isDesktop ? 12 : 8 }}>
+          {messages.map((msg,i)=><ChatBubble key={i} msg={msg} isDesktop={isDesktop}/>)}
+          {loading&&(
+            <div style={{ alignSelf:'flex-start', display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:12, background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.18)' }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                <span style={{ fontSize:11, letterSpacing:1.5, textTransform:'uppercase', color:'#fbbf24' }}>Reva</span>
+                <span style={{ fontSize:13, color:'#f8fafc' }}>is typing</span>
+              </div>
+              <div style={{ display:'flex', gap:4 }}>
+                {[0,1,2].map(n=>(
+                  <motion.span key={n} style={{ width:6, height:6, borderRadius:'50%', background:'#fbbf24' }}
+                    animate={{ opacity:[0.2,1,0.2], y:[0,-6,0] }} transition={{ duration:1.2, repeat:Infinity, delay:n*0.15 }}/>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
+          <div ref={scrollRef}/>
+        </div>
+        {showScrollToBottom && (
+          <button onClick={scrollToBottom}
+            style={{ position:'absolute', right:16, bottom:isDesktop?120:120, background:'linear-gradient(135deg,#34d399,#60a5fa)', border:'none', color:'#fff', borderRadius:999, width:44, height:44, fontSize:24, boxShadow:'0 6px 18px rgba(0,0,0,0.3)', cursor:'pointer' }}>
+            ↓
+          </button>
         )}
-        <div ref={scrollRef}/>
       </div>
 
       {/* Emotion bar — compact on mobile */}
@@ -1243,8 +1400,23 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
       {/* Input */}
       <div style={{ padding: isDesktop ? '10px 14px' : '8px 10px', borderTop:'1px solid rgba(255,255,255,0.06)', background:'rgba(10,5,22,0.8)', backdropFilter:'blur(16px)', flexShrink:0, position:'relative' }}>
         {isDesktop&&<GossipFloatingBtn onClick={()=>setView('gossip_chat')} isDesktop={isDesktop}/>}
-        <div style={{ display:'flex', gap:8, paddingRight: isDesktop ? 80 : 0 }}>
-          <textarea data-testid="chat-input" style={{ ...textareaCss, flex:1, fontSize: isDesktop ? 14 : 15, padding: isDesktop ? '13px 16px' : '11px 14px' }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Just say it…" rows={1}
+        <div style={{ display:'flex', gap:8, paddingRight: isDesktop ? 80 : 0, alignItems:'flex-end', position:'relative' }}>
+          <button data-testid="emoji-button" onClick={()=>setShowEmojiPicker(prev=>!prev)}
+            style={{ width:44, height:44, borderRadius:12, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(255,255,255,0.04)', color:'#fbbf24', fontSize:22, cursor:'pointer', display:'flex', alignItems:'center', justifyContent:'center' }}>
+            😊
+          </button>
+          {showEmojiPicker && (
+            <div ref={emojiPickerRef} style={{ position:'absolute', bottom:56, left:0, zIndex:20, boxShadow:'0 12px 30px rgba(0,0,0,0.35)', borderRadius:14, overflow:'hidden' }}>
+              <EmojiPicker
+                onEmojiClick={(emojiData)=>{ setInput(prev=>prev+emojiData.emoji); setShowEmojiPicker(false); }}
+                theme="dark"
+                searchDisabled={false}
+                skinTonesDisabled
+                width={320}
+              />
+            </div>
+          )}
+          <textarea data-testid="chat-input" style={{ ...textareaCss, flex:1, fontSize: isDesktop ? 14 : 15, padding: isDesktop ? '13px 16px' : '11px 14px', borderRadius:14, resize:'none' }} value={input} onChange={e=>setInput(e.target.value)} placeholder="Just say it…" rows={1}
             onKeyDown={e=>{ if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();} }}/>
           <button data-testid="chat-send-btn" onClick={sendMessage} style={{ ...sendBtn, background:`linear-gradient(135deg,${accentColor},#34d399)` }}>↑</button>
         </div>
@@ -1410,13 +1582,35 @@ function App() {
   const coinToastRef=useRef(null);
   const windowWidth=useWindowWidth();
   const isDesktop=windowWidth>=768;
+  const containerMaxWidth = isDesktop ? 1200 : windowWidth >= 769 ? 768 : '100%';
+  const containerPadding = isDesktop ? 32 : windowWidth >= 769 ? 24 : 16;
+  const chatLayoutStyle = {
+    width: '100%',
+    maxWidth: containerMaxWidth,
+    margin: '0 auto',
+    padding: containerPadding,
+    boxSizing: 'border-box',
+    height: '100%',
+    display: 'flex',
+    flexDirection: isDesktop ? 'row' : 'column',
+    gap: isDesktop ? 32 : 0,
+  };
+  const sidebarWrapperStyle = { width: isDesktop ? 240 : '100%', flexShrink: 0, height: '100%' };
+  const chatWrapperStyle = {
+    flex: 1,
+    minWidth: 0,
+    maxWidth: isDesktop ? 800 : '100%',
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  };
 
   // Load chat history for current session from DB
   const loadChatHistory=async(sid)=>{
     if(!sid)return false;
     try{
       const res=await api.get(`/api/chat/history/${sid}`);
-      const msgs=(res.data||[]).map(m=>({role:m.role==='ai'?'ai':'user',content:m.content,mode:m.mode}));
+      const msgs=(res.data||[]).map(m=>ensureMessage({role:m.role==='ai'?'ai':'user',content:m.content,mode:m.mode}));
       if(msgs.length>0){ setMessages(msgs); return true; }
     }catch{}
     return false;
@@ -1520,7 +1714,7 @@ function App() {
               await loadSessions(currentVibe);
             }catch{}
           }
-          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
         }
 
         if(savedView && ['chat','settings','creator','gossip_chat'].includes(savedView)){
@@ -1584,7 +1778,7 @@ function App() {
           if(sessions.length < 2){
             try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'My Chats'}); await loadSessions('default'); }catch{}
           }
-          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
         }
         setView('chat');
       } else {
@@ -1613,7 +1807,7 @@ function App() {
       setSessionId(newSid);
       try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:vibeId,title:'My Chats'}); await loadSessions(vibeId); }catch{}
       if(vibeId==='default'){
-        try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+        try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
       } else {
         setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
       }
@@ -1633,32 +1827,38 @@ function App() {
   };
 
   const sendMessage=async()=>{
-    if(!input.trim()||loading)return;
-    const userMsg={role:'user',content:input};
+    const sanitizedInput = sanitizeText(input);
+    if(!sanitizedInput||loading)return;
+    const userMsg={role:'user',content:sanitizedInput,timestamp:new Date().toISOString()};
     setMessages(prev=>[...prev,userMsg]);
-    setInput('');setLoading(true);
+    setInput('');
+    setShowEmojiPicker(false);
+    setLoading(true);
     try{
       const res=await api.post('/api/chat',{message:userMsg.content,session_id:sessionId,language,manual_mode:manualMode,persona_config:getPersonaConfig(),force_vault:false});
-      setMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:res.data.mode}]);
+      const aiMsg=ensureMessage({role:'ai',content:res.data.response,mode:res.data.mode||'AUTO'});
+      setMessages(prev=>[...prev,aiMsg]);
       setIntensity(res.data.intensity_score||0);
       setBaseline(res.data.emotional_baseline||5);
       if(res.data.coins_remaining!==undefined)setAuthUser(prev=>prev?{...prev,coins:res.data.coins_remaining}:prev);
       if(res.data.coins_deducted>0)showCoinNotif(res.data.coins_deducted,res.data.coins_remaining);
     }catch{
-      setMessages(prev=>[...prev,{role:'system',content:'⚠️ Connection failed. Try again.'}]);
+      setMessages(prev=>[...prev,ensureMessage({role:'system',content:'⚠️ Connection failed. Try again.'})]);
     }finally{setLoading(false);}
   };
 
   const sendGossipMessage=async()=>{
-    if(!gossipInput.trim()||gossipLoading)return;
-    const userMsg={role:'user',content:gossipInput};
+    const sanitizedGossip = sanitizeText(gossipInput);
+    if(!sanitizedGossip||gossipLoading)return;
+    const userMsg={role:'user',content:sanitizedGossip,timestamp:new Date().toISOString()};
     setGossipMessages(prev=>[...prev,userMsg]);
-    setGossipInput('');setGossipLoading(true);
+    setGossipInput('');
+    setGossipLoading(true);
     try{
       const res=await api.post('/api/chat',{message:userMsg.content,session_id:gossipSessionId,language,manual_mode:'GOSSIP',persona_config:{},force_vault:true});
-      setGossipMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:'GOSSIP'}]);
+      setGossipMessages(prev=>[...prev,ensureMessage({role:'ai',content:res.data.response,mode:'GOSSIP'})]);
     }catch{
-      setGossipMessages(prev=>[...prev,{role:'system',content:'⚠️ Connection failed.'}]);
+      setGossipMessages(prev=>[...prev,ensureMessage({role:'system',content:'⚠️ Connection failed.'})]);
     }finally{setGossipLoading(false);}
   };
 
@@ -1681,7 +1881,7 @@ function App() {
     // Register session in DB so it shows in sidebar
     try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'My Chats'}); await loadSessions('default'); }catch{}
     // Load personalized welcome
-    try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+    try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
     setView('chat');
     // Auto-trigger onboarding chat: send a "hey" to get the consent question
     setTimeout(async()=>{
@@ -1718,7 +1918,7 @@ function App() {
         } else {
           const newSid=genSessionId();
           setSessionId(newSid);
-          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+          try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
         }
       }
     }catch{}
@@ -1736,7 +1936,7 @@ function App() {
     setMessages([]);
     await loadSessions(activeVibe);
     if(activeVibe==='default'){
-      try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+      try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
     } else {
       setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
     }
@@ -1761,7 +1961,7 @@ function App() {
           setSessionId(genSessionId());
           setMessages([]);
           if(activeVibe==='default'){
-            try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([WELCOME_MESSAGE]); }
+            try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
           }
         }
       }
@@ -1796,6 +1996,7 @@ function App() {
 
   return (
     <AppBg>
+      <Toaster position="top-center" toastOptions={{ style: { background: 'rgba(15,8,32,0.95)', color: '#f8fafc', border: '1px solid rgba(167,139,250,0.4)', fontFamily: "'Outfit',sans-serif" }, duration: 2000 }} />
       {/* Loading state while checking auth */}
       {view===null&&(
         <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
@@ -1843,18 +2044,16 @@ function App() {
       {/* Main app views — NO animations, render instantly */}
       {view==='chat'&&(
         <div style={wrapFull}>
-          {isDesktop?(
-            <div style={{ display:'flex', height:'100%' }}>
-              <div style={{ width:240, flexShrink:0, height:'100%' }}>
+          <div style={chatLayoutStyle}>
+            {isDesktop&&(
+              <div style={sidebarWrapperStyle}>
                 <DesktopSidebar authUser={authUser} activeVibe={activeVibe} setActiveVibe={switchVibe} characters={characters} onOpenCreator={openCreator} onDeleteCharacter={handleDeleteCharacter} onOpenSettings={()=>setView('settings')} onOpenGossip={openGossip} language={language} setLanguage={setLanguage} startNewSession={startNewSession} chatSessions={chatSessions} activeSessionId={sessionId} onSwitchSession={switchSession} onDeleteSession={deleteSession} onRenameSession={renameSession}/>
               </div>
-              <div style={{ flex:1, overflow:'hidden', position:'relative', height:'100%' }}>
-                <ChatInterface {...chatViewProps}/>
-              </div>
+            )}
+            <div style={chatWrapperStyle}>
+              <ChatInterface {...chatViewProps}/>
             </div>
-          ):(
-            <ChatInterface {...chatViewProps}/>
-          )}
+          </div>
         </div>
       )}
 
