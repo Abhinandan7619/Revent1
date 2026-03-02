@@ -1759,7 +1759,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
           {loading&&(
             <div style={{ alignSelf:'flex-start', display:'flex', alignItems:'center', gap:8, padding:'8px 12px', borderRadius:12, background:'rgba(251,191,36,0.08)', border:'1px solid rgba(251,191,36,0.18)' }}>
               <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                <span style={{ fontSize:11, letterSpacing:1.5, textTransform:'uppercase', color:'#fbbf24' }}>{activeVibe === 'default' ? 'Reva' : (activeChar ? (activeChar.label || 'Reva') : 'Reva')}</span>
+                <span style={{ fontSize:11, letterSpacing:1.5, textTransform:'uppercase', color:'#fbbf24' }}>{activeVibe === 'default' ? 'Reva' : (activeChar?.label || 'Reva')}</span>
                 <span style={{ fontSize:13, color:'#f8fafc' }}>is typing</span>
               </div>
               <div style={{ display:'flex', gap:4 }}>
