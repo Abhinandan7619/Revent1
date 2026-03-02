@@ -1654,10 +1654,7 @@ const ChatInterface = ({ activeVibe, setActiveVibe, setView, characters, onOpenC
 
       {/* Topbar */}
       <div style={topbar}>
-        <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-          {!isDesktop&&(
-            <button onClick={()=>setDrawerOpen(true)} style={{ ...iconBtn, width:34, height:34, fontSize:18, background:'rgba(255,255,255,0.06)' }}>☰</button>
-          )}
+        <div style={{ display:'flex', alignItems:'center', gap:8, cursor: !isDesktop ? 'pointer' : 'default' }} onClick={!isDesktop ? ()=>setDrawerOpen(true) : undefined}>
           <LogoIcon size="sm"/>
           <div>
             <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:700, fontSize:14, background:'linear-gradient(90deg,#a78bfa,#34d399)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>Reva</div>
