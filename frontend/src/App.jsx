@@ -22,7 +22,7 @@ const BASE_ROLES = [
   { id: 'Childhood Buddy',   icon: '🎮', desc: 'Nostalgic, loyal, casual',                 color: '#34d399' },
   { id: 'Chill Ex',          icon: '😎', desc: 'Detached, objective, caring',              color: '#fbbf24' },
   { id: 'Blunt Senior',      icon: '👴', desc: 'Direct, no sugar-coating',                 color: '#f87171' },
-  { id: 'Protective Sister', icon: '🛡️', desc: 'Defensive, fierce energy',                color: '#f472b6' },
+  { id: 'Sibling', icon: '🛡️', desc: 'Defensive, fierce energy',                color: '#f472b6' },
 ];
 const TRAITS = [
   { id: 'Funny', emoji: '😂' }, { id: 'Savage', emoji: '🔪' },
@@ -40,7 +40,7 @@ const GENDER_OPTIONS = [
 ];
 const ROLE_COLORS = {
   'Close Cousin': '#a78bfa', 'Office Bro': '#60a5fa', 'Childhood Buddy': '#34d399',
-  'Chill Ex': '#fbbf24', 'Blunt Senior': '#f87171', 'Protective Sister': '#f472b6',
+  'Chill Ex': '#fbbf24', 'Blunt Senior': '#f87171', 'Sibling': '#f472b6',
 };
 const RE_DEFAULT = { id: 'default', label: 'Reva', emoji: null, color: '#a78bfa', config: {} };
 const EMOTION_ITEMS = [
@@ -648,17 +648,17 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
     { id:'Childhood Buddy',   emoji:'🎮',   desc:'Nostalgic, loyal, ride-or-die',            color:'#34d399' },
     { id:'Chill Ex',          emoji:'😎',   desc:'Detached, neutral, mature perspective',    color:'#fbbf24' },
     { id:'Blunt Senior',      emoji:'👴',   desc:'Direct, experienced, no sugar-coating',    color:'#f87171' },
-    { id:'Protective Sister', emoji:'👩‍❤️‍👩', desc:'Fierce, defensive, emotionally strong',   color:'#f472b6' },
+    { id:'Sibling',           emoji:'👩‍❤️‍👩', desc:'Fierce, defensive, emotionally strong',   color:'#f472b6' },
     { id:'Office Bro',        emoji:'💼',   desc:'Practical, slightly sarcastic, work-aware',color:'#60a5fa' },
   ];
   const IDENTITY_SECTIONS = [
-    { id:'support_style', label:'// How they support you', opts:[
+    { id:'support_style', label:'How they support you', opts:[
       { id:'hype',      emoji:'🔥', title:'Hype you up',            desc:'Always in your corner, no matter what' },
       { id:'listen',    emoji:'👂', title:'Just listen',             desc:'No fixing, no advice — just space' },
       { id:'tough',     emoji:'💪', title:'Tough love',              desc:'Calls you out when you need it' },
       { id:'humor',     emoji:'😄', title:'Laugh it off',            desc:'Makes everything feel lighter' },
     ]},
-    { id:'comm_style', label:'// Their signature move', opts:[
+    { id:'comm_style', label:'Their signature move', opts:[
       { id:'texts',      emoji:'💬', title:'Short blunt texts',      desc:'Gets to the point, zero fluff' },
       { id:'latenight',  emoji:'🌙', title:'Late-night deep talks',  desc:'Best at 2AM when it gets real' },
       { id:'memes',      emoji:'😂', title:'Memes & reactions',      desc:'Communicates in feelings and humor' },
@@ -668,7 +668,8 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
   const QUESTIONS = [
     { id:'meet',    type:'chips',   reva:"Tell me... how do you two know each other?",
       text:"How did you meet?",
-      chips:['School / College','Work / Office','Online','Neighborhood','Family intro','Just happened'] },
+      chips:['School / College','Work / Office','Online','Neighborhood','Family intro','Just happened'],
+      skipFor:['Sibling','Close Cousin'] },
     { id:'support', type:'options', reva:"When you're having a rough day...",
       text:"What do they always say when you're stressed?",
       options:[
@@ -740,7 +741,8 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
     if(step<4){ setStep(p=>p+1); return; }
     if(step===4){ setStep(5); setQIdx(0); return; }
     if(step===5){
-      if(qIdx<QUESTIONS.length-1){ setQIdx(p=>p+1); return; }
+      const filteredQuestions = QUESTIONS.filter(q => !q.skipFor || !q.skipFor.includes(char.base_role));
+      if(qIdx<filteredQuestions.length-1){ setQIdx(p=>p+1); return; }
       await runAIGenerate(); return;
     }
   };
@@ -958,15 +960,24 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
 
             {/* Step 5 — Memory Hook Q&A */}
             {step===5&&(()=>{
-              const q=QUESTIONS[qIdx];
+              const filteredQuestions = QUESTIONS.filter(q => !q.skipFor || !q.skipFor.includes(char.base_role));
+              const q = filteredQuestions[qIdx];
+              if (!q) return null;
+              
+              // Filter chips based on persona
+              let displayChips = q.chips;
+              if (q.id === 'meet' && char.base_role === 'Childhood Buddy') {
+                displayChips = q.chips.filter(c => c !== 'Work / Office');
+              }
+              
               return (
                 <div style={{ paddingTop:16 }}>
                   <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:800, fontSize:22, color:'#fff', marginBottom:5 }}>Build the <span style={gradText}>memory</span></div>
                   <div style={{ fontSize:13, color:'rgba(248,250,252,0.45)', marginBottom:14 }}>A few quick questions. Reva uses these to feel real — not scripted.</div>
                   <div style={{ height:3, background:'rgba(255,255,255,0.06)', borderRadius:99, marginBottom:6, overflow:'hidden' }}>
-                    <motion.div animate={{ width:`${((qIdx+1)/QUESTIONS.length)*100}%` }} style={{ height:'100%', background:'linear-gradient(90deg,#a78bfa,#34d399)', borderRadius:99 }}/>
+                    <motion.div animate={{ width:`${((qIdx+1)/filteredQuestions.length)*100}%` }} style={{ height:'100%', background:'linear-gradient(90deg,#a78bfa,#34d399)', borderRadius:99 }}/>
                   </div>
-                  <div style={{ fontSize:11, color:'rgba(248,250,252,0.3)', textAlign:'right', marginBottom:14 }}>Question {qIdx+1} of {QUESTIONS.length}</div>
+                  <div style={{ fontSize:11, color:'rgba(248,250,252,0.3)', textAlign:'right', marginBottom:14 }}>Question {qIdx+1} of {filteredQuestions.length}</div>
                   <div style={{ background:'rgba(167,139,250,0.08)', border:'1px solid rgba(167,139,250,0.2)', borderRadius:12, padding:'10px 14px', marginBottom:14 }}>
                     <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:'rgba(167,139,250,0.6)', marginBottom:4 }}>Reva says</div>
                     <div style={{ fontSize:13, color:'rgba(248,250,252,0.7)', lineHeight:1.5 }}>{q.reva}</div>
@@ -974,7 +985,7 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
                   <div style={{ fontFamily:"'Outfit',sans-serif", fontWeight:600, fontSize:14, color:'#fff', marginBottom:12 }}>{q.text}</div>
                   {q.type==='chips'&&(
                     <div style={{ display:'flex', flexWrap:'wrap', gap:8 }}>
-                      {q.chips.map(chip=>{
+                      {displayChips.map(chip=>{
                         const isSel=char.qAnswers[q.id]===chip;
                         return (
                           <div key={chip} onClick={()=>setChar(prev=>({...prev,qAnswers:{...prev.qAnswers,[q.id]:chip}}))}
@@ -1080,7 +1091,8 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
             <button onClick={handleBack} style={btnBackStyle}>← Back</button>
             <button onClick={handleNext} disabled={!canAdvance()}
               style={{ ...btnContinue, flex:1, opacity:canAdvance()?1:0.35, cursor:canAdvance()?'pointer':'not-allowed' }}>
-              {step===5&&qIdx===QUESTIONS.length-1?'✨ Build my Clan':'Continue →'}
+              const filteredQuestions = QUESTIONS.filter(q => !q.skipFor || !q.skipFor.includes(char.base_role));
+              {step===5&&qIdx===filteredQuestions.length-1?'✨ Build my Clan':'Continue →'}
             </button>
           </div>
         </div>
