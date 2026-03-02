@@ -1091,8 +1091,10 @@ const CharacterCreator = ({ onBack, onSave, language, editingCharacter }) => {
             <button onClick={handleBack} style={btnBackStyle}>← Back</button>
             <button onClick={handleNext} disabled={!canAdvance()}
               style={{ ...btnContinue, flex:1, opacity:canAdvance()?1:0.35, cursor:canAdvance()?'pointer':'not-allowed' }}>
-              const filteredQuestions = QUESTIONS.filter(q => !q.skipFor || !q.skipFor.includes(char.base_role));
-              {step===5&&qIdx===filteredQuestions.length-1?'✨ Build my Clan':'Continue →'}
+              {(()=>{
+                const filteredQs = QUESTIONS.filter(q => !q.skipFor || !q.skipFor.includes(char.base_role));
+                return step===5&&qIdx===filteredQs.length-1?'✨ Build my Clan':'Continue →';
+              })()}
             </button>
           </div>
         </div>
