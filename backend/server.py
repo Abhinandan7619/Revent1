@@ -313,8 +313,8 @@ async def chat(chat_req: ChatRequest, request: Request):
                         break
             existing = await get_user_sessions(user["user_id"], vibe_id)
             session_exists = any(s["session_id"] == chat_req.session_id for s in existing)
-            # Only auto-create for default (companion) or if explicitly doesn't exist
-            if not session_exists and (vibe_id == "default" and len(existing) < 2):
+            # ONLY auto-create for default companion mode, NEVER for clans
+            if not session_exists and vibe_id == "default" and len(existing) < 2:
                 title = chat_req.message[:40] if chat_req.message else "New Chat"
                 await create_chat_session(user["user_id"], chat_req.session_id, vibe_id, title)
 
