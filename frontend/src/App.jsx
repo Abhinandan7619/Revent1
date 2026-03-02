@@ -2191,10 +2191,12 @@ function App() {
       // New session for this vibe
       const newSid = genSessionId();
       setSessionId(newSid);
-      try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:vibeId,title:'Companion'}); await loadSessions(vibeId); }catch{}
+      // ONLY create session for default companion, NOT for clans
       if(vibeId==='default'){
+        try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:vibeId,title:'Companion'}); await loadSessions(vibeId); }catch{}
         try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
       } else {
+        // For clans, don't auto-create session, just set welcome message
         setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
       }
     }
