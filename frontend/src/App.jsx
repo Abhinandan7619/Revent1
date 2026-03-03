@@ -2328,21 +2328,19 @@ function App() {
   };
 
   const startNewSession=async(title)=>{
+    // Always switch to default companion mode when creating new session
+    setActiveVibe('default');
     const newSid=genSessionId();
     const sessionTitle=title||'New Chat';
     try{
-      await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:activeVibe,title:sessionTitle});
+      await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:sessionTitle});
     }catch(e){
       if(e?.response?.status===400){ alert('You already have 2 sessions. Delete one to create a new chat.'); return; }
     }
     setSessionId(newSid);
     setMessages([]);
-    await loadSessions(activeVibe);
-    if(activeVibe==='default'){
-      try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
-    } else {
-      setMessages([{role:'ai',content:'Hey! Ready to talk? 😊',mode:'AUTO'}]);
-    }
+    await loadSessions('default');
+    try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
   };
 
   const switchSession=async(sid)=>{
