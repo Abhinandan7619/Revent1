@@ -53,19 +53,21 @@ const EMOTION_ITEMS = [
   { emoji: '🤔', label: 'Confused',mode: 'BE_REAL' },
 ];
 const modeMeta = {
-  BACK_ME: { label: 'BACK ME', emoji: '🔥' },
-  HEAR_ME: { label: 'HEAR ME', emoji: '💙' },
-  BE_REAL: { label: 'BE REAL', emoji: '🧠' },
-  VAULT:   { label: 'VAULT',   emoji: '🔒' },
-  GOSSIP:  { label: 'GOSSIP',  emoji: '🤫' },
-  CRISIS:  { label: 'CRISIS',  emoji: '🛡️' },
-  AUTO:    { label: 'AUTO',    emoji: '⚡' },
+  BACK_ME:     { label: 'BACK ME',     emoji: '🔥' },
+  HEAR_ME:     { label: 'HEAR ME',     emoji: '💙' },
+  BE_REAL:     { label: 'BE REAL',     emoji: '🧠' },
+  UNFILTERED:  { label: 'UNFILTERED',  emoji: '🎯' },
+  VAULT:       { label: 'VAULT',       emoji: '🔒' },
+  GOSSIP:      { label: 'GOSSIP',      emoji: '🤫' },
+  CRISIS:      { label: 'CRISIS',      emoji: '🛡️' },
+  AUTO:        { label: 'AUTO',        emoji: '⚡' },
 };
 const MODE_TRAY = [
   { id: 'AUTO', emoji: '⚡', name: 'AUTO MODE', shortDesc: 'Let Reva decide the vibe' },
   { id: 'HEAR_ME', emoji: '💙', name: 'HEAR ME', shortDesc: 'I just need someone to listen' },
   { id: 'BACK_ME', emoji: '🔥', name: 'BACK ME', shortDesc: 'Match my energy and hype me' },
   { id: 'BE_REAL', emoji: '🧠', name: 'BE REAL', shortDesc: 'Tell me what I need to hear' },
+  { id: 'UNFILTERED', emoji: '🎯', name: 'UNFILTERED', shortDesc: 'Raw, present moment — no memory' },
 ];
 const formatTimestamp = (ts) => {
   if(!ts) return '';
@@ -823,12 +825,13 @@ const ChatBubble = ({ msg, isDesktop }) => {
   const meta = msg.mode ? modeMeta[msg.mode] : null;
   // Color scheme for different modes
   const modeColors = {
-    BACK_ME: '#f87171',  // Red
-    HEAR_ME: '#60a5fa',  // Blue
-    BE_REAL: '#c084fc',  // Purple
-    VAULT:   '#9ca3af',  // Gray
-    CRISIS:  '#fbbf24',  // Yellow
-    AUTO:    '#34d399',  // Green
+    BACK_ME:    '#f87171',  // Red
+    HEAR_ME:    '#60a5fa',  // Blue
+    BE_REAL:    '#c084fc',  // Purple
+    UNFILTERED: '#fb923c',  // Orange
+    VAULT:      '#9ca3af',  // Gray
+    CRISIS:     '#fbbf24',  // Yellow
+    AUTO:       '#34d399',  // Green
   };
   const modeColor = msg.mode ? modeColors[msg.mode] : modeColors.AUTO;
   const isCrisisBubble = msg.role === 'ai' && msg.mode === 'CRISIS';
@@ -1520,6 +1523,15 @@ const GossipInterface = ({ setView, authUser, messages, input, setInput, sendMes
 
 // ─── Settings Screen ──────────────────────────────────────────────────────────
 const SettingsScreen = ({ authUser, onBack, language, setLanguage, onLogout, isDesktop }) => {
+  const [city, setCity] = useState(authUser?.city || '');
+  const [citySaving, setCitySaving] = useState(false);
+  const saveCity = async (val) => {
+    setCity(val);
+    if (!val) return;
+    setCitySaving(true);
+    try { await api.post('/api/user/update-profile', { city: val }); } catch {}
+    setCitySaving(false);
+  };
   const COIN_PACKS=[
     {coins:40,price:'₹49',label:'Starter',badge:null},{coins:100,price:'₹99',label:'Core',badge:'Popular'},
     {coins:220,price:'₹199',label:'Value',badge:'Best Value'},{coins:600,price:'₹499',label:'Power',badge:null},
@@ -1574,6 +1586,22 @@ const SettingsScreen = ({ authUser, onBack, language, setLanguage, onLogout, isD
           </div>
           <div style={{ ...glass, padding:'14px 18px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
             <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+              <span style={{ fontSize:18 }}>📍</span>
+              <span style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:500, fontSize:14 }}>City</span>
+            </div>
+            <div style={{ position:'relative' }}>
+              <select value={city} onChange={e=>saveCity(e.target.value)} style={{ appearance:'none', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.08)', padding:'7px 28px 7px 12px', borderRadius:10, color:'#fff', fontSize:13, outline:'none', cursor:'pointer', maxWidth:130 }}>
+                <option value="">Not set</option>
+                <option value="Mumbai">Mumbai</option><option value="Delhi">Delhi</option>
+                <option value="Bangalore">Bangalore</option><option value="Hyderabad">Hyderabad</option>
+                <option value="Chennai">Chennai</option><option value="Kolkata">Kolkata</option>
+                <option value="Pune">Pune</option>
+              </select>
+              <span style={{ position:'absolute', right:8, top:'50%', transform:'translateY(-50%)', fontSize:9, color:'rgba(248,250,252,0.3)', pointerEvents:'none' }}>▾</span>
+            </div>
+          </div>
+          <div style={{ ...glass, padding:'14px 18px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:12 }}>
               <span style={{ fontSize:18 }}>🔒</span>
               <div>
                 <div style={{ fontFamily:"'DM Sans',sans-serif", fontWeight:500, fontSize:14 }}>Privacy & Data</div>
@@ -1617,7 +1645,8 @@ function App() {
   const setSessionId=(v)=>{ saveState('sessionId',v); setSessionIdRaw(v); };
   const [gossipSessionId,setGossipSessionId]=useState(genSessionId);
   const [manualMode,setManualMode]=useState('AUTO');
-  const [language,setLanguage]=useState('Hindi');
+  const [language,setLanguageRaw]=useState('Hindi');
+  const setLanguage=(lang)=>{ setLanguageRaw(lang); api.post('/api/user/update-profile',{language:lang}).catch(()=>{}); };
   const [intensity,setIntensity]=useState(0);
   const [baseline,setBaseline]=useState(5);
   const [userName,setUserName]=useState('User');
@@ -1632,6 +1661,7 @@ function App() {
   const scrollRef=useRef(null);
   const gossipScrollRef=useRef(null);
   const coinToastRef=useRef(null);
+  const langDoneCalledRef=useRef(false);
   const windowWidth=useWindowWidth();
   const isDesktop=windowWidth>=768;
   const containerMaxWidth = isDesktop ? 1200 : windowWidth >= 769 ? 768 : '100%';
@@ -1921,6 +1951,8 @@ function App() {
   };
 
   const handleLangDone=async(lang)=>{
+    if(langDoneCalledRef.current)return;
+    langDoneCalledRef.current=true;
     setLanguage(lang);
     try{
       const res=await api.post('/api/user/update-profile',{name:userName,language:lang,onboarding_complete:true});
@@ -1931,18 +1963,15 @@ function App() {
     setSessionId(newSid);
     // Register session in DB so it shows in sidebar
     try{ await api.post('/api/chat/sessions',{session_id:newSid,vibe_id:'default',title:'My Chats'}); await loadSessions('default'); }catch{}
-    // Load personalized welcome
-    try{ const wRes=await api.get('/api/chat/welcome'); setMessages(wRes.data.messages||[]); }catch{ setMessages([ensureMessage(WELCOME_MESSAGE)]); }
+    setMessages([]);
     setView('chat');
     // Auto-trigger onboarding chat: send a "hey" to get the consent question
-    setTimeout(async()=>{
-      try{
-        const res=await api.post('/api/chat',{message:'hey',session_id:newSid,language:lang,manual_mode:'AUTO',persona_config:{}});
-        if(res.data.response){
-          setMessages(prev=>[...prev,{role:'ai',content:res.data.response,mode:res.data.mode||'AUTO'}]);
-        }
-      }catch{}
-    },800);
+    try{
+      const res=await api.post('/api/chat',{message:'hey',session_id:newSid,language:lang,manual_mode:'AUTO',persona_config:{}});
+      if(res.data.response){
+        setMessages([{role:'ai',content:res.data.response,mode:res.data.mode||'AUTO'}]);
+      }
+    }catch{}
   };
 
   const openGossip=()=>{ setGossipMessages([]);setGossipSessionId(genSessionId());setView('gossip_chat'); };

@@ -98,6 +98,7 @@ class RefineRequest(BaseModel):
 class UpdateProfileRequest(BaseModel):
     name: Optional[str] = None
     language: Optional[str] = None
+    city: Optional[str] = None
     onboarding_complete: Optional[bool] = None
 
 
@@ -202,6 +203,8 @@ async def update_profile(req: UpdateProfileRequest, request: Request):
         updates["name"] = req.name
     if req.language is not None:
         updates["language"] = req.language
+    if req.city is not None:
+        updates["city"] = req.city
     if req.onboarding_complete is not None:
         updates["onboarding_complete"] = req.onboarding_complete
     updated = await update_user(user["user_id"], updates)
@@ -310,6 +313,8 @@ async def chat(chat_req: ChatRequest, request: Request):
             persona_cfg["_user_personality"] = user["personality_profile"]
         if user and user.get("name"):
             persona_cfg["_user_name"] = user["name"]
+        if user and user.get("city"):
+            persona_cfg["_user_city"] = user["city"]
 
         inputs = {
             "session_id": chat_req.session_id,
